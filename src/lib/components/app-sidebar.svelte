@@ -85,7 +85,7 @@
 		},
 		{
 			title: "New Features Available",
-			description: "Check out the changelog.",
+			description: "Stay up-to-date with the latest improvements by checking out the changelog.",
 			url: "https://linktofeedback.com",
 		},
 		{
@@ -207,7 +207,8 @@
 					<Card.Root 
 						class="hover:bg-gray-100 transition-all absolute w-full
 							{cardIndex === visibleCards[visibleCards.length - 1] ? 'z-20 rotate-0 scale-100' : 
-							cardIndex === visibleCards[visibleCards.length - 2] ? 'z-10 -mt-2 -rotate-3 scale-[0.98] opacity-90' :
+							cardIndex === visibleCards[visibleCards.length - 2] ? 'z-10 -translate-y-2 scale-[0.98] opacity-90' :
+                            cardIndex === visibleCards[visibleCards.length - 3] ? 'z-10 -translate-y-4 scale-[0.96] opacity-80' :
 							'z-0 -rotate-4 scale-[0.96] opacity-80'}"
 					>
 						<div class="relative">
