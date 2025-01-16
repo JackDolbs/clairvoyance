@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
 	import * as Collapsible from "$lib/components/ui/collapsible/index.js";
+	import * as Card from "$lib/components/ui/card";
 	import Logo from "$lib/components/Logo.svelte";
 	import UserInfo from "$lib/components/UserInfo.svelte";
 	import ChevronRight from "lucide-svelte/icons/chevron-right";
@@ -13,9 +14,8 @@
 		BrainCircuit,
 		Settings,
 		MessageCircleWarning,
-
-		Share
-
+		Share,
+		X
 	} from 'lucide-svelte';
 
 	const navigationItems = [
@@ -78,10 +78,20 @@
 
 	const secondaryItems = [
 		{
-			title: "Feedback",
+			title: "Share Feedback",
+			description: "Help us improve Clairvoyance by sharing your thoughts.",
 			url: "https://linktofeedback.com",
-			icon: MessageCircleWarning
 		},
+		{
+			title: "New Features Available",
+			description: "Check out the changelog.",
+			url: "https://linktofeedback.com",
+		},
+		{
+			title: "Work With Us",
+			description: "Apply to work with Auriel Analytics for custom Clairvoyance instances.",
+			url: "https://auriel.tech/enquire",
+		}
 	];
 
 	const user = {
@@ -89,6 +99,12 @@
 		email: "demo@auriel.ai",
 		avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=demo"
 	};
+
+	let visibleCards = $state(secondaryItems.map((_, i) => i)); // Track visible cards by index
+
+	function dismissCard(index: number) {
+		visibleCards = visibleCards.filter(i => i !== index);
+	}
 </script>
 
 <Sidebar.Root variant="inset" class="font-grotesk bg-neutral-50">
@@ -155,20 +171,37 @@
 	<Sidebar.Footer class="font-grotesk bg-neutral-50">
 		<!-- Secondary Navigation -->
 		<Sidebar.Group>
-			<Sidebar.Menu>
-				{#each secondaryItems as item (item.title)}
-					<Sidebar.MenuItem>
-						<Sidebar.MenuButton size="sm">
-							{#snippet child({ props })}
-								<a href={item.url} {...props}>
-									<svelte:component this={item.icon} class="w-4 h-4" />
-									<span>{item.title}</span>
-								</a>
-							{/snippet}
-						</Sidebar.MenuButton>
-					</Sidebar.MenuItem>
+			<div class="relative h-[140px]"> <!-- Fixed height container for stack -->
+				{#each visibleCards as cardIndex (cardIndex)}
+					{@const item = secondaryItems[cardIndex]}
+					<Card.Root 
+						class="hover:bg-gray-100 transition-all absolute w-full
+							{cardIndex === visibleCards[visibleCards.length - 1] ? 'z-20 rotate-0 scale-100' : 
+							cardIndex === visibleCards[visibleCards.length - 2] ? 'z-10 -rotate-2 scale-[0.98] opacity-90' :
+							'z-0 -rotate-4 scale-[0.96] opacity-80'}"
+					>
+						<div class="relative">
+							<button
+								class="absolute right-1 top-1 p-2 rounded-full hover:bg-gray-200 transition-colors"
+								on:click|stopPropagation={() => dismissCard(cardIndex)}
+							>
+								<X class="w-4 h-4" />
+								<span class="sr-only">Dismiss</span>
+							</button>
+							<a href={item.url} class="block p-4">
+								<Card.Header class="p-0">
+									<Card.Title class="flex items-center gap-2 text-sm font-medium">
+										{item.title}
+									</Card.Title>
+									<Card.Description class="text-xs mt-1">
+										{item.description}
+									</Card.Description>
+								</Card.Header>
+							</a>
+						</div>
+					</Card.Root>
 				{/each}
-			</Sidebar.Menu>
+			</div>
 		</Sidebar.Group>
 
 		<!-- User Menu -->
