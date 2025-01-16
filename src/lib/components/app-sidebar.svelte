@@ -18,11 +18,13 @@
 		X
 	} from 'lucide-svelte';
 
+	let dashboardActive = $state(false);
+	let analyticsActive = $state(false);
+
 	const navigationItems = [
 		{
 			title: "Dashboard",
 			icon: LayoutDashboard,
-			isActive: false,
 			items: [
 				{
 					title: "Overview",
@@ -37,7 +39,6 @@
         {
 			title: "Analytics",
 			icon: ChartBar,
-			isActive: false,
 			items: [
 				{
 					title: "Notebooks",
@@ -105,6 +106,12 @@
 	function dismissCard(index: number) {
 		visibleCards = visibleCards.filter(i => i !== index);
 	}
+
+	function isItemActive(item: typeof navigationItems[number]) {
+		if (item.title === "Dashboard") return dashboardActive;
+		if (item.title === "Analytics") return analyticsActive;
+		return false;
+	}
 </script>
 
 <Sidebar.Root variant="inset" class="font-grotesk bg-neutral-50">
@@ -125,15 +132,38 @@
 		<Sidebar.Group>
 			<Sidebar.Menu>
 				{#each navigationItems as item (item.title)}
-					<Collapsible.Root open={item.isActive}>
+					<Collapsible.Root 
+						open={isItemActive(item)}
+						onOpenChange={(open) => {
+							if (item.title === "Dashboard") dashboardActive = open;
+							if (item.title === "Analytics") analyticsActive = open;
+						}}
+					>
 						{#snippet child({ props })}
 							<Sidebar.MenuItem {...props}>
 								<Sidebar.MenuButton>
 									{#snippet child({ props })}
-										<a href={item.url} {...props}>
-											<svelte:component this={item.icon} class="w-4 h-4" />
-											<span>{item.title}</span>
-										</a>
+										{#if item.items?.length}
+											<button 
+												{...props} 
+												class="flex items-center gap-2 mx-2 py-1.5 text-sm w-full"
+												on:click={() => {
+													if (item.title === "Dashboard") {
+														dashboardActive = !dashboardActive;
+													} else if (item.title === "Analytics") {
+														analyticsActive = !analyticsActive;
+													}
+												}}
+											>
+												<svelte:component this={item.icon} class="w-4 h-4" />
+												<span>{item.title}</span>
+											</button>
+										{:else}
+											<a href={item.url} {...props}>
+												<svelte:component this={item.icon} class="w-4 h-4" />
+												<span>{item.title}</span>
+											</a>
+										{/if}
 									{/snippet}
 								</Sidebar.MenuButton>
 								{#if item.items?.length}
