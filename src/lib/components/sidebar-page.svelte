@@ -3,6 +3,16 @@
 	import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
 	import { Separator } from "$lib/components/ui/separator/index.js";
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
+	import { page } from "$app/stores";
+
+	// Get the current route segments
+	$: segments = $page.url.pathname
+		.split('/')
+		.filter(Boolean)
+		.map(segment => ({
+			label: segment.charAt(0).toUpperCase() + segment.slice(1),
+			href: '/' + segment
+		}));
 </script>
 
 <Sidebar.Provider>
@@ -14,13 +24,21 @@
 				<Separator orientation="vertical" class="mr-2 h-4" />
 				<Breadcrumb.Root>
 					<Breadcrumb.List>
-						<Breadcrumb.Item class="hidden md:block">
-							<Breadcrumb.Link href="#">Building Your Application</Breadcrumb.Link>
-						</Breadcrumb.Item>
-						<Breadcrumb.Separator class="hidden md:block" />
 						<Breadcrumb.Item>
-							<Breadcrumb.Page>Data Fetching</Breadcrumb.Page>
+							<Breadcrumb.Link href="/">Home</Breadcrumb.Link>
 						</Breadcrumb.Item>
+						{#each segments as segment, i}
+							<Breadcrumb.Separator />
+							<Breadcrumb.Item>
+								{#if i === segments.length - 1}
+									<Breadcrumb.Page>{segment.label}</Breadcrumb.Page>
+								{:else}
+									<Breadcrumb.Link href={segment.href}>
+										{segment.label}
+									</Breadcrumb.Link>
+								{/if}
+							</Breadcrumb.Item>
+						{/each}
 					</Breadcrumb.List>
 				</Breadcrumb.Root>
 			</div>

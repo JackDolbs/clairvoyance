@@ -27,8 +27,8 @@
 			icon: LayoutDashboard,
 			items: [
 				{
-					title: "Overview",
-					url: "/dashboard",
+					title: "Metrics",
+					url: "/metrics",
 				},
 				{
 					title: "KPIs",
@@ -57,7 +57,7 @@
 		},
 		{
 			title: "Knowledge Graph",
-			url: "/graph",
+			url: "/knowledge-graph",
 			icon: Network,
 		},
         {
@@ -67,7 +67,7 @@
 		},
 		{
 			title: "Data Sources",
-			url: "/sources",
+			url: "/data-sources",
 			icon: Database,
 		},
         {

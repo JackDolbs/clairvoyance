@@ -4,6 +4,7 @@
 	import Settings from "lucide-svelte/icons/settings";
 	import HelpCircle from "lucide-svelte/icons/help-circle";
 	import GitFork from "lucide-svelte/icons/git-fork";
+	import { goto } from "$app/navigation";
 
 	import * as Avatar from "$lib/components/ui/avatar/index.js";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
@@ -21,6 +22,18 @@
 	} = $props();
 
 	const sidebar = useSidebar();
+
+	function handleProfileClick() {
+		goto('/profile');
+	}
+
+	function handleRoadmapClick() {
+		window.open('https://github.com/huntabyte/clairvoyance/roadmap', '_blank');
+	}
+
+	function handleHelpClick() {
+		window.open('https://docs.clairvoyance.xyz', '_blank');
+	}
 </script>
 
 <Sidebar.Menu>
@@ -65,21 +78,32 @@
 				</DropdownMenu.Label>
 				<DropdownMenu.Separator />
 				<DropdownMenu.Group>
-					<DropdownMenu.Item>
+					<DropdownMenu.Item 
+						onSelect={handleProfileClick}
+						class="cursor-pointer"
+					>
 						<Settings class="w-4 h-4" />
-						My Settings
+						My Profile
 					</DropdownMenu.Item>
-					<DropdownMenu.Item>
+					<DropdownMenu.Item 
+						onSelect={handleRoadmapClick}
+						class="cursor-pointer"
+					>
 						<GitFork class="w-4 h-4" />
 						Roadmap
 					</DropdownMenu.Item>
-					<DropdownMenu.Item>
+					<DropdownMenu.Item 
+						onSelect={handleHelpClick}
+						class="cursor-pointer"
+					>
 						<HelpCircle class="w-4 h-4" />
 						Help
 					</DropdownMenu.Item>
 				</DropdownMenu.Group>
 				<DropdownMenu.Separator />
-				<DropdownMenu.Item>
+				<DropdownMenu.Item
+					class="cursor-pointer"
+				>
 					<LogOut class="w-4 h-4" />
 					Log out
 				</DropdownMenu.Item>

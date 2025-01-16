@@ -1,12 +1,11 @@
 <script lang="ts">
-    import { fade } from 'svelte/transition';
+    import PageContent from "$lib/components/page-content.svelte";
 </script>
 
-<div class="flex items-center justify-center h-screen">
+<PageContent>
     <h1 
         class="font-orbitron text-4xl font-bold tracking-wider text-center"
-        in:fade={{ duration: 300 }}
     >
         Welcome to Clairvoyance!
     </h1>
-</div> 
+</PageContent> 
