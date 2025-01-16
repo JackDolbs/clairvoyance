@@ -1,18 +1,8 @@
 <script lang="ts">
-	import SidebarPage from "$lib/components/sidebar-page.svelte";
 	import "../app.css";
-	import { page } from '$app/stores';
 </script>
 
-{#if $page.url.pathname === '/protected'}
-	<slot />
-{:else}
-	<div class="bg-neutral-50">
-		<SidebarPage>
-			<slot />
-		</SidebarPage>
-	</div>
-{/if}
+<slot />
 
 <svelte:head>
 	<meta name="theme-color" content="#171717">
