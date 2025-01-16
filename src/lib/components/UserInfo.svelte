@@ -2,6 +2,8 @@
 	import ChevronsUpDown from "lucide-svelte/icons/chevrons-up-down";
 	import LogOut from "lucide-svelte/icons/log-out";
 	import Settings from "lucide-svelte/icons/settings";
+	import HelpCircle from "lucide-svelte/icons/help-circle";
+	import GitFork from "lucide-svelte/icons/git-fork";
 
 	import * as Avatar from "$lib/components/ui/avatar/index.js";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
@@ -61,10 +63,22 @@
 						</div>
 					</div>
 				</DropdownMenu.Label>
-				<DropdownMenu.Item>
-					<Settings class="w-4 h-4" />
-					Account Settings
-				</DropdownMenu.Item>
+				<DropdownMenu.Separator />
+				<DropdownMenu.Group>
+					<DropdownMenu.Item>
+						<Settings class="w-4 h-4" />
+						My Settings
+					</DropdownMenu.Item>
+					<DropdownMenu.Item>
+						<GitFork class="w-4 h-4" />
+						Roadmap
+					</DropdownMenu.Item>
+					<DropdownMenu.Item>
+						<HelpCircle class="w-4 h-4" />
+						Help
+					</DropdownMenu.Item>
+				</DropdownMenu.Group>
+				<DropdownMenu.Separator />
 				<DropdownMenu.Item>
 					<LogOut class="w-4 h-4" />
 					Log out

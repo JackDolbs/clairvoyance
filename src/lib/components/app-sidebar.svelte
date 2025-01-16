@@ -171,7 +171,7 @@
 	<Sidebar.Footer class="font-grotesk bg-neutral-50">
 		<!-- Secondary Navigation -->
 		<Sidebar.Group>
-			<div class="relative h-[140px]"> <!-- Fixed height container for stack -->
+			<div class="relative h-[120px]"> <!-- Fixed height container for stack -->
 				{#each visibleCards as cardIndex (cardIndex)}
 					{@const item = secondaryItems[cardIndex]}
 					<Card.Root 
@@ -206,5 +206,12 @@
 
 		<!-- User Menu -->
 		<UserInfo {user} />
+
+        <!-- Footer -->
+         <div>
+            <p class="text-center text-[8px] text-neutral-400">
+              &copy; {new Date().getFullYear()} <a class="hover:underline" href="https://www.aurielanalytics.com" target="_blank" rel="noopener noreferrer">Auriel Analytics Ltd.</a> · v{__APP_VERSION__} ({__COMMIT_HASH__})
+            </p>
+         </div>
 	</Sidebar.Footer>
 </Sidebar.Root>
