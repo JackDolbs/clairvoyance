@@ -54,7 +54,8 @@ export default {
       },
       fontFamily: {
         sans: ["var(--font-sans)", ...fontFamily.sans],
-        orbitron: ['Orbitron', 'sans-serif'],
+        orbitron: ['var(--font-orbitron)'],
+        grotesk: ['var(--font-grotesk)'],
       },
     },
   },
