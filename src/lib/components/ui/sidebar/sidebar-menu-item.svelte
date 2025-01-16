@@ -14,7 +14,7 @@
 <h4
 	bind:this={ref}
 	data-sidebar="menu-item"
-	class={cn("group/menu-item relative tracking-wider hover:bg-neutral-100 transition-colors rounded-lg", className)}
+	class={cn("group/menu-item relative tracking-wider hover:bg-accent transition-colors rounded-lg", className)}
 	{...restProps}
 >
 	{@render children?.()}

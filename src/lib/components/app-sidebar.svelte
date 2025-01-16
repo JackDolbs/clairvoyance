@@ -51,7 +51,7 @@
 			]
 		},
         {
-			title: "Query With Chat",
+			title: "Chat Insights",
 			url: "/chat",
 			icon: MessageSquare,
 		},
@@ -115,12 +115,12 @@
 </script>
 
 <Sidebar.Root variant="inset" class="font-grotesk bg-neutral-50">
-	<Sidebar.Header class="bg-neutral-50 border-b">
+	<Sidebar.Header class="bg-neutral-50 border-b py-4">
 		<Sidebar.Menu>
 				<Sidebar.MenuButton size="lg">
 					{#snippet child({ props })}
 						<a href="/" {...props} class="flex items-center gap-2 group mx-1">
-							<Logo size="text-sm" wrapper={false} />
+							<Logo size="text-lg" wrapper={false} />
 						</a>
 					{/snippet}
 				</Sidebar.MenuButton>
@@ -207,7 +207,7 @@
 					<Card.Root 
 						class="hover:bg-gray-100 transition-all absolute w-full
 							{cardIndex === visibleCards[visibleCards.length - 1] ? 'z-20 rotate-0 scale-100' : 
-							cardIndex === visibleCards[visibleCards.length - 2] ? 'z-10 -rotate-2 scale-[0.98] opacity-90' :
+							cardIndex === visibleCards[visibleCards.length - 2] ? 'z-10 -mt-2 -rotate-3 scale-[0.98] opacity-90' :
 							'z-0 -rotate-4 scale-[0.96] opacity-80'}"
 					>
 						<div class="relative">
@@ -240,7 +240,7 @@
         <!-- Footer -->
          <div>
             <p class="text-center text-[8px] text-neutral-400">
-              &copy; {new Date().getFullYear()} <a class="hover:underline" href="https://www.aurielanalytics.com" target="_blank" rel="noopener noreferrer">Auriel Analytics Ltd.</a> · v{__APP_VERSION__} ({__COMMIT_HASH__})
+              &copy; {new Date().getFullYear()} <a class="hover:underline" href="https://auriel.tech/" target="_blank" rel="noopener noreferrer">Auriel Analytics Ltd.</a> · v{__APP_VERSION__} ({__COMMIT_HASH__})
             </p>
          </div>
 	</Sidebar.Footer>
