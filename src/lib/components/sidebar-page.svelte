@@ -24,12 +24,12 @@
 				<Separator orientation="vertical" class="mr-2 h-4" />
 				<Breadcrumb.Root>
 					<Breadcrumb.List>
-						<Breadcrumb.Item>
+						<Breadcrumb.Item class="font-orbitron tracking-wider">
 							<Breadcrumb.Link href="/">Home</Breadcrumb.Link>
 						</Breadcrumb.Item>
 						{#each segments as segment, i}
 							<Breadcrumb.Separator />
-							<Breadcrumb.Item>
+							<Breadcrumb.Item class="font-orbitron tracking-wider">
 								{#if i === segments.length - 1}
 									<Breadcrumb.Page>{segment.label}</Breadcrumb.Page>
 								{:else}

@@ -3,9 +3,9 @@
 </script>
 
 <PageContent>
-    <h1 
-        class="font-orbitron text-4xl font-bold tracking-wider text-center"
-    >
-        Welcome to Clairvoyance!
-    </h1>
+    <div class="flex items-center gap-4 mb-6">
+        <h1 class="font-orbitron text-2xl font-semibold tracking-wide">
+            Welcome to Clairvoyance!
+        </h1>
+    </div>
 </PageContent> 

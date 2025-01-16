@@ -5,7 +5,7 @@
 <PageContent>
     <div class="flex items-center gap-4 mb-6">
         <h1 class="font-orbitron text-2xl font-semibold tracking-wide">
-            Settings
+            Config
         </h1>
     </div>
 </PageContent> 

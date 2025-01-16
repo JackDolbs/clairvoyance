@@ -23,7 +23,7 @@
 
 	const navigationItems = [
 		{
-			title: "Dashboard",
+			title: "Dashboards",
 			icon: LayoutDashboard,
 			items: [
 				{
@@ -32,7 +32,7 @@
 				},
 				{
 					title: "KPIs",
-					url: "/kpis",
+					url: "/KPIs",
 				}
 			]
 		},
@@ -61,7 +61,7 @@
 			icon: Network,
 		},
         {
-			title: "Ontology",
+			title: "Your Ontology",
 			url: "/ontology",
 			icon: BrainCircuit,
 		},
@@ -71,8 +71,8 @@
 			icon: Database,
 		},
         {
-			title: "Settings",
-			url: "/settings",
+			title: "Config",
+			url: "/config",
 			icon: Settings
 		}
 	];
@@ -108,7 +108,7 @@
 	}
 
 	function isItemActive(item: typeof navigationItems[number]) {
-		if (item.title === "Dashboard") return dashboardActive;
+		if (item.title === "Dashboards") return dashboardActive;
 		if (item.title === "Analytics") return analyticsActive;
 		return false;
 	}
@@ -148,7 +148,7 @@
 												{...props} 
 												class="flex items-center gap-2 mx-2 py-1.5 text-sm w-full"
 												on:click={() => {
-													if (item.title === "Dashboard") {
+													if (item.title === "Dashboards") {
 														dashboardActive = !dashboardActive;
 													} else if (item.title === "Analytics") {
 														analyticsActive = !analyticsActive;
