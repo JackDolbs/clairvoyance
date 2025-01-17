@@ -8,54 +8,19 @@
     import { Check, AlertCircle, Upload, XCircle } from "lucide-svelte";
     import { fade } from "svelte/transition";
     import * as Tooltip from "$lib/components/ui/tooltip";
+    import { displayName, orgName } from '$lib/stores/profile';
 
     type StatusMessage = {
         type: 'success' | 'error';
         text: string;
     } | null;
 
-    // User preferences stored in localStorage
-    let displayName = '';
-    let orgName = '';
-    let imageUrl = '';
     let statusMessage: StatusMessage = null;
 
     // Only access localStorage in the browser
     if (browser) {
-        displayName = localStorage.getItem('user_displayName') || '';
-        orgName = localStorage.getItem('user_orgName') || '';
-        imageUrl = localStorage.getItem('user_avatar') || '';
-    }
-
-    async function handleImageUpload(event: Event) {
-        const file = (event.target as HTMLInputElement).files?.[0];
-        if (file) {
-            try {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    if (typeof e.target?.result === 'string') {
-                        imageUrl = e.target.result;
-                        if (browser) {
-                            try {
-                                localStorage.setItem('user_avatar', e.target.result);
-                                showStatus('success', 'Profile picture updated');
-                            } catch (err) {
-                                console.error('Failed to save image:', err);
-                                showStatus('error', 'Failed to save image');
-                            }
-                        }
-                    }
-                };
-                reader.onerror = () => {
-                    console.error('Failed to read file');
-                    showStatus('error', 'Failed to load image');
-                };
-                reader.readAsDataURL(file);
-            } catch (error) {
-                console.error('Upload error:', error);
-                showStatus('error', 'Failed to upload image');
-            }
-        }
+        $displayName = localStorage.getItem('user_displayName') || 'Demo User';
+        $orgName = localStorage.getItem('user_orgName') || 'Demo Company';
     }
 
     function showStatus(type: 'success' | 'error', text: string) {
@@ -65,27 +30,15 @@
 
     function handleSave(event: MouseEvent) {
         event.preventDefault();
-        
         if (!browser) return;
         
         try {
-            localStorage.setItem('user_displayName', displayName);
-            localStorage.setItem('user_orgName', orgName);
-            if (imageUrl) {
-                localStorage.setItem('user_avatar', imageUrl);
-            }
+            localStorage.setItem('user_displayName', $displayName);
+            localStorage.setItem('user_orgName', $orgName);
             showStatus('success', 'Settings saved');
         } catch (err) {
             console.error('Save error:', err);
             showStatus('error', 'Failed to save settings');
-        }
-    }
-
-    function checkStoredImage() {
-        if (browser) {
-            const stored = localStorage.getItem('user_avatar');
-            console.log('Stored image exists:', !!stored);
-            console.log('Current imageUrl:', !!imageUrl);
         }
     }
 </script>
@@ -95,20 +48,6 @@
         <h1 class="font-orbitron text-2xl font-semibold tracking-wide">
             Profile Settings
         </h1>
-        {#if statusMessage}
-            <div class="flex items-center gap-2 text-sm" 
-                class:text-emerald-600={statusMessage.type === 'success'}
-                class:text-red-600={statusMessage.type === 'error'}
-                in:fade
-            >
-                {#if statusMessage.type === 'success'}
-                    <Check class="w-4 h-4" />
-                {:else}
-                    <XCircle class="w-4 h-4" />
-                {/if}
-                <span>{statusMessage.text}</span>
-            </div>
-        {/if}
     </div>
 
     <div class="space-y-8 max-w-2xl">
@@ -129,32 +68,23 @@
                                     <AlertCircle class="w-4 h-4 text-amber-500" />
                                 </Tooltip.Trigger>
                                 <Tooltip.Content>
-                                    <p>Profile picture is stored in your browser's local storage.<br/>
-                                    It won't sync across devices or browsers.</p>
+                                    <p>Profile picture customization coming soon</p>
                                 </Tooltip.Content>
                             </Tooltip.Root>
                         </div>
                         <div class="flex items-center gap-4">
                             <div class="h-20 w-20 rounded-full bg-neutral-100 flex items-center justify-center overflow-hidden border">
-                                {#if imageUrl}
-                                    <img 
-                                        src={imageUrl} 
-                                        alt="Profile" 
-                                        class="h-full w-full object-cover"
-                                    />
-                                {:else}
-                                    <Upload class="h-8 w-8 text-neutral-400" />
-                                {/if}
+                                <Upload class="h-8 w-8 text-neutral-400" />
                             </div>
                             <div class="flex-1 space-y-2">
                                 <Input 
                                     type="file" 
                                     accept="image/*"
-                                    on:change={handleImageUpload}
-                                    class="cursor-pointer h-10 file:h-full file:mr-4 file:px-4 file:rounded-l-md file:border-0 file:text-sm file:font-medium hover:file:bg-accent file:cursor-pointer file:text-foreground file:bg-muted flex items-center"
+                                    disabled
+                                    class="opacity-50 cursor-not-allowed h-10 file:h-full file:mr-4 file:px-4 file:rounded-l-md file:border-0 file:text-sm file:font-medium file:text-foreground file:bg-muted flex items-center"
                                 />
                                 <p class="text-xs text-muted-foreground">
-                                    Upload a profile picture (stored locally in your browser)
+                                    Upload a profile picture (feature coming soon)
                                 </p>
                             </div>
                         </div>
@@ -164,7 +94,7 @@
                         <Label for="displayName">Display Name</Label>
                         <Input 
                             id="displayName"
-                            bind:value={displayName}
+                            bind:value={$displayName}
                             placeholder="Enter your display name"
                         />
                         <p class="text-xs text-neutral-500">Your personal display name within the application</p>
@@ -174,7 +104,7 @@
                         <Label for="orgName">Organization Name</Label>
                         <Input 
                             id="orgName"
-                            bind:value={orgName}
+                            bind:value={$orgName}
                             placeholder="Enter your organization name"
                         />
                         <p class="text-xs text-neutral-500">The name of your organization or instance</p>
@@ -215,16 +145,29 @@
                 </div>
             </Card.Content>
             <Card.Footer>
-                <button 
-                    type="button"
-                    class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-                    on:click={(e) => {
-                        checkStoredImage();
-                        handleSave(e);
-                    }}
-                >
-                    Save Changes
-                </button>
+                <div class="space-y-5">
+                    <button 
+                        type="button"
+                        class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                        on:click={handleSave}
+                    >
+                        Save Changes
+                    </button>
+                    {#if statusMessage}
+                        <div class="flex items-center gap-2 text-sm" 
+                            class:text-emerald-600={statusMessage.type === 'success'}
+                            class:text-red-600={statusMessage.type === 'error'}
+                            in:fade
+                        >
+                            {#if statusMessage.type === 'success'}
+                                <Check class="w-4 h-4" />
+                            {:else}
+                                <XCircle class="w-4 h-4" />
+                            {/if}
+                            <span>{statusMessage.text}</span>
+                        </div>
+                    {/if}
+                </div>
             </Card.Footer>
         </Card.Root>
 
