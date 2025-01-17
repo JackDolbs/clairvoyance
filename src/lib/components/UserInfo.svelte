@@ -20,11 +20,11 @@
 	}
 
 	function handleRoadmapClick() {
-		window.open('https://github.com/huntabyte/clairvoyance/roadmap', '_blank');
+		window.open('https://featurebase.app', '_blank');
 	}
 
 	function handleHelpClick() {
-		window.open('https://docs.clairvoyance.xyz', '_blank');
+		window.open('https://docs.auriel.tech', '_blank');
 	}
 </script>
 
