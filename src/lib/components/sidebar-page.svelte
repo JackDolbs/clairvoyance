@@ -13,6 +13,30 @@
 			label: segment.charAt(0).toUpperCase() + segment.slice(1),
 			href: '/' + segment
 		}));
+
+	// Add tab to breadcrumb if present
+	$: {
+		const tab = $page.url.searchParams.get('tab');
+		const isConfigPage = segments.length > 0 && segments[segments.length - 1].label === 'Config';
+		
+		// If on config page, show either the current tab or "Application" by default
+		if (isConfigPage) {
+			const tabLabels = {
+				instance: "Application",
+				updates: "Updates",
+				chat: "Chat",
+				auth: "Authentication",
+				backup: "Backup"
+			};
+			segments = [
+				...segments,
+				{
+					label: tab ? (tabLabels[tab] || tab.charAt(0).toUpperCase() + tab.slice(1)) : "Application",
+					href: `${segments[segments.length - 1].href}${tab ? `?tab=${tab}` : ''}`
+				}
+			];
+		}
+	}
 </script>
 
 <Sidebar.Provider>

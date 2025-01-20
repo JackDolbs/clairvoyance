@@ -110,39 +110,6 @@
                         <p class="text-xs text-neutral-500">The name of your organization or instance</p>
                     </div>
                 </div>
-                
-                <div class="space-y-2">
-                    <div class="flex items-center gap-2">
-                        <Label>Theme Preference</Label>
-                        <Tooltip.Root>
-                            <Tooltip.Trigger>
-                                <AlertCircle class="w-4 h-4 text-amber-500" />
-                            </Tooltip.Trigger>
-                            <Tooltip.Content>
-                                <p>Theme customization coming soon</p>
-                            </Tooltip.Content>
-                        </Tooltip.Root>
-                    </div>
-                    <div class="grid grid-cols-3 gap-4">
-                        <div 
-                            class="opacity-50 cursor-not-allowed w-full h-10 px-4 py-2 inline-flex items-center justify-center rounded-md border border-input bg-background text-sm font-medium ring-offset-background transition-colors"
-                        >
-                            Light
-                        </div>
-
-                        <div 
-                            class="opacity-50 cursor-not-allowed w-full h-10 px-4 py-2 inline-flex items-center justify-center rounded-md border border-input bg-background text-sm font-medium ring-offset-background transition-colors"
-                        >
-                            Dark
-                        </div>
-
-                        <div 
-                            class="opacity-50 cursor-not-allowed w-full h-10 px-4 py-2 inline-flex items-center justify-center rounded-md border border-input bg-background text-sm font-medium ring-offset-background transition-colors"
-                        >
-                            System
-                        </div>
-                    </div>
-                </div>
             </Card.Content>
             <Card.Footer>
                 <div class="space-y-5">
@@ -241,31 +208,6 @@
                     />
                         <p class="text-xs text-neutral-500">Set up backup methods to regain access to your account</p>
                     </div>
-                </div>
-            </Card.Content>
-        </Card.Root>
-
-        <Card.Root>
-            <Card.Header>
-                <Card.Title>Instance Information</Card.Title>
-                <Card.Description>
-                    Details about your application instance
-                </Card.Description>
-            </Card.Header>
-            <Card.Content>
-                <div class="space-y-1 text-sm">
-                    <p class="flex justify-between">
-                        <span class="text-neutral-500">Version</span>
-                        <span class="font-medium">Pre-alpha</span>
-                    </p>
-                    <p class="flex justify-between">
-                        <span class="text-neutral-500">Auth method</span>
-                        <span class="font-medium">PIN Protected</span>
-                    </p>
-                    <p class="flex justify-between">
-                        <span class="text-neutral-500">Environment</span>
-                        <span class="font-medium">{import.meta.env.MODE}</span>
-                    </p>
                 </div>
             </Card.Content>
         </Card.Root>
