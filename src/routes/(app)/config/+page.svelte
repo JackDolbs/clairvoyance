@@ -11,6 +11,7 @@
     import * as Tabs from "$lib/components/ui/tabs";
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
+    import * as AlertDialog from "$lib/components/ui/alert-dialog";
 
     let showPin = false;
     const pin = import.meta.env.VITE_AUTH_PIN || '0000';
@@ -147,7 +148,54 @@
             <Tabs.Content value="updates" class="space-y-6">
                 <Card.Root>
                     <Card.Header>
-                        <Card.Title>Update Settings</Card.Title>
+                        <Card.Title>Manual Updates</Card.Title>
+                        <Card.Description>
+                            Manually check and apply updates to your instance
+                        </Card.Description>
+                    </Card.Header>
+                    <Card.Content>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-medium">Latest Version</h4>
+                                    <p class="text-sm text-muted-foreground">v1.0.0-alpha.1 is available</p>
+                                </div>
+                                <AlertDialog.Root>
+                                    <AlertDialog.Trigger asChild>
+                                        <Button>Update Now</Button>
+                                    </AlertDialog.Trigger>
+                                    <AlertDialog.Content>
+                                        <AlertDialog.Header>
+                                            <AlertDialog.Title class="font-orbitron">
+                                                Upgrade Confirmation
+                                            </AlertDialog.Title>
+                                            <AlertDialog.Description class="space-y-4 font-grotesk">
+                                                <p>
+                                                    Are you sure you would like to upgrade your instance to v1.0.0-alpha.1?
+                                                </p>
+                                                <p>
+                                                    You can review the changelogs <a href="#" class="text-primary hover:underline">here</a>.
+                                                </p>
+                                                <p class="text-amber-600">
+                                                    If something goes wrong and you cannot upgrade your instance, you can check 
+                                                    <a href="#" class="underline hover:text-amber-700">this guide</a> on what to do.
+                                                </p>
+                                            </AlertDialog.Description>
+                                        </AlertDialog.Header>
+                                        <AlertDialog.Footer>
+                                            <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+                                            <AlertDialog.Action>Continue Update</AlertDialog.Action>
+                                        </AlertDialog.Footer>
+                                    </AlertDialog.Content>
+                                </AlertDialog.Root>
+                            </div>
+                        </div>
+                    </Card.Content>
+                </Card.Root>
+
+                <Card.Root>
+                    <Card.Header>
+                        <Card.Title>Automatic Updates</Card.Title>
                         <Card.Description>
                             Configure instance update preferences
                         </Card.Description>
@@ -216,22 +264,6 @@
                                 class="opacity-50 cursor-not-allowed" 
                             />
                             <p class="text-xs text-muted-foreground">When to apply available updates</p>
-                        </div>
-
-                        <div class="space-y-2 pt-2 border-t">
-                            <div class="flex justify-between text-sm">
-                                <span class="text-muted-foreground">Last checked</span>
-                                <span>Never</span>
-                            </div>
-                            <div class="flex justify-between text-sm">
-                                <span class="text-muted-foreground">Last updated</span>
-                                <span>Never</span>
-                            </div>
-                            <div class="pt-4">
-                                <Button variant="outline" disabled class="w-full">
-                                    Check for Updates
-                                </Button>
-                            </div>
                         </div>
                     </Card.Content>
                 </Card.Root>
