@@ -15,7 +15,7 @@
         if (value.length === 4) {
             const correctPin = import.meta.env.VITE_AUTH_PIN || '0000';
             if (value === correctPin) {
-                const expiryTime = new Date().getTime() + (60 * 60 * 1000);
+                const expiryTime = new Date().getTime() + (8 * 60 * 60 * 1000); // 8 hours
                 localStorage.setItem('authExpiry', expiryTime.toString());
                 showSuccess = true;
                 setTimeout(() => {

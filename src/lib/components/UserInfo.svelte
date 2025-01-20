@@ -26,6 +26,13 @@
 	function handleHelpClick() {
 		window.open('https://docs.auriel.tech', '_blank');
 	}
+
+	function handleLogout() {
+		// Remove auth expiry from localStorage
+		localStorage.removeItem('authExpiry');
+		// Redirect to login page
+		goto('/auth/protected');
+	}
 </script>
 
 <Sidebar.Menu>
@@ -92,10 +99,11 @@
 				</DropdownMenu.Group>
 				<DropdownMenu.Separator />
 				<DropdownMenu.Item
-					class="cursor-pointer"
+					onSelect={handleLogout}
+					class="text-red-600 cursor-pointer"
 				>
-					<LogOut class="w-4 h-4" />
-					Log out
+					<LogOut class="w-4 h-4 mr-2" />
+					<span>Log Out</span>
 				</DropdownMenu.Item>
 			</DropdownMenu.Content>
 		</DropdownMenu.Root>
