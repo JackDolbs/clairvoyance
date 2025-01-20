@@ -171,13 +171,13 @@
                                             </AlertDialog.Title>
                                             <AlertDialog.Description class="space-y-4 font-grotesk">
                                                 <p>
-                                                    Are you sure you would like to upgrade your instance to v1.0.0-alpha.1?
+                                                    Are you sure you would like to upgrade to v1.0.0-alpha.1?
                                                 </p>
                                                 <p>
                                                     You can review the changelogs <a href="#" class="text-primary hover:underline">here</a>.
                                                 </p>
                                                 <p class="text-amber-600">
-                                                    If something goes wrong and you cannot upgrade your instance, you can check 
+                                                    If something goes wrong check 
                                                     <a href="#" class="underline hover:text-amber-700">this guide</a> on what to do.
                                                 </p>
                                             </AlertDialog.Description>

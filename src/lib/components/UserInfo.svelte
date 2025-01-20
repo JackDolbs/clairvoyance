@@ -3,11 +3,13 @@
 	import LogOut from "lucide-svelte/icons/log-out";
 	import Settings from "lucide-svelte/icons/settings";
 	import HelpCircle from "lucide-svelte/icons/help-circle";
+	import HeartHandshake from "lucide-svelte/icons/heart-handshake";
 	import GitFork from "lucide-svelte/icons/git-fork";
 	import { goto } from "$app/navigation";
 	import { browser } from '$app/environment';
 	import { displayName, orgName } from '$lib/stores/profile';
 	import { toast } from "$lib/components/ui/sonner";
+	import { OnboardingModal } from "$lib/components/ui/onboarding";
 
 	import * as Avatar from "$lib/components/ui/avatar/index.js";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
@@ -15,6 +17,8 @@
 	import { useSidebar } from "$lib/components/ui/sidebar/index.js";
 
 	const sidebar = useSidebar();
+
+	let showOnboarding = false;
 
 	function handleProfileClick() {
 		goto('/profile');
@@ -26,6 +30,10 @@
 
 	function handleHelpClick() {
 		window.open('https://docs.auriel.tech', '_blank');
+	}
+
+	function handleOnboardingClick() {
+		showOnboarding = true;
 	}
 
 	async function handleLogout() {
@@ -87,6 +95,13 @@
 						My Profile
 					</DropdownMenu.Item>
 					<DropdownMenu.Item 
+						onSelect={handleOnboardingClick}
+						class="cursor-pointer"
+					>
+						<HeartHandshake class="w-4 h-4" />
+						Onboarding
+					</DropdownMenu.Item>
+					<DropdownMenu.Item 
 						onSelect={handleRoadmapClick}
 						class="cursor-pointer"
 					>
@@ -113,3 +128,5 @@
 		</DropdownMenu.Root>
 	</Sidebar.MenuItem>
 </Sidebar.Menu>
+
+<OnboardingModal bind:open={showOnboarding} />
