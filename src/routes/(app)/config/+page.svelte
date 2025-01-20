@@ -265,6 +265,13 @@
                             />
                             <p class="text-xs text-muted-foreground">When to apply available updates</p>
                         </div>
+
+                        <div class="space-y-2 pt-2 border-t">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-muted-foreground">Last updated</span>
+                                <span>Never</span>
+                            </div>
+                        </div>
                     </Card.Content>
                 </Card.Root>
             </Tabs.Content>
