@@ -3,19 +3,14 @@
     import PageContent from "$lib/components/page-content.svelte";
     import { Label } from "$lib/components/ui/label";
     import { Input } from "$lib/components/ui/input";
-    import { Button } from "$lib/components/ui/button";
+    import { Button } from "$lib/components/ui/button/index.js";
     import * as Card from "$lib/components/ui/card";
     import { Check, AlertCircle, Upload, XCircle } from "lucide-svelte";
-    import { fade } from "svelte/transition";
     import * as Tooltip from "$lib/components/ui/tooltip";
     import { displayName, orgName } from '$lib/stores/profile';
+    import { toast } from "$lib/components/ui/sonner";
 
-    type StatusMessage = {
-        type: 'success' | 'error';
-        text: string;
-    } | null;
-
-    let statusMessage: StatusMessage = null;
+    let saving = false;
 
     // Only access localStorage in the browser
     if (browser) {
@@ -23,22 +18,20 @@
         $orgName = localStorage.getItem('user_orgName') || 'Demo Company';
     }
 
-    function showStatus(type: 'success' | 'error', text: string) {
-        statusMessage = { type, text };
-        setTimeout(() => statusMessage = null, 3000);
-    }
-
-    function handleSave(event: MouseEvent) {
-        event.preventDefault();
+    async function handleSave() {
         if (!browser) return;
+        saving = true;
         
         try {
             localStorage.setItem('user_displayName', $displayName);
             localStorage.setItem('user_orgName', $orgName);
-            showStatus('success', 'Settings saved');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            toast.success("Profile updated successfully");
         } catch (err) {
             console.error('Save error:', err);
-            showStatus('error', 'Failed to save settings');
+            toast.error("Failed to update profile");
+        } finally {
+            saving = false;
         }
     }
 </script>
@@ -111,30 +104,13 @@
                     </div>
                 </div>
             </Card.Content>
-            <Card.Footer>
-                <div class="space-y-5">
-                    <button 
-                        type="button"
-                        class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-                        on:click={handleSave}
-                    >
-                        Save Changes
-                    </button>
-                    {#if statusMessage}
-                        <div class="flex items-center gap-2 text-sm" 
-                            class:text-emerald-600={statusMessage.type === 'success'}
-                            class:text-red-600={statusMessage.type === 'error'}
-                            in:fade
-                        >
-                            {#if statusMessage.type === 'success'}
-                                <Check class="w-4 h-4" />
-                            {:else}
-                                <XCircle class="w-4 h-4" />
-                            {/if}
-                            <span>{statusMessage.text}</span>
-                        </div>
-                    {/if}
-                </div>
+            <Card.Footer class="flex flex-col items-start gap-4">
+                <Button 
+                    disabled={saving}
+                    onclick={handleSave}
+                >
+                    {saving ? 'Saving...' : 'Save Changes'}
+                </Button>
             </Card.Footer>
         </Card.Root>
 

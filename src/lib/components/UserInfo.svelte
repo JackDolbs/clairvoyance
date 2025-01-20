@@ -7,6 +7,7 @@
 	import { goto } from "$app/navigation";
 	import { browser } from '$app/environment';
 	import { displayName, orgName } from '$lib/stores/profile';
+	import { toast } from "$lib/components/ui/sonner";
 
 	import * as Avatar from "$lib/components/ui/avatar/index.js";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
@@ -27,9 +28,12 @@
 		window.open('https://docs.auriel.tech', '_blank');
 	}
 
-	function handleLogout() {
+	async function handleLogout() {
 		// Remove auth expiry from localStorage
 		localStorage.removeItem('authExpiry');
+		toast.info("Logging out...");
+		await new Promise(resolve => setTimeout(resolve, 500));
+		toast.success("Logged out successfully");
 		// Redirect to login page
 		goto('/auth/protected');
 	}
@@ -40,20 +44,20 @@
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger>
 				{#snippet child({ props })}
-					<Sidebar.MenuButton
-						{...props}
-						size="lg"
-						class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-					>
-						<Avatar.Root class="h-8 w-8 rounded-lg">
-							<Avatar.Fallback class="rounded-lg">{$displayName.slice(0, 2).toUpperCase()}</Avatar.Fallback>
-						</Avatar.Root>
-						<div class="grid flex-1 text-left text-sm leading-tight">
-							<span class="truncate font-semibold">{$displayName}</span>
-							<span class="truncate text-xs text-gray-500">{$orgName}</span>
-						</div>
-						<ChevronsUpDown class="ml-auto size-4" />
-					</Sidebar.MenuButton>
+				<Sidebar.MenuButton
+					{...props}
+					size="lg"
+					class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+				>
+					<Avatar.Root class="h-8 w-8 rounded-lg">
+						<Avatar.Fallback class="rounded-lg">{$displayName.slice(0, 2).toUpperCase()}</Avatar.Fallback>
+					</Avatar.Root>
+					<div class="grid flex-1 text-left text-sm leading-tight">
+						<span class="truncate font-semibold">{$displayName}</span>
+						<span class="truncate text-xs text-gray-500">{$orgName}</span>
+					</div>
+					<ChevronsUpDown class="ml-auto size-4" />
+				</Sidebar.MenuButton>
 				{/snippet}
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content

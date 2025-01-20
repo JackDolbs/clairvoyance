@@ -4,29 +4,31 @@
     import * as InputOTP from "$lib/components/ui/input-otp/index.js";
     import Logo from "$lib/components/Logo.svelte";
     import * as Card from "$lib/components/ui/card/index.js";
+    import { toast } from "$lib/components/ui/sonner";
     
     let value = '';
-    let showSuccess = false;
-    let showError = false;
 
     const isUsingDefaultPin = !import.meta.env.VITE_AUTH_PIN;
 
-    $: {
+    $: if (value.length === 4) {
+        handlePinSubmit();
+    }
+
+    async function handlePinSubmit() {
         if (value.length === 4) {
             const correctPin = import.meta.env.VITE_AUTH_PIN || '0000';
             if (value === correctPin) {
-                const expiryTime = new Date().getTime() + (8 * 60 * 60 * 1000); // 8 hours
+                const expiryTime = new Date().getTime() + (8 * 60 * 60 * 1000);
                 localStorage.setItem('authExpiry', expiryTime.toString());
-                showSuccess = true;
+                toast.info("Preparing your workspace...");
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                toast.success("Welcome back!");
                 setTimeout(() => {
                     goto('/');
                 }, 1500);
             } else {
-                showError = true;
+                toast.error("Incorrect PIN, please try again");
                 value = '';
-                setTimeout(() => {
-                    showError = false;
-                }, 2000);
             }
         }
     }
@@ -43,45 +45,31 @@
             </Card.Description>
         </Card.Header>
         <Card.Content>
-            {#if !showSuccess}
-                <div class="grid">
-                    <div class="flex justify-center items-center mb-5" class:shake={showError}>
-                        <InputOTP.Root 
-                            maxlength={4} 
-                            bind:value
-                        >
-                            {#snippet children({ cells })}
-                                <InputOTP.Group>
-                                    {#each cells as cell}
-                                        <InputOTP.Slot {cell} />
-                                    {/each}
-                                </InputOTP.Group>
-                            {/snippet}
-                        </InputOTP.Root>
-                    </div>
-
-                    {#if showError}
-                        <p class="text-sm text-red-500 text-center font-orbitron mb-5" in:fade>Invalid PIN code</p>
-                    {/if}
-
-                    {#if isUsingDefaultPin}
-                        <p class="text-xs text-amber-500 text-center" in:fade>
-                            You are using the default PIN (0000).
-                        </p>
-                        <p class="text-xs text-amber-500 text-center" in:fade>
-                            Configure VITE_AUTH_PIN in your environment for security.
-                        </p>
-                    {/if}
+            <div class="grid">
+                <div class="flex justify-center items-center mb-5">
+                    <InputOTP.Root 
+                        maxlength={4} 
+                        bind:value
+                    >
+                        {#snippet children({ cells })}
+                            <InputOTP.Group>
+                                {#each cells as cell}
+                                    <InputOTP.Slot {cell} />
+                                {/each}
+                            </InputOTP.Group>
+                        {/snippet}
+                    </InputOTP.Root>
                 </div>
-            {:else}
-                <div class="text-center"
-                     in:fly={{ y: 20, duration: 500 }}
-                     out:fade={{ duration: 300 }}>
-                    <p class="text-sm text-center font-orbitron font-semibold text-emerald-500">
-                        Access Granted
+
+                {#if isUsingDefaultPin}
+                    <p class="text-xs text-amber-500 text-center" in:fade>
+                        You are using the default PIN (0000).
                     </p>
-                </div>
-            {/if}
+                    <p class="text-xs text-amber-500 text-center" in:fade>
+                        Configure VITE_AUTH_PIN in your environment for security.
+                    </p>
+                {/if}
+            </div>
         </Card.Content>
     </Card.Root>
 </div>

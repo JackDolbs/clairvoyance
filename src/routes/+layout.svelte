@@ -1,5 +1,6 @@
 <script lang="ts">
 	import "../app.css";
+	import { Toaster } from "$lib/components/ui/sonner";
 </script>
 
 <!-- Desktop View -->
@@ -22,3 +23,7 @@
 	<meta name="theme-color" content="#171717">
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 </svelte:head>
+
+<Toaster 
+	richColors 
+/>
