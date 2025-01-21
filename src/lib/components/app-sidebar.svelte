@@ -17,6 +17,7 @@
 		Share,
 		X
 	} from 'lucide-svelte';
+	import NotificationCards from "$lib/components/notification-cards.svelte";
 
 	let dashboardActive = $state(false);
 	let analyticsActive = $state(false);
@@ -100,12 +101,6 @@
 		email: "demo@auriel.ai",
 		avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=demo"
 	};
-
-	let visibleCards = $state(secondaryItems.map((_, i) => i)); // Track visible cards by index
-
-	function dismissCard(index: number) {
-		visibleCards = visibleCards.filter(i => i !== index);
-	}
 
 	function isItemActive(item: typeof navigationItems[number]) {
 		if (item.title === "Dashboards") return dashboardActive;
@@ -199,43 +194,12 @@
 	</Sidebar.Content>
 
 	<Sidebar.Footer class="font-grotesk bg-neutral-50">
-		<!-- Secondary Navigation -->
+
 		<Sidebar.Group>
-			<div class="relative h-[120px]"> <!-- Fixed height container for stack -->
-				{#each visibleCards as cardIndex (cardIndex)}
-					{@const item = secondaryItems[cardIndex]}
-					<Card.Root 
-						class="hover:bg-gray-100 transition-all absolute w-full
-							{cardIndex === visibleCards[visibleCards.length - 1] ? 'z-20 rotate-0 scale-100' : 
-							cardIndex === visibleCards[visibleCards.length - 2] ? 'z-10 -translate-y-2 scale-[0.98] opacity-90' :
-                            cardIndex === visibleCards[visibleCards.length - 3] ? 'z-10 -translate-y-4 scale-[0.96] opacity-80' :
-							'z-0 -rotate-4 scale-[0.96] opacity-80'}"
-					>
-						<div class="relative">
-							<button
-								class="absolute right-1 top-1 p-2 rounded-full hover:bg-gray-200 transition-colors"
-								on:click|stopPropagation={() => dismissCard(cardIndex)}
-							>
-								<X class="w-4 h-4" />
-								<span class="sr-only">Dismiss</span>
-							</button>
-							<a href={item.url} class="block p-4">
-								<Card.Header class="p-0">
-									<Card.Title class="flex items-center gap-2 text-sm font-medium">
-										{item.title}
-									</Card.Title>
-									<Card.Description class="text-xs mt-1">
-										{item.description}
-									</Card.Description>
-								</Card.Header>
-							</a>
-						</div>
-					</Card.Root>
-				{/each}
-			</div>
+			<NotificationCards items={secondaryItems} />
 		</Sidebar.Group>
 
-		<!-- User Menu -->
+
 		<UserInfo {user} />
 
         <!-- Footer -->
