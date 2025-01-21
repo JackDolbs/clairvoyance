@@ -7,14 +7,12 @@
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
     import { PlusCircle, FileText, Database } from "lucide-svelte";
     import { onMount } from 'svelte';
+    import { chatStore, type ChatMessage, type ChatConversation } from '$lib/stores/chat';
+    import { goto } from '$app/navigation';
 
-    interface ChatMessage {
-        role: 'user' | 'assistant';
-        content: string;
-        timestamp: Date;
-    }
+    let conversations = $state<ChatConversation[]>([]);
+    chatStore.subscribe(value => conversations = value);
 
-    let messages = $state<ChatMessage[]>([]);
     let inputMessage = $state('');
     let chatContainer: HTMLDivElement;
     let showHistory = $state(false);
@@ -61,27 +59,29 @@
     async function handleSubmit() {
         if (!inputMessage.trim()) return;
 
-        messages = [...messages, {
+        // Create new conversation
+        const conversationId = chatStore.addConversation(inputMessage, selectedContexts);
+        
+        // Add initial message
+        const message: ChatMessage = {
             role: 'user',
             content: inputMessage,
             timestamp: new Date()
-        }];
-
-        const userMessage = inputMessage;
-        inputMessage = '';
-
-        messages = [...messages, {
+        };
+        
+        chatStore.addMessage(conversationId, message);
+        
+        // Add assistant response
+        const assistantMessage: ChatMessage = {
             role: 'assistant',
             content: 'This is a placeholder response. API integration coming soon!',
             timestamp: new Date()
-        }];
-
-        setTimeout(() => {
-            chatContainer?.scrollTo({
-                top: chatContainer.scrollHeight,
-                behavior: 'smooth'
-            });
-        }, 100);
+        };
+        
+        chatStore.addMessage(conversationId, assistantMessage);
+        
+        // Navigate to the new conversation
+        goto(`/chat/conversation/${conversationId}`);
     }
 </script>
 
@@ -106,12 +106,12 @@
             class="absolute inset-0 overflow-y-auto pr-4"
             bind:this={chatContainer}
         >
-            {#if messages.length > 0}
+            {#if conversations.length > 0}
                 <div class="space-y-8 pb-32">
-                    {#each messages as message}
-                        <div class="flex gap-4 {message.role === 'assistant' ? 'bg-muted/30 p-6 rounded-2xl' : ''}">
-                            <div class="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br {message.role === 'assistant' ? 'from-primary/20 to-primary/30' : 'from-neutral-200 to-neutral-300'} flex items-center justify-center shadow-sm">
-                                {#if message.role === 'assistant'}
+                    {#each conversations as conversation}
+                        <div class="flex gap-4 {conversation.messages[conversation.messages.length - 1]?.role === 'assistant' ? 'bg-muted/30 p-6 rounded-2xl' : ''}">
+                            <div class="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br {conversation.messages[conversation.messages.length - 1]?.role === 'assistant' ? 'from-primary/20 to-primary/30' : 'from-neutral-200 to-neutral-300'} flex items-center justify-center shadow-sm">
+                                {#if conversation.messages[conversation.messages.length - 1]?.role === 'assistant'}
                                     <span class="text-sm font-semibold text-primary/70">AI</span>
                                 {:else}
                                     <span class="text-sm font-semibold text-neutral-600">You</span>
@@ -120,14 +120,14 @@
                             <div class="flex-1 space-y-2">
                                 <div class="flex items-center gap-2">
                                     <span class="font-medium text-neutral-900">
-                                        {message.role === 'assistant' ? 'Assistant' : 'You'}
+                                        {conversation.messages[conversation.messages.length - 1]?.role === 'assistant' ? 'Assistant' : 'You'}
                                     </span>
                                     <span class="text-xs text-muted-foreground font-medium">
-                                        {formatTime(message.timestamp)}
+                                        {formatTime(conversation.messages[conversation.messages.length - 1]?.timestamp || new Date())}
                                     </span>
                                 </div>
                                 <p class="text-sm leading-relaxed text-neutral-700">
-                                    {message.content}
+                                    {conversation.messages[conversation.messages.length - 1]?.content || 'Empty conversation'}
                                 </p>
                             </div>
                         </div>
@@ -348,10 +348,33 @@
         </Sheet.Header>
         
         <div class="py-6">
-            <!-- Placeholder for chat history items -->
-            <div class="text-sm text-muted-foreground text-center">
-                No previous chats yet
-            </div>
+            {#if conversations.length === 0}
+                <div class="text-sm text-muted-foreground text-center">
+                    No previous chats yet
+                </div>
+            {:else}
+                <div class="space-y-2">
+                    {#each conversations as conversation}
+                        <button
+                            class="w-full px-4 py-3 hover:bg-muted/50 rounded-lg transition-colors text-left group"
+                            onclick={() => {
+                                showHistory = false;
+                                goto(`/chat/conversation/${conversation.id}`);
+                            }}
+                        >
+                            <div class="flex items-center justify-between">
+                                <span class="font-medium text-sm">{conversation.title}</span>
+                                <span class="text-xs text-muted-foreground">
+                                    {formatTime(conversation.lastUpdated)}
+                                </span>
+                            </div>
+                            <p class="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                {conversation.messages[conversation.messages.length - 1]?.content || 'Empty conversation'}
+                            </p>
+                        </button>
+                    {/each}
+                </div>
+            {/if}
         </div>
     </Sheet.Content>
 </Sheet.Root> 
