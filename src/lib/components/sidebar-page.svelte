@@ -4,6 +4,7 @@
 	import { Separator } from "$lib/components/ui/separator/index.js";
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
 	import { page } from "$app/stores";
+	import { ChevronRight } from "lucide-svelte";
 
 	// Get the current route segments
 	$: segments = $page.url.pathname
@@ -11,7 +12,7 @@
 		.filter(Boolean)
 		.map(segment => ({
 			label: segment.charAt(0).toUpperCase() + segment.slice(1),
-			href: '/' + segment
+			href: segment === 'conversation' ? '/chat/conversation' : '/' + segment
 		}));
 
 	// Add tab to breadcrumb if present
@@ -19,7 +20,6 @@
 		const tab = $page.url.searchParams.get('tab');
 		const isConfigPage = segments.length > 0 && segments[segments.length - 1].label === 'Config';
 		
-		// If on config page, show either the current tab or "Application" by default
 		if (isConfigPage) {
 			const tabLabels = {
 				instance: "Application",

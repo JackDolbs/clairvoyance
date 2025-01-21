@@ -3,13 +3,16 @@
     import { goto } from '$app/navigation';
     import { chatStore, type ChatMessage, type ChatConversation } from '$lib/stores/chat';
     import PageContent from "$lib/components/page-content.svelte";
-    import { Button } from "$lib/components/ui/button";
+    import { Button } from "$lib/components/ui/button/index.js";
     import { Textarea } from "$lib/components/ui/textarea";
-    import { SendHorizontal, History, Search } from "lucide-svelte";
+    import { SendHorizontal, History, Search, ArrowLeft } from "lucide-svelte";
     import * as Sheet from "$lib/components/ui/sheet";
-    import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+    import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
     import { PlusCircle, FileText, Database } from "lucide-svelte";
     import { onMount } from 'svelte';
+    import * as Avatar from "$lib/components/ui/avatar";
+    import { displayName } from '$lib/stores/profile';
+    import ChatHistorySheet from "$lib/components/chat-history-sheet.svelte";
 
     // Placeholder data - replace with actual data from ontology
     const availableContexts = [
@@ -27,6 +30,11 @@
     let selectedContexts = $state(conversation.contexts);
     let chatContainer: HTMLDivElement;
     let textareaElement: HTMLTextAreaElement;
+    let showHistory = $state(false);
+    let conversations = $state<ChatConversation[]>([]);
+    chatStore.subscribe(value => conversations = value);
+    let contextSearch = $state('');
+    let activeTab = $state('available');
 
     function formatTime(date: Date) {
         return new Intl.DateTimeFormat('en-US', {
@@ -85,51 +93,101 @@
     });
 </script>
 
+<style>
+    /* Custom Scrollbar */
+    .chat-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: hsl(var(--muted)) transparent;
+    }
+
+    .chat-scroll::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .chat-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .chat-scroll::-webkit-scrollbar-thumb {
+        background-color: hsl(var(--muted) / 0.2);
+        border-radius: 20px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+    }
+
+    .chat-scroll::-webkit-scrollbar-thumb:hover {
+        background-color: hsl(var(--muted) / 0.3);
+    }
+</style>
+
 <div class="flex flex-col h-full">
     <!-- Chat Header -->
-    <header class="flex-none pb-6 flex items-center justify-end px-10">
+    <header class="flex-none pb-6 flex items-center justify-between px-10">
         <Button 
             variant="ghost" 
             size="sm"
             class="hover:bg-primary/5 gap-2"
             onclick={() => goto('/chat')}
         >
-            <History class="w-4 h-4 text-muted-foreground" />
-            Back to Chat
+            <ArrowLeft class="w-4 h-4 text-muted-foreground" />
             <span class="sr-only">Back to Chat</span>
+        </Button>
+
+        <Button 
+            variant="ghost" 
+            size="sm"
+            class="hover:bg-primary/5 gap-2"
+            onclick={() => showHistory = true}
+        >
+            <History class="w-4 h-4 text-muted-foreground" />
+            History
+            <span class="sr-only">View Chat History</span>
         </Button>
     </header>
 
     <!-- Chat Content -->
     <main class="flex-1 min-h-0 relative">
         <div 
-            class="absolute inset-0 overflow-y-auto pr-4"
+            class="absolute inset-0 overflow-y-auto px-10 chat-scroll"
             bind:this={chatContainer}
         >
-            <div class="space-y-8 pb-32">
+            <div class="max-w-3xl mx-auto space-y-6 pb-32">
                 {#each messages as message}
-                    <div class="flex gap-4 {message.role === 'assistant' ? 'bg-muted/30 p-6 rounded-2xl' : ''}">
-                        <div class="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br {message.role === 'assistant' ? 'from-primary/20 to-primary/30' : 'from-neutral-200 to-neutral-300'} flex items-center justify-center shadow-sm">
-                            {#if message.role === 'assistant'}
-                                <span class="text-sm font-semibold text-primary/70">AI</span>
-                            {:else}
-                                <span class="text-sm font-semibold text-neutral-600">You</span>
-                            {/if}
-                        </div>
-                        <div class="flex-1 space-y-2">
-                            <div class="flex items-center gap-2">
-                                <span class="font-medium text-neutral-900">
-                                    {message.role === 'assistant' ? 'Assistant' : 'You'}
-                                </span>
-                                <span class="text-xs text-muted-foreground font-medium">
-                                    {formatTime(message.timestamp)}
+                    {#if message.role === 'user'}
+                        <div class="flex gap-6">
+                            <Avatar.Root class="h-12 w-12 shrink-0 rounded-lg">
+                                <Avatar.Fallback class="rounded-lg font-orbitron">
+                                    {$displayName.slice(0, 2).toUpperCase()}
+                                </Avatar.Fallback>
+                            </Avatar.Root>
+                            <div class="flex-1 space-y-1">
+                                <p class="text-lg font-medium leading-relaxed text-neutral-900">
+                                    {message.content}
+                                </p>
+                                <span class="text-xs text-muted-foreground">
+                                    {message.timestamp.toLocaleDateString('en-US', { 
+                                        month: '2-digit', 
+                                        day: '2-digit', 
+                                        year: 'numeric'
+                                    })} at {formatTime(message.timestamp)}
                                 </span>
                             </div>
-                            <p class="text-sm leading-relaxed text-neutral-700">
-                                {message.content}
-                            </p>
                         </div>
-                    </div>
+                    {:else}
+                        <div class="pl-18 space-y-3">
+                            <div class="bg-muted/30 p-6 rounded-2xl">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-sm font-semibold text-primary/70">Clairvoyance</span>
+                                    <span class="text-xs text-muted-foreground">
+                                        {formatTime(message.timestamp)}
+                                    </span>
+                                </div>
+                                <p class="text-sm leading-relaxed text-neutral-600">
+                                    {message.content}
+                                </p>
+                            </div>
+                        </div>
+                    {/if}
                 {/each}
             </div>
         </div>
@@ -165,6 +223,105 @@
                         handleSubmit();
                     }}
                 >
+                    <DropdownMenu.Root>
+                        <DropdownMenu.Trigger>
+                            <Button 
+                                variant="ghost" 
+                                size="icon"
+                                class="shrink-0 my-auto hover:bg-primary/5"
+                            >
+                                <PlusCircle class="w-5 h-5 text-muted-foreground" />
+                                <span class="sr-only">Add Context</span>
+                            </Button>
+                        </DropdownMenu.Trigger>
+                        <DropdownMenu.Content class="w-64">
+                            <!-- Search Bar -->
+                            <div class="p-1.5 border-b">
+                                <div class="flex items-center px-2 py-1 rounded-md border bg-muted/50">
+                                    <Search class="w-3 h-3 text-muted-foreground mr-1.5" />
+                                    <input 
+                                        type="text" 
+                                        placeholder="Search contexts..." 
+                                        class="flex-1 bg-transparent focus:outline-none text-xs"
+                                        bind:value={contextSearch}
+                                    />
+                                </div>
+                            </div>
+
+                            <!-- Tabs -->
+                            <div class="border-b">
+                                <div class="flex">
+                                    <button 
+                                        class="flex-1 px-2 py-1.5 text-xs font-medium border-b-2 transition-colors {activeTab === 'added' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}"
+                                        onclick={() => activeTab = 'added'}
+                                    >
+                                        Added
+                                    </button>
+                                    <button 
+                                        class="flex-1 px-2 py-1.5 text-xs font-medium border-b-2 transition-colors {activeTab === 'available' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}"
+                                        onclick={() => activeTab = 'available'}
+                                    >
+                                        Available
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Content -->
+                            <div class="py-1 max-h-[250px] overflow-y-auto">
+                                {#if activeTab === 'added'}
+                                    {#if selectedContexts.length === 0}
+                                        <div class="px-2 py-3 text-xs text-center text-muted-foreground">
+                                            No contexts added yet
+                                        </div>
+                                    {:else}
+                                        {#each selectedContexts as contextId}
+                                            {@const context = availableContexts.find(c => c.id === contextId)}
+                                            {#if context && (!contextSearch || context.name.toLowerCase().includes(contextSearch.toLowerCase()))}
+                                                <DropdownMenu.CheckboxItem
+                                                    checked={true}
+                                                    onCheckedChange={() => {
+                                                        selectedContexts = selectedContexts.filter(id => id !== context.id);
+                                                    }}
+                                                    class="text-xs py-1.5"
+                                                >
+                                                    <div class="flex items-center">
+                                                        {#if context.type === 'database'}
+                                                            <Database class="w-3 h-3" />
+                                                        {:else}
+                                                            <FileText class="w-3 h-3" />
+                                                        {/if}
+                                                        {context.name}
+                                                    </div>
+                                                </DropdownMenu.CheckboxItem>
+                                            {/if}
+                                        {/each}
+                                    {/if}
+                                {:else}
+                                    {#each availableContexts.filter(c => !selectedContexts.includes(c.id)) as context}
+                                        {#if !contextSearch || context.name.toLowerCase().includes(contextSearch.toLowerCase())}
+                                            <DropdownMenu.CheckboxItem
+                                                checked={false}
+                                                onCheckedChange={() => {
+                                                    selectedContexts = [...selectedContexts, context.id];
+                                                }}
+                                                class="text-xs py-1.5"
+                                            >
+                                                <div class="flex items-center gap-1.5">
+                                                    {#if context.type === 'database'}
+                                                        <Database class="w-3 h-3" />
+                                                    {:else}
+                                                        <FileText class="w-3 h-3" />
+                                                    {/if}
+                                                    {context.name}
+                                                </div>
+                                            </DropdownMenu.CheckboxItem>
+                                        {/if}
+                                    {/each}
+                                {/if}
+                            </div>
+                        </DropdownMenu.Content>
+                    </DropdownMenu.Root>
+
                     <div class="flex-1">
                         <textarea
                             placeholder="Ask Clairvoyance a question..."
@@ -212,4 +369,8 @@
             </div>
         </div>
     </footer>
-</div> 
+</div>
+
+<Sheet.Root bind:open={showHistory}>
+    <ChatHistorySheet />
+</Sheet.Root> 

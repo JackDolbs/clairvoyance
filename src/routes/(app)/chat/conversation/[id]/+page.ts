@@ -2,7 +2,7 @@ import type { PageLoad } from './$types';
 import { chatStore } from '$lib/stores/chat';
 import { error } from '@sveltejs/kit';
 
-export const load: PageLoad = ({ params }) => {
+export const load = (({ params }) => {
     const conversation = chatStore.getConversation(params.id);
     
     if (!conversation) {
@@ -10,6 +10,7 @@ export const load: PageLoad = ({ params }) => {
     }
 
     return {
-        conversation
+        conversation,
+        breadcrumb: 'Conversation'
     };
-}; 
+}) satisfies PageLoad; 

@@ -9,6 +9,7 @@
     import { onMount } from 'svelte';
     import { chatStore, type ChatMessage, type ChatConversation } from '$lib/stores/chat';
     import { goto } from '$app/navigation';
+    import ChatHistorySheet from "$lib/components/chat-history-sheet.svelte";
 
     let conversations = $state<ChatConversation[]>([]);
     chatStore.subscribe(value => conversations = value);
@@ -335,46 +336,8 @@
             </div>
         </div>
     </footer>
-</div>
+    </div>
 
-<!-- Chat History Sheet -->
 <Sheet.Root bind:open={showHistory}>
-    <Sheet.Content side="right" class="w-[600px] sm:w-[540px] md:w-[600px] lg:w-[700px]">
-        <Sheet.Header>
-            <Sheet.Title>Chat History</Sheet.Title>
-            <Sheet.Description>
-                View and continue your previous conversations
-            </Sheet.Description>
-        </Sheet.Header>
-        
-        <div class="py-6">
-            {#if conversations.length === 0}
-                <div class="text-sm text-muted-foreground text-center">
-                    No previous chats yet
-                </div>
-            {:else}
-                <div class="space-y-2">
-                    {#each conversations as conversation}
-                        <button
-                            class="w-full px-4 py-3 hover:bg-muted/50 rounded-lg transition-colors text-left group"
-                            onclick={() => {
-                                showHistory = false;
-                                goto(`/chat/conversation/${conversation.id}`);
-                            }}
-                        >
-                            <div class="flex items-center justify-between">
-                                <span class="font-medium text-sm">{conversation.title}</span>
-                                <span class="text-xs text-muted-foreground">
-                                    {formatTime(conversation.lastUpdated)}
-                                </span>
-                            </div>
-                            <p class="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                {conversation.messages[conversation.messages.length - 1]?.content || 'Empty conversation'}
-                            </p>
-                        </button>
-                    {/each}
-                </div>
-            {/if}
-        </div>
-    </Sheet.Content>
+    <ChatHistorySheet />
 </Sheet.Root> 
