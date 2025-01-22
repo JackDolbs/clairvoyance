@@ -1,13 +1,8 @@
 <script lang="ts">
-	import ChevronsUpDown from "lucide-svelte/icons/chevrons-up-down";
-	import LogOut from "lucide-svelte/icons/log-out";
-	import Settings from "lucide-svelte/icons/settings";
-	import HelpCircle from "lucide-svelte/icons/help-circle";
-	import HeartHandshake from "lucide-svelte/icons/heart-handshake";
-	import GitFork from "lucide-svelte/icons/git-fork";
+	import { ChevronsUpDown, LogOut, Settings, HelpCircle, HeartHandshake, GitFork } from "lucide-svelte";
 	import { goto } from "$app/navigation";
 	import { browser } from '$app/environment';
-	import { displayName, orgName } from '$lib/stores/profile';
+	import { firstName, lastName, orgName, getFullName, getInitials } from '$lib/stores/profile';
 	import { toast } from "$lib/components/ui/sonner";
 	import { OnboardingModal } from "$lib/components/ui/onboarding";
 
@@ -19,6 +14,16 @@
 	const sidebar = useSidebar();
 
 	let showOnboarding = false;
+
+	// Initialize from localStorage
+	if (browser) {
+		$firstName = localStorage.getItem('user_firstName') || '';
+		$lastName = localStorage.getItem('user_lastName') || '';
+		$orgName = localStorage.getItem('user_orgName') || 'Demo Company';
+	}
+
+	$: fullName = getFullName($firstName, $lastName);
+	$: initials = getInitials($firstName, $lastName);
 
 	function handleProfileClick() {
 		goto('/profile');
@@ -58,10 +63,10 @@
 					class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
 				>
 					<Avatar.Root class="h-8 w-8 rounded-lg">
-						<Avatar.Fallback class="rounded-lg">{$displayName.slice(0, 2).toUpperCase()}</Avatar.Fallback>
+						<Avatar.Fallback class="rounded-lg">{initials}</Avatar.Fallback>
 					</Avatar.Root>
 					<div class="grid flex-1 text-left text-sm leading-tight">
-						<span class="truncate font-semibold">{$displayName}</span>
+						<span class="truncate font-semibold">{fullName}</span>
 						<span class="truncate text-xs text-gray-500">{$orgName}</span>
 					</div>
 					<ChevronsUpDown class="ml-auto size-4" />
@@ -77,10 +82,10 @@
 				<DropdownMenu.Label class="p-0 font-normal">
 					<div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
 						<Avatar.Root class="h-8 w-8 rounded-lg">
-							<Avatar.Fallback class="rounded-lg">{$displayName.slice(0, 2).toUpperCase()}</Avatar.Fallback>
+							<Avatar.Fallback class="rounded-lg">{initials}</Avatar.Fallback>
 						</Avatar.Root>
 						<div class="grid flex-1 text-left text-sm leading-tight">
-							<span class="truncate font-semibold">{$displayName}</span>
+							<span class="truncate font-semibold">{fullName}</span>
 							<span class="truncate text-xs text-gray-500">{$orgName}</span>
 						</div>
 					</div>

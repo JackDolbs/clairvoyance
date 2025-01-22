@@ -8,7 +8,7 @@
     import * as Tabs from "$lib/components/ui/tabs";
     import { Check, AlertCircle, Upload, XCircle } from "lucide-svelte";
     import * as Tooltip from "$lib/components/ui/tooltip";
-    import { displayName, orgName } from '$lib/stores/profile';
+    import { orgName, firstName, lastName } from '$lib/stores/profile';
     import { toast } from "$lib/components/ui/sonner";
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
@@ -32,8 +32,9 @@
 
     // Only access localStorage in the browser
     if (browser) {
-        $displayName = localStorage.getItem('user_displayName') || 'Demo User';
         $orgName = localStorage.getItem('user_orgName') || 'Demo Company';
+        $firstName = localStorage.getItem('user_firstName') || '';
+        $lastName = localStorage.getItem('user_lastName') || '';
     }
 
     async function handleSave() {
@@ -41,7 +42,8 @@
         saving = true;
         
         try {
-            localStorage.setItem('user_displayName', $displayName);
+            localStorage.setItem('user_firstName', $firstName);
+            localStorage.setItem('user_lastName', $lastName);
             localStorage.setItem('user_orgName', $orgName);
             await new Promise(resolve => setTimeout(resolve, 500));
             toast.success("Profile updated successfully");
@@ -114,13 +116,23 @@
 
                         <!-- Display Name Section -->
                         <div class="space-y-2">
-                            <Label for="displayName">Display Name</Label>
+                            <Label for="firstName">First Name</Label>
                             <Input 
-                                id="displayName"
-                                bind:value={$displayName}
-                                placeholder="Enter your display name"
+                                id="firstName"
+                                bind:value={$firstName}
+                                placeholder="Enter your first name"
                             />
-                            <p class="text-xs text-neutral-500">Your personal display name within the application</p>
+                            <p class="text-xs text-neutral-500">Your first name</p>
+                        </div>
+
+                        <div class="space-y-2">
+                            <Label for="lastName">Last Name</Label>
+                            <Input 
+                                id="lastName"
+                                bind:value={$lastName}
+                                placeholder="Enter your last name"
+                            />
+                            <p class="text-xs text-neutral-500">Your last name (optional)</p>
                         </div>
 
                         <!-- Organization Name Section -->
