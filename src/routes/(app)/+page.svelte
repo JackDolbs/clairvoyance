@@ -56,11 +56,11 @@
             month: 'long', 
             day: 'numeric' 
         });
-        currentTime = now.toLocaleTimeString('en-US', { 
-            hour: 'numeric', 
-            minute: '2-digit',
-            hour12: true 
-        });
+        
+        // 24-hour time format (HHMM)
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        currentTime = `${hours}:${minutes}`;
     }
 
     onMount(() => {
