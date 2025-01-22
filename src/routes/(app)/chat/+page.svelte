@@ -6,10 +6,11 @@
     import ChatHistorySheet from "$lib/components/chat-history-sheet.svelte";
     import ChatInput from "$lib/components/chat-input.svelte";
     import { Button } from "$lib/components/ui/button";
+    import ModelSelector from "$lib/components/chat/model-selector.svelte";
 
     let showHistory = $state(false);
     let selectedContexts = $state<string[]>([]);
-
+    
     async function handleSubmit(message: string) {
         // Create new conversation
         const conversationId = chatStore.addConversation(message, selectedContexts);
@@ -39,7 +40,9 @@
 
 <div class="flex flex-col h-full">
     <!-- Chat Header -->
-    <header class="flex-none pb-6 flex items-center justify-end px-10">
+    <header class="flex-none pb-6 flex items-center justify-between px-10">
+        <ModelSelector />
+
         <Button 
             variant="ghost" 
             size="sm"
@@ -48,7 +51,6 @@
         >
             <History class="w-4 h-4 text-muted-foreground" />
             History
-            <span class="sr-only">Chat History</span>
         </Button>
     </header>
 
