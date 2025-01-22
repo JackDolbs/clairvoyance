@@ -13,6 +13,7 @@
     import * as Avatar from "$lib/components/ui/avatar";
     import { displayName } from '$lib/stores/profile';
     import ChatHistorySheet from "$lib/components/chat-history-sheet.svelte";
+    import ChatInput from "$lib/components/chat-input.svelte";
 
     // Placeholder data - replace with actual data from ontology
     const availableContexts = [
@@ -53,17 +54,15 @@
         textareaElement.style.overflowY = height === 200 ? 'auto' : 'hidden';
     }
 
-    async function handleSubmit() {
-        if (!inputMessage.trim()) return;
-
-        const message: ChatMessage = {
+    async function handleSubmit(message: string) {
+        const chatMessage: ChatMessage = {
             role: 'user',
-            content: inputMessage,
+            content: message,
             timestamp: new Date()
         };
 
-        chatStore.addMessage($page.params.id, message);
-        messages = [...messages, message];
+        chatStore.addMessage($page.params.id, chatMessage);
+        messages = [...messages, chatMessage];
         
         // Add assistant response
         const assistantMessage: ChatMessage = {
@@ -74,8 +73,6 @@
         
         chatStore.addMessage($page.params.id, assistantMessage);
         messages = [...messages, assistantMessage];
-        
-        inputMessage = '';
         
         // Scroll to bottom
         setTimeout(() => {
@@ -92,33 +89,6 @@
         }
     });
 </script>
-
-<style>
-    /* Custom Scrollbar */
-    .chat-scroll {
-        scrollbar-width: thin;
-        scrollbar-color: hsl(var(--muted)) transparent;
-    }
-
-    .chat-scroll::-webkit-scrollbar {
-        width: 8px;
-    }
-
-    .chat-scroll::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .chat-scroll::-webkit-scrollbar-thumb {
-        background-color: hsl(var(--muted) / 0.2);
-        border-radius: 20px;
-        border: 2px solid transparent;
-        background-clip: content-box;
-    }
-
-    .chat-scroll::-webkit-scrollbar-thumb:hover {
-        background-color: hsl(var(--muted) / 0.3);
-    }
-</style>
 
 <div class="flex flex-col h-full">
     <!-- Chat Header -->
@@ -151,7 +121,7 @@
             class="absolute inset-0 overflow-y-auto px-10 chat-scroll"
             bind:this={chatContainer}
         >
-            <div class="max-w-3xl mx-auto space-y-6 pb-32">
+            <div class="max-w-4xl mx-auto space-y-5 pb-32">
                 {#each messages as message}
                     {#if message.role === 'user'}
                         <div class="flex gap-6">
@@ -177,10 +147,7 @@
                         <div class="pl-18 space-y-3">
                             <div class="bg-muted/30 p-6 rounded-2xl">
                                 <div class="flex items-center gap-2 mb-2">
-                                    <span class="text-sm font-semibold text-primary/70">Clairvoyance</span>
-                                    <span class="text-xs text-muted-foreground">
-                                        {formatTime(message.timestamp)}
-                                    </span>
+                                    <span class="text-xs font-semibold text-primary/50">Clairvoyance's Response</span>
                                 </div>
                                 <p class="text-sm leading-relaxed text-neutral-600">
                                     {message.content}
@@ -195,182 +162,41 @@
 
     <!-- Chat Footer -->
     <footer class="flex-none py-5 w-full">
-        <div class="max-w-3xl mx-auto px-4">
-            <div class="rounded-2xl border shadow-lg bg-background/80 backdrop-blur-sm">
-                <!-- Add Contexts -->
-                {#if selectedContexts.length > 0}
-                    <div class="px-4 pt-3 flex gap-2 flex-wrap">
-                        {#each selectedContexts as contextId}
-                            {@const context = availableContexts.find(c => c.id === contextId)}
-                            {#if context}
-                                <div class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full flex items-center gap-1">
-                                    {#if context.type === 'database'}
-                                        <Database class="w-3 h-3" />
-                                    {:else}
-                                        <FileText class="w-3 h-3" />
-                                    {/if}
-                                    {context.name}
-                                </div>
-                            {/if}
-                        {/each}
-                    </div>
-                {/if}
-
-                <form 
-                    class="flex gap-5 p-4" 
-                    onsubmit={(e) => {
-                        e.preventDefault();
-                        handleSubmit();
-                    }}
-                >
-                    <DropdownMenu.Root>
-                        <DropdownMenu.Trigger>
-                            <Button 
-                                variant="ghost" 
-                                size="icon"
-                                class="shrink-0 my-auto hover:bg-primary/5"
-                            >
-                                <PlusCircle class="w-5 h-5 text-muted-foreground" />
-                                <span class="sr-only">Add Context</span>
-                            </Button>
-                        </DropdownMenu.Trigger>
-                        <DropdownMenu.Content class="w-64">
-                            <!-- Search Bar -->
-                            <div class="p-1.5 border-b">
-                                <div class="flex items-center px-2 py-1 rounded-md border bg-muted/50">
-                                    <Search class="w-3 h-3 text-muted-foreground mr-1.5" />
-                                    <input 
-                                        type="text" 
-                                        placeholder="Search contexts..." 
-                                        class="flex-1 bg-transparent focus:outline-none text-xs"
-                                        bind:value={contextSearch}
-                                    />
-                                </div>
-                            </div>
-
-                            <!-- Tabs -->
-                            <div class="border-b">
-                                <div class="flex">
-                                    <button 
-                                        class="flex-1 px-2 py-1.5 text-xs font-medium border-b-2 transition-colors {activeTab === 'added' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}"
-                                        onclick={() => activeTab = 'added'}
-                                    >
-                                        Added
-                                    </button>
-                                    <button 
-                                        class="flex-1 px-2 py-1.5 text-xs font-medium border-b-2 transition-colors {activeTab === 'available' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}"
-                                        onclick={() => activeTab = 'available'}
-                                    >
-                                        Available
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Content -->
-                            <div class="py-1 max-h-[250px] overflow-y-auto">
-                                {#if activeTab === 'added'}
-                                    {#if selectedContexts.length === 0}
-                                        <div class="px-2 py-3 text-xs text-center text-muted-foreground">
-                                            No contexts added yet
-                                        </div>
-                                    {:else}
-                                        {#each selectedContexts as contextId}
-                                            {@const context = availableContexts.find(c => c.id === contextId)}
-                                            {#if context && (!contextSearch || context.name.toLowerCase().includes(contextSearch.toLowerCase()))}
-                                                <DropdownMenu.CheckboxItem
-                                                    checked={true}
-                                                    onCheckedChange={() => {
-                                                        selectedContexts = selectedContexts.filter(id => id !== context.id);
-                                                    }}
-                                                    class="text-xs py-1.5"
-                                                >
-                                                    <div class="flex items-center">
-                                                        {#if context.type === 'database'}
-                                                            <Database class="w-3 h-3" />
-                                                        {:else}
-                                                            <FileText class="w-3 h-3" />
-                                                        {/if}
-                                                        {context.name}
-                                                    </div>
-                                                </DropdownMenu.CheckboxItem>
-                                            {/if}
-                                        {/each}
-                                    {/if}
-                                {:else}
-                                    {#each availableContexts.filter(c => !selectedContexts.includes(c.id)) as context}
-                                        {#if !contextSearch || context.name.toLowerCase().includes(contextSearch.toLowerCase())}
-                                            <DropdownMenu.CheckboxItem
-                                                checked={false}
-                                                onCheckedChange={() => {
-                                                    selectedContexts = [...selectedContexts, context.id];
-                                                }}
-                                                class="text-xs py-1.5"
-                                            >
-                                                <div class="flex items-center gap-1.5">
-                                                    {#if context.type === 'database'}
-                                                        <Database class="w-3 h-3" />
-                                                    {:else}
-                                                        <FileText class="w-3 h-3" />
-                                                    {/if}
-                                                    {context.name}
-                                                </div>
-                                            </DropdownMenu.CheckboxItem>
-                                        {/if}
-                                    {/each}
-                                {/if}
-                            </div>
-                        </DropdownMenu.Content>
-                    </DropdownMenu.Root>
-
-                    <div class="flex-1">
-                        <textarea
-                            placeholder="Ask Clairvoyance a question..."
-                            bind:value={inputMessage}
-                            bind:this={textareaElement}
-                            class="w-full resize-none border rounded-md px-3 py-3 bg-transparent focus:outline-none text-neutral-700 text-sm"
-                            style="height: 44px; overflow-y: hidden;"
-                            rows="1"
-                            oninput={(e) => {
-                                const textarea = e.target as HTMLTextAreaElement;
-                                textarea.style.height = '44px';
-                                const height = Math.min(textarea.scrollHeight, 200);
-                                textarea.style.height = height + 'px';
-                                textarea.style.overflowY = height === 200 ? 'auto' : 'hidden';
-                            }}
-                            onkeydown={(e) => {
-                                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                                    const textarea = e.target as HTMLTextAreaElement;
-                                    const start = textarea.selectionStart;
-                                    const end = textarea.selectionEnd;
-                                    inputMessage = inputMessage.substring(0, start) + '\n' + inputMessage.substring(end);
-                                    e.preventDefault();
-                                    setTimeout(() => {
-                                        textarea.selectionStart = textarea.selectionEnd = start + 1;
-                                    }, 0);
-                                }
-                                else if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSubmit();
-                                }
-                            }}
-                        />
-                    </div>
-
-                    <Button 
-                        type="submit" 
-                        disabled={!inputMessage.trim()} 
-                        class="shrink-0 my-auto hover:bg-primary/5 transition-colors"
-                        variant="ghost"
-                        size="icon"
-                    >
-                        <SendHorizontal class="w-5 h-5 {inputMessage.trim() ? 'text-primary' : 'text-muted-foreground'}" />
-                    </Button>
-                </form>
-            </div>
-        </div>
+        <ChatInput 
+            selectedContexts={selectedContexts}
+            onContextsChange={(contexts) => selectedContexts = contexts}
+            onSubmit={(message) => handleSubmit(message)}
+        />
     </footer>
 </div>
 
 <Sheet.Root bind:open={showHistory}>
     <ChatHistorySheet />
 </Sheet.Root> 
+
+<style>
+    /* Custom Scrollbar */
+    .chat-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: hsl(var(--muted)) transparent;
+    }
+
+    .chat-scroll::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .chat-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .chat-scroll::-webkit-scrollbar-thumb {
+        background-color: hsl(var(--muted) / 0.2);
+        border-radius: 20px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+    }
+
+    .chat-scroll::-webkit-scrollbar-thumb:hover {
+        background-color: hsl(var(--muted) / 0.3);
+    }
+</style>
