@@ -107,43 +107,14 @@
             class="absolute inset-0 overflow-y-auto pr-4"
             bind:this={chatContainer}
         >
-            {#if conversations.length > 0}
-                <div class="space-y-8 pb-32">
-                    {#each conversations as conversation}
-                        <div class="flex gap-4 {conversation.messages[conversation.messages.length - 1]?.role === 'assistant' ? 'bg-muted/30 p-6 rounded-2xl' : ''}">
-                            <div class="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br {conversation.messages[conversation.messages.length - 1]?.role === 'assistant' ? 'from-primary/20 to-primary/30' : 'from-neutral-200 to-neutral-300'} flex items-center justify-center shadow-sm">
-                                {#if conversation.messages[conversation.messages.length - 1]?.role === 'assistant'}
-                                    <span class="text-sm font-semibold text-primary/70">AI</span>
-                                {:else}
-                                    <span class="text-sm font-semibold text-neutral-600">You</span>
-                                {/if}
-                            </div>
-                            <div class="flex-1 space-y-2">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-medium text-neutral-900">
-                                        {conversation.messages[conversation.messages.length - 1]?.role === 'assistant' ? 'Assistant' : 'You'}
-                                    </span>
-                                    <span class="text-xs text-muted-foreground font-medium">
-                                        {formatTime(conversation.messages[conversation.messages.length - 1]?.timestamp || new Date())}
-                                    </span>
-                                </div>
-                                <p class="text-sm leading-relaxed text-neutral-700">
-                                    {conversation.messages[conversation.messages.length - 1]?.content || 'Empty conversation'}
-                                </p>
-                            </div>
-                        </div>
-                    {/each}
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="text-center">
+                    <p class="text-lg font-medium text-neutral-900">Talk with Clairvoyance</p>
+                    <p class="text-sm text-muted-foreground mt-1">
+                        Ask questions or explore insights about your data
+                    </p>
                 </div>
-            {:else}
-                <div class="absolute inset-0 flex items-center justify-center">
-                    <div class="text-center">
-                        <p class="text-lg font-medium text-neutral-900">Talk with Clairvoyance</p>
-                        <p class="text-sm text-muted-foreground mt-1">
-                            Ask questions or explore insights about your data
-                        </p>
-                    </div>
-                </div>
-            {/if}
+            </div>
         </div>
     </main>
 
@@ -336,7 +307,7 @@
             </div>
         </div>
     </footer>
-    </div>
+</div>
 
 <Sheet.Root bind:open={showHistory}>
     <ChatHistorySheet />
