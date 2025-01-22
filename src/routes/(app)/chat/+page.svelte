@@ -74,6 +74,6 @@
     </footer>
 </div>
 
-<Sheet.Root bind:open={showHistory}>
-    <ChatHistorySheet />
+<Sheet.Root open={showHistory} onOpenChange={(value) => showHistory = value}>
+    <ChatHistorySheet open={showHistory} onOpenChange={(value) => showHistory = value} />
 </Sheet.Root> 

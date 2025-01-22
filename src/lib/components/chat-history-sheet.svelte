@@ -4,6 +4,13 @@
     import { chatStore, type ChatConversation } from '$lib/stores/chat';
     import { Button } from "$lib/components/ui/button";
 
+    type Props = {
+        open: boolean;
+        onOpenChange: (open: boolean) => void;
+    }
+
+    const { open, onOpenChange } = $props<Props>();
+
     let conversations = $state<ChatConversation[]>([]);
     chatStore.subscribe(value => conversations = value);
 
@@ -14,11 +21,18 @@
             hour12: true
         }).format(date);
     }
+
+    async function handleConversationClick(conversationId: string) {
+        await goto(`/chat/conversation/${conversationId}`);
+        onOpenChange(false); // Close the sheet after navigation
+    }
 </script>
 
 <Sheet.Content 
     side="right" 
     class="w-[800px] sm:w-[540px] md:w-[800px] lg:w-[900px] xl:w-[1000px]"
+    {open}
+    onOpenChange={onOpenChange}
 >
     <Sheet.Header>
         <Sheet.Title>Chat History</Sheet.Title>
@@ -42,10 +56,8 @@
             <div class="space-y-2">
                 {#each conversations as conversation}
                     <button
-                        class="w-full px-4 py-3 hover:bg-muted/50 rounded-lg transition-colors text-left group"
-                        onclick={() => {
-                            goto(`/chat/conversation/${conversation.id}`);
-                        }}
+                        class="w-full px-6 py-4 hover:bg-muted/50 rounded-xl transition-colors text-left group border bg-card"
+                        onclick={() => handleConversationClick(conversation.id)}
                     >
                         <div class="flex items-center justify-between">
                             <span class="font-medium text-sm">{conversation.title}</span>

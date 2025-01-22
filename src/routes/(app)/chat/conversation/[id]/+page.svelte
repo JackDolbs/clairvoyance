@@ -24,7 +24,7 @@
 
     // Fix the props access
     const props = $props<{ data: { conversation: ChatConversation } }>();
-    const conversation = props.data.conversation;
+    let conversation = $state(props.data.conversation);
     
     let messages = $state(conversation.messages);
     let inputMessage = $state('');
@@ -36,6 +36,19 @@
     chatStore.subscribe(value => conversations = value);
     let contextSearch = $state('');
     let activeTab = $state('available');
+
+    // Replace $: with $derived
+    const conversationId = $derived($page.params.id);
+
+    // Replace reactive block with $effect
+    $effect(() => {
+        const newConversation = chatStore.getConversation(conversationId);
+        if (newConversation) {
+            conversation = newConversation;
+            messages = newConversation.messages;
+            selectedContexts = newConversation.contexts;
+        }
+    });
 
     function formatTime(date: Date) {
         return new Intl.DateTimeFormat('en-US', {
@@ -170,8 +183,8 @@
     </footer>
 </div>
 
-<Sheet.Root bind:open={showHistory}>
-    <ChatHistorySheet />
+<Sheet.Root open={showHistory} onOpenChange={(value) => showHistory = value}>
+    <ChatHistorySheet open={showHistory} onOpenChange={(value) => showHistory = value} />
 </Sheet.Root> 
 
 <style>
