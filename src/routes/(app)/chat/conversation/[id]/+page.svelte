@@ -36,6 +36,7 @@
     chatStore.subscribe(value => conversations = value);
     let contextSearch = $state('');
     let activeTab = $state('available');
+    let copiedMessageId = $state<string | null>(null);
 
     // Replace $: with $derived
     const conversationId = $derived($page.params.id);
@@ -94,6 +95,18 @@
                 behavior: 'smooth'
             });
         }, 100);
+    }
+
+    async function handleCopy(content: string, messageId: string) {
+        try {
+            await navigator.clipboard.writeText(content);
+            copiedMessageId = messageId;
+            setTimeout(() => {
+                copiedMessageId = null;
+            }, 2000); // Reset after 2 seconds
+        } catch (err) {
+            console.error('Failed to copy:', err);
+        }
     }
 
     onMount(() => {
@@ -159,8 +172,58 @@
                     {:else}
                         <div class="pl-18 space-y-3">
                             <div class="bg-muted/30 p-6 rounded-2xl">
-                                <div class="flex items-center gap-2 mb-2">
+                                <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-semibold text-primary/50">Clairvoyance's Response</span>
+                                    <div class="flex items-center gap-2">
+                                        <button 
+                                            class="p-1 hover:bg-muted/50 rounded-md transition-colors"
+                                            title="Regenerate response"
+                                        >
+                                            <svg 
+                                                xmlns="http://www.w3.org/2000/svg" 
+                                                width="14" 
+                                                height="14" 
+                                                viewBox="0 0 24 24" 
+                                                fill="none" 
+                                                stroke="currentColor" 
+                                                stroke-width="2" 
+                                                stroke-linecap="round" 
+                                                stroke-linejoin="round" 
+                                                class="text-muted-foreground"
+                                            >
+                                                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                                                <path d="M21 3v5h-5"/>
+                                                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                                                <path d="M8 16H3v5"/>
+                                            </svg>
+                                        </button>
+                                        <button 
+                                            class="p-1 hover:bg-muted/50 rounded-md transition-colors relative group"
+                                            title="Copy to clipboard"
+                                            onclick={() => handleCopy(message.content, message.timestamp.toString())}
+                                        >
+                                            {#if copiedMessageId === message.timestamp.toString()}
+                                                <span class="absolute -top-8 left-1/2 -translate-x-1/2 bg-neutral-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    Copied!
+                                                </span>
+                                            {/if}
+                                            <svg 
+                                                xmlns="http://www.w3.org/2000/svg" 
+                                                width="14" 
+                                                height="14" 
+                                                viewBox="0 0 24 24" 
+                                                fill="none" 
+                                                stroke="currentColor" 
+                                                stroke-width="2" 
+                                                stroke-linecap="round" 
+                                                stroke-linejoin="round" 
+                                                class="text-muted-foreground {copiedMessageId === message.timestamp.toString() ? 'text-primary' : ''}"
+                                            >
+                                                <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                                                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                                 <p class="text-sm leading-relaxed text-neutral-600">
                                     {message.content}
