@@ -15,6 +15,8 @@
     import { AlertCircle } from "lucide-svelte";
     import { Switch } from "$lib/components/ui/switch";
     import { Trash } from "lucide-svelte";
+    import * as ContextMenu from "$lib/components/ui/context-menu";
+    import { BarChart3, LineChart, PieChart, Table, Database, ArrowUpRight } from "lucide-svelte";
 
     // Update the dashboard type to include color
     interface Dashboard {
@@ -214,6 +216,28 @@
         linkCopied = true;
         setTimeout(() => linkCopied = false, 2000);
     }
+
+    // Add widget options data
+    const widgetOptions = {
+        charts: [
+            { name: 'Bar Chart', icon: BarChart3, description: 'Compare values across categories' },
+            { name: 'Line Chart', icon: LineChart, description: 'Show trends over time' },
+            { name: 'Pie Chart', icon: PieChart, description: 'Display part-to-whole relationships' }
+        ],
+        tables: [
+            { name: 'Data Table', icon: Table, description: 'Display and analyze raw data' },
+            { name: 'Metrics Table', icon: ArrowUpRight, description: 'Show key metrics and changes' }
+        ],
+        dataSources: [
+            { name: 'Database Query', icon: Database, description: 'Create custom SQL queries' }
+        ]
+    };
+
+    // Add function to handle widget selection
+    function handleAddWidget(type: string, name: string) {
+        console.log(`Adding ${name} widget of type ${type}`);
+        // TODO: Implement widget creation logic
+    }
 </script>
 
 <style lang="postcss">
@@ -393,16 +417,53 @@
                     <!-- Dashboard Grid -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <!-- Empty state -->
-                        <Card.Root class="col-span-full h-[300px] flex items-center justify-center">
-                            <div class="text-center space-y-1">
-                                <p class="text-muted-foreground">
-                                    This dashboard is empty.
-                                </p>
-                                <p class="text-muted-foreground">
-                                    Add widgets to get started.
-                                </p>
-                            </div>
-                        </Card.Root>
+                        <ContextMenu.Root>
+                            <ContextMenu.Trigger asChild>
+                                <Card.Root class="col-span-full h-[300px] flex items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors">
+                                    <div class="text-center space-y-1">
+                                        <p class="text-muted-foreground">
+                                            This dashboard is empty.
+                                        </p>
+                                        <p class="text-sm text-muted-foreground">
+                                            Right click to add widgets.
+                                        </p>
+                                    </div>
+                                </Card.Root>
+                            </ContextMenu.Trigger>
+
+                            <ContextMenu.Content style="min-width: 200px;">
+                                {#each widgetOptions.charts as option}
+                                    <ContextMenu.Item>
+                                        <div class="flex items-center gap-2">
+                                            <svelte:component this={option.icon} class="w-4 h-4" />
+                                            {option.name}
+                                        </div>
+                                    </ContextMenu.Item>
+                                {/each}
+
+                                <ContextMenu.Separator />
+
+                                {#each widgetOptions.tables as option}
+                                    <ContextMenu.Item>
+                                        <div class="flex items-center gap-2">
+                                            <svelte:component this={option.icon} class="w-4 h-4" />
+                                            {option.name}
+                                        </div>
+                                    </ContextMenu.Item>
+                                {/each}
+
+                                <ContextMenu.Separator />
+
+                                {#each widgetOptions.dataSources as option}
+                                    <ContextMenu.Item>
+                                        <div class="flex items-center gap-2">
+                                            <svelte:component this={option.icon} class="w-4 h-4" />
+                                            {option.name}
+                                        </div>
+                                    </ContextMenu.Item>
+                                {/each}
+                            </ContextMenu.Content>
+                        </ContextMenu.Root>
                     </div>
                 </div>
             {/if}
