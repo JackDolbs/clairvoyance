@@ -26,30 +26,12 @@
 		{
 			title: "Dashboards",
 			icon: LayoutDashboard,
-			items: [
-				{
-					title: "Metrics",
-					url: "/metrics",
-				},
-				{
-					title: "KPIs",
-					url: "/KPIs",
-				}
-			]
+			url: "/dashboards",
 		},
         {
 			title: "Analytics",
 			icon: ChartBar,
-			items: [
-				{
-					title: "Notebooks",
-					url: "/notebooks",
-				},
-				{
-					title: "Reports",
-					url: "/reports",
-				}
-			]
+			url: "/analytics",
 		},
         {
 			title: "Chat Insights",
