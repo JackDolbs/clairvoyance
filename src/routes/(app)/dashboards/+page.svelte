@@ -366,7 +366,7 @@
         </div>
 
         <!-- Main Content -->
-        <div class="flex-1 rounded-lg border-2 bg-card shadow-sm">
+        <div class="flex-1 rounded-lg border bg-card shadow-sm">
             {#if selectedDashboard}
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-6">
