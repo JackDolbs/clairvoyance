@@ -29,46 +29,254 @@
     import { browser } from '$app/environment';
     import Maximize2 from "lucide-svelte/icons/maximize-2";
     import Minimize2 from "lucide-svelte/icons/minimize-2";
+    import * as Table from "$lib/components/ui/table";
 
     // Add tool state
     let currentTool: 'pan' | 'node' | 'edge' | 'select' = 'pan';
     let sheetOpen = false;
     let selectedNode: any = null;
     
-    // Add node types for your ontology
+    // Define ontological classes (node types) for B2B SaaS
     const nodeTypes = [
-        { id: 'entity', name: 'Entity', color: '#4CAF50' },
-        { id: 'attribute', name: 'Attribute', color: '#2196F3' },
-        { id: 'relationship', name: 'Relationship', color: '#FFC107' },
-        { id: 'event', name: 'Event', color: '#9C27B0' }
+        // Core Business Entities
+        { id: 'organization', name: 'Organization', color: '#4CAF50' },    // Customer companies
+        { id: 'department', name: 'Department', color: '#81C784' },        // Departments within orgs
+        { id: 'user', name: 'User', color: '#2196F3' },                   // End users
+        
+        // Product & Features
+        { id: 'product_module', name: 'Product Module', color: '#9C27B0' }, // Core product modules
+        { id: 'feature', name: 'Feature', color: '#CE93D8' },              // Specific features
+        { id: 'integration', name: 'Integration', color: '#673AB7' },       // Third-party integrations
+        
+        // Commercial & Billing
+        { id: 'subscription', name: 'Subscription', color: '#FFC107' },     // Subscription plans
+        { id: 'invoice', name: 'Invoice', color: '#FFB74D' },              // Billing documents
+        { id: 'payment', name: 'Payment', color: '#FF9800' },              // Payment records
+        
+        // Support & Usage
+        { id: 'ticket', name: 'Support Ticket', color: '#F44336' },        // Support cases
+        { id: 'usage_metric', name: 'Usage Metric', color: '#4DD0E1' },    // Usage statistics
+        { id: 'session', name: 'User Session', color: '#26A69A' }          // User sessions
     ];
 
-    // Mock data for the graph
+    // Create a meaningful demo dataset
     const mockData = {
         nodes: [
-            { 
-                id: "Customer", 
-                group: 1, 
-                type: 'entity',
+            // Organizations and Departments
+            {
+                id: "Acme Corp",
+                group: 0,
+                type: 'organization',
                 properties: {
-                    description: 'A person or organization that purchases products',
-                    attributes: ['name', 'email', 'address']
+                    industry: 'Technology',
+                    employees: 500,
+                    annualRevenue: '50M+',
+                    region: 'North America',
+                    customerSince: '2023-01'
                 }
             },
-            { id: "Order", group: 2 },
-            { id: "Product", group: 3 },
-            { id: "Category", group: 3 },
-            { id: "Supplier", group: 4 },
-            { id: "Payment", group: 2 },
+            {
+                id: "Acme Sales",
+                group: 1,
+                type: 'department',
+                properties: {
+                    orgId: 'Acme Corp',
+                    headcount: 50,
+                    region: 'Global'
+                }
+            },
+            {
+                id: "Acme Engineering",
+                group: 1,
+                type: 'department',
+                properties: {
+                    orgId: 'Acme Corp',
+                    headcount: 120,
+                    region: 'North America'
+                }
+            },
+
+            // Product Modules and Features
+            {
+                id: "Analytics Platform",
+                group: 2,
+                type: 'product_module',
+                properties: {
+                    version: '2.1.0',
+                    category: 'Core',
+                    releaseDate: '2023-12',
+                    status: 'Active'
+                }
+            },
+            {
+                id: "Custom Dashboards",
+                group: 3,
+                type: 'feature',
+                properties: {
+                    moduleId: 'Analytics Platform',
+                    status: 'Active',
+                    tier: 'Enterprise'
+                }
+            },
+            {
+                id: "API Access",
+                group: 3,
+                type: 'feature',
+                properties: {
+                    moduleId: 'Analytics Platform',
+                    status: 'Active',
+                    tier: 'Enterprise'
+                }
+            },
+
+            // Users and Sessions
+            {
+                id: "john.smith",
+                group: 4,
+                type: 'user',
+                properties: {
+                    name: 'John Smith',
+                    role: 'Sales Director',
+                    department: 'Acme Sales',
+                    email: 'john.smith@acme.com'
+                }
+            },
+            {
+                id: "Session_JS_123",
+                group: 5,
+                type: 'session',
+                properties: {
+                    userId: 'john.smith',
+                    duration: '45m',
+                    timestamp: '2024-03-20T10:00:00Z'
+                }
+            },
+
+            // Commercial
+            {
+                id: "Enterprise_Plan_2024",
+                group: 6,
+                type: 'subscription',
+                properties: {
+                    customer: 'Acme Corp',
+                    tier: 'Enterprise',
+                    seats: 100,
+                    startDate: '2024-01',
+                    term: '12 months'
+                }
+            },
+            {
+                id: "INV-2024-Q1",
+                group: 7,
+                type: 'invoice',
+                properties: {
+                    subscription: 'Enterprise_Plan_2024',
+                    amount: 25000,
+                    status: 'Paid',
+                    date: '2024-01-01'
+                }
+            },
+
+            // Support and Usage
+            {
+                id: "TICKET-123",
+                group: 8,
+                type: 'ticket',
+                properties: {
+                    customer: 'Acme Corp',
+                    subject: 'API Integration Support',
+                    priority: 'High',
+                    status: 'Open'
+                }
+            },
+            {
+                id: "API_Usage_Metric",
+                group: 9,
+                type: 'usage_metric',
+                properties: {
+                    feature: 'API Access',
+                    customer: 'Acme Corp',
+                    period: '2024-03',
+                    calls: 150000
+                }
+            }
         ],
         links: [
-            { source: "Customer", target: "Order", value: 1 },
-            { source: "Order", target: "Product", value: 1 },
-            { source: "Product", target: "Category", value: 1 },
-            { source: "Product", target: "Supplier", value: 1 },
-            { source: "Order", target: "Payment", value: 1 },
+            // Organizational Structure
+            { source: "Acme Sales", target: "Acme Corp", value: 1, type: 'belongs_to' },
+            { source: "Acme Engineering", target: "Acme Corp", value: 1, type: 'belongs_to' },
+            { source: "john.smith", target: "Acme Sales", value: 1, type: 'member_of' },
+
+            // Product Usage
+            { source: "john.smith", target: "Analytics Platform", value: 1, type: 'uses' },
+            { source: "Session_JS_123", target: "john.smith", value: 1, type: 'initiated_by' },
+            { source: "Session_JS_123", target: "Custom Dashboards", value: 1, type: 'accessed' },
+            
+            // Product Structure
+            { source: "Custom Dashboards", target: "Analytics Platform", value: 1, type: 'part_of' },
+            { source: "API Access", target: "Analytics Platform", value: 1, type: 'part_of' },
+
+            // Commercial Relationships
+            { source: "Acme Corp", target: "Enterprise_Plan_2024", value: 1, type: 'subscribes_to' },
+            { source: "INV-2024-Q1", target: "Enterprise_Plan_2024", value: 1, type: 'bills' },
+            
+            // Support and Usage Tracking
+            { source: "TICKET-123", target: "API Access", value: 1, type: 'relates_to' },
+            { source: "API_Usage_Metric", target: "API Access", value: 1, type: 'measures' },
+            { source: "API_Usage_Metric", target: "Acme Corp", value: 1, type: 'tracks' }
         ]
     };
+
+    // Add mock data for different node types
+    const mockCustomerData = [
+        { 
+            id: 'Acme Corp',
+            industry: 'Technology',
+            employees: 500,
+            activeUsers: 50,
+            mrr: 2500,
+            status: 'Active',
+            startDate: '2023-01-15'
+        },
+        // Add more customer examples...
+    ];
+
+    const mockUserData = [
+        {
+            id: 'John Smith',
+            email: 'john@acmecorp.com',
+            role: 'Admin',
+            lastLogin: '2024-03-20',
+            department: 'Sales',
+            activeModules: ['Analytics', 'Reporting', 'API']
+        },
+        // Add more user examples...
+    ];
+
+    const mockTicketData = [
+        {
+            id: 'Support #123',
+            title: 'API Integration Issue',
+            status: 'Open',
+            priority: 'High',
+            created: '2024-03-19',
+            updated: '2024-03-20',
+            category: 'Technical'
+        },
+        // Add more ticket examples...
+    ];
+
+    const mockInvoiceData = [
+        {
+            id: 'INV-2024-001',
+            date: '2024-03-01',
+            amount: 2500,
+            status: 'Paid',
+            items: ['Enterprise Plan - Monthly'],
+            paymentMethod: 'Credit Card'
+        },
+        // Add more invoice examples...
+    ];
 
     let svgContainer: HTMLDivElement;
     let svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
@@ -186,6 +394,9 @@
             .attr("stroke-opacity", 0.6)
             .attr("stroke-width", 2);
 
+        // Update node radius
+        const nodeRadius = 10; // Control node/circle size
+
         // Create nodes
         const node = g.append("g")
             .selectAll("g")
@@ -198,18 +409,18 @@
 
         // Add circles to nodes with pointer cursor
         node.append("circle")
-            .attr("r", 30)
+            .attr("r", nodeRadius)
             .attr("fill", (d: any) => d3.schemeCategory10[d.group])
             .style("cursor", "pointer");
 
-        // Add labels to nodes
+        // Add labels NEXT TO nodes (not inside)
         node.append("text")
             .text((d: any) => d.id)
-            .attr("text-anchor", "middle")
-            .attr("dy", ".35em")
-            .attr("fill", "white")
+            .attr("x", nodeRadius + 5) // Position text to the right of the node
+            .attr("y", 5) // Slight vertical adjustment for centering
+            .attr("text-anchor", "start") // Align text from the start
+            .attr("fill", "currentColor") // Use theme color
             .attr("font-size", "12px")
-            .style("cursor", "pointer")
             .style("pointer-events", "none"); // Prevent text from interfering with circle clicks
 
         // Update positions on simulation tick
@@ -350,6 +561,13 @@
     function handleSearch(query: string) {
         searchQuery = query;
         // Add actual search logic here
+    }
+
+    // First, add state for tracking active tab
+    let activeTab = 'properties';
+
+    function handleTabChange(tab: string) {
+        activeTab = tab;
     }
 </script>
 
@@ -672,7 +890,7 @@
         <!-- Right sidebar -->
         <Sheet.Root bind:open={sheetOpen} onOpenChange={(open) => { if (!open) selectedNode = null; }}>
             {#if selectedNode}
-                <Sheet.Content class="w-[400px]">
+                <Sheet.Content class="w-[600px]">
                     <Sheet.Header>
                         <Sheet.Title>Node Properties</Sheet.Title>
                         <Sheet.Description>
@@ -680,11 +898,12 @@
                         </Sheet.Description>
                     </Sheet.Header>
 
-                    <Tabs defaultValue="properties" class="mt-6">
+                    <Tabs defaultValue="properties" class="mt-6" onValueChange={handleTabChange}>
                         <TabsList class="w-full">
                             <TabsTrigger value="properties">Properties</TabsTrigger>
                             <TabsTrigger value="styling">Styling</TabsTrigger>
                             <TabsTrigger value="data">Data</TabsTrigger>
+                            <TabsTrigger value="metadata">Metadata</TabsTrigger>
                         </TabsList>
                         <TabsContent value="properties">
                             <div class="space-y-4">
@@ -740,6 +959,38 @@
                             </div>
                         </TabsContent>
                         <TabsContent value="data">
+                            <div class="space-y-4">
+                                <Table.Root>
+                                    <Table.Header>
+                                        <Table.Row>
+                                            <Table.Head>ID</Table.Head>
+                                            <Table.Head>Date</Table.Head>
+                                            <Table.Head>Amount</Table.Head>
+                                            <Table.Head>Status</Table.Head>
+                                        </Table.Row>
+                                    </Table.Header>
+                                    <Table.Body>
+                                        {#if selectedNode.type === 'sales'}
+                                            {#each mockSalesData as sale}
+                                                <Table.Row>
+                                                    <Table.Cell>{sale.id}</Table.Cell>
+                                                    <Table.Cell>{sale.date}</Table.Cell>
+                                                    <Table.Cell>${sale.amount}</Table.Cell>
+                                                    <Table.Cell>{sale.status}</Table.Cell>
+                                                </Table.Row>
+                                            {/each}
+                                        {:else}
+                                            <Table.Row>
+                                                <Table.Cell colspan="4" class="text-center text-muted-foreground">
+                                                    No data records available for this node type
+                                                </Table.Cell>
+                                            </Table.Row>
+                                        {/if}
+                                    </Table.Body>
+                                </Table.Root>
+                            </div>
+                        </TabsContent>
+                        <TabsContent value="metadata">
                             <div class="space-y-4">
                                 <!-- Ontology Class Info -->
                                 <div>
@@ -813,12 +1064,15 @@
                         </TabsContent>
                     </Tabs>
 
-                    <Sheet.Footer class="mt-6">
-                        <Button variant="outline" on:click={() => sheetOpen = false}>
-                            Cancel
-                        </Button>
-                        <Button>Save changes</Button>
-                    </Sheet.Footer>
+                    <!-- Move the conditional footer inside Sheet.Content -->
+                    {#if activeTab === 'properties' || activeTab === 'styling'}
+                        <Sheet.Footer class="mt-6">
+                            <Button variant="outline" on:click={() => sheetOpen = false}>
+                                Cancel
+                            </Button>
+                            <Button>Save changes</Button>
+                        </Sheet.Footer>
+                    {/if}
                 </Sheet.Content>
             {/if}
         </Sheet.Root>
