@@ -153,16 +153,17 @@
 </script>
 
 <PageContent>
-    <div class="flex flex-col gap-2 mb-6">
+
+    <div>
         <h1 class="font-orbitron text-2xl font-semibold tracking-wide">
             Data Sources
         </h1>
-        <p class="text-muted-foreground">
+        <p class="text-sm text-muted-foreground mt-1">
             Connect your data sources to start gaining deeper insights with Clairvoyance.
         </p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
         {#each dataSources as source}
             <button
                 class="p-6 border rounded-lg hover:border-primary transition-colors flex flex-col items-center gap-4 bg-card"
