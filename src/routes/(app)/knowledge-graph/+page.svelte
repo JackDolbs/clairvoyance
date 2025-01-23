@@ -36,194 +36,252 @@
     let sheetOpen = false;
     let selectedNode: any = null;
     
-    // Define ontological classes (node types) for B2B SaaS
+    // Update node types to include hierarchy levels
     const nodeTypes = [
-        // Core Business Entities
-        { id: 'organization', name: 'Organization', color: '#4CAF50' },    // Customer companies
-        { id: 'department', name: 'Department', color: '#81C784' },        // Departments within orgs
-        { id: 'user', name: 'User', color: '#2196F3' },                   // End users
-        
-        // Product & Features
-        { id: 'product_module', name: 'Product Module', color: '#9C27B0' }, // Core product modules
-        { id: 'feature', name: 'Feature', color: '#CE93D8' },              // Specific features
-        { id: 'integration', name: 'Integration', color: '#673AB7' },       // Third-party integrations
-        
-        // Commercial & Billing
-        { id: 'subscription', name: 'Subscription', color: '#FFC107' },     // Subscription plans
-        { id: 'invoice', name: 'Invoice', color: '#FFB74D' },              // Billing documents
-        { id: 'payment', name: 'Payment', color: '#FF9800' },              // Payment records
-        
-        // Support & Usage
-        { id: 'ticket', name: 'Support Ticket', color: '#F44336' },        // Support cases
-        { id: 'usage_metric', name: 'Usage Metric', color: '#4DD0E1' },    // Usage statistics
-        { id: 'session', name: 'User Session', color: '#26A69A' }          // User sessions
+        { id: 'root_class', name: 'Root Class', color: '#333333', radius: 20 },    // Root/Thing
+        { id: 'main_class', name: 'Main Class', color: '#4CAF50', radius: 15 },    // Core entities
+        { id: 'sub_class', name: 'Sub Class', color: '#81C784', radius: 12 },      // Sub-entities
+        { id: 'property', name: 'Property', color: '#2196F3', radius: 8 },         // Properties
+        { id: 'enum', name: 'Enumeration', color: '#FFC107', radius: 10 }          // Enums/Options
     ];
 
-    // Create a meaningful demo dataset
+    // Create a comprehensive B2B SaaS ontology
     const mockData = {
         nodes: [
-            // Organizations and Departments
+            // Root Entity
             {
-                id: "Acme Corp",
+                id: "Thing",
                 group: 0,
-                type: 'organization',
+                type: 'root_class',
                 properties: {
-                    industry: 'Technology',
-                    employees: 500,
-                    annualRevenue: '50M+',
-                    region: 'North America',
-                    customerSince: '2023-01'
+                    description: 'Root entity from which all classes inherit',
+                    category: 'core'
+                }
+            },
+            // Core Business Entities
+            {
+                id: "Organization",
+                group: 1,
+                type: 'main_class',
+                properties: {
+                    description: 'Business entity using the platform',
+                    category: 'core'
                 }
             },
             {
-                id: "Acme Sales",
+                id: "User",  // Add the missing User node
                 group: 1,
-                type: 'department',
+                type: 'main_class',
                 properties: {
-                    orgId: 'Acme Corp',
-                    headcount: 50,
-                    region: 'Global'
+                    description: 'User of the platform',
+                    category: 'core'
                 }
             },
+            // Organization Properties
             {
-                id: "Acme Engineering",
-                group: 1,
-                type: 'department',
+                id: "org_name",
+                group: 0,
+                type: 'property',
+                properties: { dataType: 'string', required: true }
+            },
+            {
+                id: "org_industry",
+                group: 0,
+                type: 'property',
+                properties: { dataType: 'enum', required: true }
+            },
+            {
+                id: "org_size",
+                group: 0,
+                type: 'enum',
                 properties: {
-                    orgId: 'Acme Corp',
-                    headcount: 120,
-                    region: 'North America'
+                    values: ['Small', 'Medium', 'Enterprise']
                 }
             },
 
-            // Product Modules and Features
+            // Department (Sub-class of Organization)
             {
-                id: "Analytics Platform",
+                id: "Department",
+                group: 1,
+                type: 'sub_class',
+                properties: {
+                    description: 'Organizational unit',
+                    category: 'organizational'
+                }
+            },
+            // Department Properties
+            {
+                id: "dept_name",
+                group: 1,
+                type: 'property',
+                properties: { dataType: 'string', required: true }
+            },
+            {
+                id: "dept_budget",
+                group: 1,
+                type: 'property',
+                properties: { dataType: 'number', required: false }
+            },
+
+            // Product Hierarchy
+            {
+                id: "Product",
                 group: 2,
-                type: 'product_module',
+                type: 'main_class',
                 properties: {
-                    version: '2.1.0',
-                    category: 'Core',
-                    releaseDate: '2023-12',
-                    status: 'Active'
+                    description: 'Platform product offering',
+                    category: 'product'
                 }
             },
+            // Product Properties
             {
-                id: "Custom Dashboards",
+                id: "product_name",
+                group: 2,
+                type: 'property',
+                properties: { dataType: 'string', required: true }
+            },
+            {
+                id: "product_version",
+                group: 2,
+                type: 'property',
+                properties: { dataType: 'string', required: true }
+            },
+            {
+                id: "product_status",
+                group: 2,
+                type: 'enum',
+                properties: {
+                    values: ['Active', 'Beta', 'Deprecated']
+                }
+            },
+
+            // Feature (Sub-class of Product)
+            {
+                id: "Feature",
                 group: 3,
-                type: 'feature',
+                type: 'sub_class',
                 properties: {
-                    moduleId: 'Analytics Platform',
-                    status: 'Active',
-                    tier: 'Enterprise'
+                    description: 'Product feature',
+                    category: 'product'
                 }
             },
+            // Feature Properties
             {
-                id: "API Access",
+                id: "feature_name",
                 group: 3,
-                type: 'feature',
+                type: 'property',
+                properties: { dataType: 'string', required: true }
+            },
+            {
+                id: "feature_status",
+                group: 3,
+                type: 'enum',
                 properties: {
-                    moduleId: 'Analytics Platform',
-                    status: 'Active',
-                    tier: 'Enterprise'
+                    values: ['Enabled', 'Disabled', 'Beta']
                 }
             },
 
-            // Users and Sessions
-            {
-                id: "john.smith",
-                group: 4,
-                type: 'user',
-                properties: {
-                    name: 'John Smith',
-                    role: 'Sales Director',
-                    department: 'Acme Sales',
-                    email: 'john.smith@acme.com'
-                }
-            },
-            {
-                id: "Session_JS_123",
-                group: 5,
-                type: 'session',
-                properties: {
-                    userId: 'john.smith',
-                    duration: '45m',
-                    timestamp: '2024-03-20T10:00:00Z'
-                }
-            },
-
-            // Commercial
-            {
-                id: "Enterprise_Plan_2024",
-                group: 6,
-                type: 'subscription',
-                properties: {
-                    customer: 'Acme Corp',
-                    tier: 'Enterprise',
-                    seats: 100,
-                    startDate: '2024-01',
-                    term: '12 months'
-                }
-            },
-            {
-                id: "INV-2024-Q1",
-                group: 7,
-                type: 'invoice',
-                properties: {
-                    subscription: 'Enterprise_Plan_2024',
-                    amount: 25000,
-                    status: 'Paid',
-                    date: '2024-01-01'
-                }
-            },
-
-            // Support and Usage
-            {
-                id: "TICKET-123",
-                group: 8,
-                type: 'ticket',
-                properties: {
-                    customer: 'Acme Corp',
-                    subject: 'API Integration Support',
-                    priority: 'High',
-                    status: 'Open'
-                }
-            },
-            {
-                id: "API_Usage_Metric",
-                group: 9,
-                type: 'usage_metric',
-                properties: {
-                    feature: 'API Access',
-                    customer: 'Acme Corp',
-                    period: '2024-03',
-                    calls: 150000
-                }
-            }
+            // Continue with User, Subscription, etc...
         ],
         links: [
-            // Organizational Structure
-            { source: "Acme Sales", target: "Acme Corp", value: 1, type: 'belongs_to' },
-            { source: "Acme Engineering", target: "Acme Corp", value: 1, type: 'belongs_to' },
-            { source: "john.smith", target: "Acme Sales", value: 1, type: 'member_of' },
+            // Connect all main classes to Thing
+            { 
+                source: "Organization", 
+                target: "Thing", 
+                type: 'is_a',
+                description: 'Organization is a Thing'
+            },
+            { 
+                source: "Product", 
+                target: "Thing", 
+                type: 'is_a',
+                description: 'Product is a Thing'
+            },
+            { 
+                source: "User", 
+                target: "Thing", 
+                type: 'is_a',
+                description: 'User is a Thing'
+            },
+            // Organization Hierarchy
+            { 
+                source: "org_name", 
+                target: "Organization", 
+                type: 'has_property',
+                description: 'Organization name'
+            },
+            { 
+                source: "org_industry", 
+                target: "Organization", 
+                type: 'has_property',
+                description: 'Industry classification'
+            },
+            { 
+                source: "org_size", 
+                target: "org_industry", 
+                type: 'enum_values',
+                description: 'Available size categories'
+            },
 
-            // Product Usage
-            { source: "john.smith", target: "Analytics Platform", value: 1, type: 'uses' },
-            { source: "Session_JS_123", target: "john.smith", value: 1, type: 'initiated_by' },
-            { source: "Session_JS_123", target: "Custom Dashboards", value: 1, type: 'accessed' },
-            
-            // Product Structure
-            { source: "Custom Dashboards", target: "Analytics Platform", value: 1, type: 'part_of' },
-            { source: "API Access", target: "Analytics Platform", value: 1, type: 'part_of' },
+            // Department Relations
+            { 
+                source: "Department", 
+                target: "Organization", 
+                type: 'belongs_to',
+                description: 'Department belongs to Organization'
+            },
+            { 
+                source: "dept_name", 
+                target: "Department", 
+                type: 'has_property',
+                description: 'Department name'
+            },
+            { 
+                source: "dept_budget", 
+                target: "Department", 
+                type: 'has_property',
+                description: 'Department budget'
+            },
 
-            // Commercial Relationships
-            { source: "Acme Corp", target: "Enterprise_Plan_2024", value: 1, type: 'subscribes_to' },
-            { source: "INV-2024-Q1", target: "Enterprise_Plan_2024", value: 1, type: 'bills' },
-            
-            // Support and Usage Tracking
-            { source: "TICKET-123", target: "API Access", value: 1, type: 'relates_to' },
-            { source: "API_Usage_Metric", target: "API Access", value: 1, type: 'measures' },
-            { source: "API_Usage_Metric", target: "Acme Corp", value: 1, type: 'tracks' }
+            // Product Hierarchy
+            { 
+                source: "product_name", 
+                target: "Product", 
+                type: 'has_property',
+                description: 'Product name'
+            },
+            { 
+                source: "product_version", 
+                target: "Product", 
+                type: 'has_property',
+                description: 'Product version'
+            },
+            { 
+                source: "product_status", 
+                target: "Product", 
+                type: 'has_property',
+                description: 'Product status'
+            },
+
+            // Feature Relations
+            { 
+                source: "Feature", 
+                target: "Product", 
+                type: 'belongs_to',
+                description: 'Feature belongs to Product'
+            },
+            { 
+                source: "feature_name", 
+                target: "Feature", 
+                type: 'has_property',
+                description: 'Feature name'
+            },
+            { 
+                source: "feature_status", 
+                target: "Feature", 
+                type: 'has_property',
+                description: 'Feature status'
+            }
         ]
     };
 
@@ -381,11 +439,67 @@
 
         g = svg.append("g");
 
-        // Create force simulation
+        // Update the force simulation configuration
         const simulation = d3.forceSimulation(mockData.nodes as any)
-            .force("link", d3.forceLink(mockData.links).id((d: any) => d.id))
-            .force("charge", d3.forceManyBody().strength(-1000))
-            .force("center", d3.forceCenter(width / 2, height / 2));
+            .force("link", d3.forceLink()
+                .id((d: any) => d.id)
+                .links(mockData.links.filter(link => 
+                    mockData.nodes.some(n => n.id === link.source) && 
+                    mockData.nodes.some(n => n.id === link.target)
+                ))
+                .distance(d => {
+                    // Longer distances between main classes
+                    if (d.source.type === 'main_class' && d.target.type === 'main_class') return 300;
+                    // Medium distance for class-to-property connections
+                    if (d.type === 'has_property') return 150;
+                    // Default distance for other connections
+                    return 200;
+                })
+                .strength(0.2)  // Keep links flexible
+            )
+            .force("charge", d3.forceManyBody()
+                .strength(-600)  // Stronger repulsion
+                .distanceMax(600)  // Longer range
+                .distanceMin(50)   // Minimum spacing
+            )
+            .force("collision", d3.forceCollide()
+                .radius(d => {
+                    // Larger collision radius for main classes
+                    if (d.type === 'main_class') return 80;
+                    if (d.type === 'sub_class') return 60;
+                    return 40;
+                })
+                .strength(0.7)
+            )
+            // Gentler hierarchical positioning
+            .force("y", d3.forceY((d: any) => {
+                if (d.id === "Thing") return 50;
+                if (d.type === "main_class") return height * 0.3;
+                if (d.type === "sub_class") return height * 0.5;
+                if (d.type === "property") return height * 0.7;
+                return height * 0.6;
+            }).strength(0.1))
+            .force("x", d3.forceX((d: any) => {
+                if (d.id === "Thing") return width / 2;
+                // Spread main classes more widely
+                if (d.type === "main_class") {
+                    return width * (0.2 + Math.random() * 0.6);
+                }
+                return width * (0.3 + Math.random() * 0.4);
+            }).strength(0.05))
+            .alphaDecay(0.005)
+            .velocityDecay(0.3);
+
+        // Only fix the Thing node
+        mockData.nodes.forEach((node: any) => {
+            if (node.id === "Thing") {
+                node.fx = width / 2;
+                node.fy = 50;
+            } else {
+                node.fx = null;
+                node.fy = null;
+            }
+        });
 
         // Create links
         const link = g.append("g")
@@ -395,9 +509,6 @@
             .attr("stroke", "#999")
             .attr("stroke-opacity", 0.6)
             .attr("stroke-width", 2);
-
-        // Update node radius
-        const nodeRadius = 10; // Control node/circle size
 
         // Create nodes
         const node = g.append("g")
@@ -411,19 +522,37 @@
 
         // Add circles to nodes with pointer cursor
         node.append("circle")
-            .attr("r", nodeRadius)
-            .attr("fill", (d: any) => d3.schemeCategory10[d.group])
+            .attr("r", (d: any) => nodeTypes.find(t => t.id === d.type)?.radius || 8)
+            .attr("fill", (d: any) => nodeTypes.find(t => t.id === d.type)?.color || '#999')
             .style("cursor", "pointer");
 
-        // Add labels NEXT TO nodes (not inside)
+        // Add labels NEXT TO nodes
         node.append("text")
             .text((d: any) => d.id)
-            .attr("x", nodeRadius + 5) // Position text to the right of the node
-            .attr("y", 5) // Slight vertical adjustment for centering
-            .attr("text-anchor", "start") // Align text from the start
-            .attr("fill", "currentColor") // Use theme color
+            .attr("x", (d: any) => (nodeTypes.find(t => t.id === d.type)?.radius || 8) + 5)
+            .attr("y", 5)
+            .attr("text-anchor", "start")
+            .attr("fill", "currentColor")
             .attr("font-size", "12px")
-            .style("pointer-events", "none"); // Prevent text from interfering with circle clicks
+            .style("pointer-events", "none");
+
+        // Add hover effect to nodes
+        node.on('mouseover', (event, d) => {
+            hoveredNode = d;
+            d3.select(event.currentTarget)
+                .select('circle')
+                .transition()
+                .duration(200)
+                .attr("r", (d: any) => (nodeTypes.find(t => t.id === d.type)?.radius || 8) + 2);
+        })
+        .on('mouseout', (event) => {
+            hoveredNode = null;
+            d3.select(event.currentTarget)
+                .select('circle')
+                .transition()
+                .duration(200)
+                .attr("r", (d: any) => nodeTypes.find(t => t.id === d.type)?.radius || 8);
+        });
 
         // Update positions on simulation tick
         simulation.on("tick", () => {
@@ -451,8 +580,13 @@
 
         function dragended(event: any) {
             if (!event.active) simulation.alphaTarget(0);
-            event.subject.fx = null;
-            event.subject.fy = null;
+            // Don't reset fx and fy to null - this keeps nodes where we drag them
+            // Only reset if it's not the Thing node (which should stay at the top)
+            if (event.subject.id !== "Thing") {
+                // Keep the fixed position where we dropped it
+                event.subject.fx = event.x;
+                event.subject.fy = event.y;
+            }
         }
 
         // Handle window resize
@@ -486,14 +620,6 @@
         // Listen for fullscreen changes
         document.addEventListener('fullscreenchange', () => {
             isFullscreen = !!document.fullscreenElement;
-        });
-
-        // Update node creation to add hover handlers
-        node.on('mouseover', (event, d) => {
-            hoveredNode = d;
-        })
-        .on('mouseout', () => {
-            hoveredNode = null;
         });
 
         return () => {
