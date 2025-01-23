@@ -31,6 +31,7 @@
     import Minimize2 from "lucide-svelte/icons/minimize-2";
     import * as Table from "$lib/components/ui/table";
     import { Badge } from "$lib/components/ui/badge";
+    import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "$lib/components/ui/accordion";
 
     // Add tool state
     let currentTool: 'pan' | 'node' | 'edge' | 'select' = 'pan';
@@ -375,246 +376,221 @@
     $: console.log('Sidebar state:', { sheetOpen, selectedNode });
 
     // Add collapsible state
-    let isCollapsed = false;
-    let sidebarWidth = isCollapsed ? 64 : 240;
+    const EXPANDED_WIDTH = 320;
+    const COLLAPSED_WIDTH = 48;
+    let isCollapsed = true;
+    let sidebarWidth = EXPANDED_WIDTH;
 
+    // Add toggle function
     function toggleSidebar() {
         isCollapsed = !isCollapsed;
-        sidebarWidth = isCollapsed ? 64 : 240;
+        sidebarWidth = isCollapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH;
     }
 
-    // Single source of truth for which dropdown is open
-    type ActiveDropdown = 'filter' | 'relationship' | 'search' | null;
-    let activeDropdown: ActiveDropdown = null;
-
-    // Function to handle dropdown toggling
-    function toggleDropdown(dropdown: ActiveDropdown) {
-        // If clicking the same dropdown, close it
-        if (activeDropdown === dropdown) {
-            activeDropdown = null;
-        } else {
-            // If clicking a different dropdown, close the current one and open the new one
-            activeDropdown = dropdown;
-        }
-    }
-
-    // Function to close all dropdowns
-    function closeDropdowns() {
-        activeDropdown = null;
-    }
-
-    // Add click outside handler
-    function handleClickOutside(event: MouseEvent) {
-        const target = event.target as HTMLElement;
-        if (!target.closest('.sidebar-container') && !target.closest('.dropdown-portal')) {
-            closeDropdowns();
-        }
-    }
-
-    // Add fullscreen state
-    let isFullscreen = false;
-
-    // Add fullscreen toggle function
-    async function toggleFullscreen() {
-        if (!document.fullscreenElement) {
-            await svgContainer.requestFullscreen();
-            isFullscreen = true;
-        } else {
-            await document.exitFullscreen();
-            isFullscreen = false;
-        }
-    }
-
-    let hoveredNode: any = null;
-
+    // Add responsive initialization on mount
     onMount(() => {
-        // Initialize SVG
-        width = svgContainer.clientWidth;
-        height = svgContainer.clientHeight;
+        // Check if screen is 2xl or larger
+        const mediaQuery = window.matchMedia('(min-width: 1536px)');
+        isCollapsed = !mediaQuery.matches;  // Expand on xl screens
+        sidebarWidth = isCollapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH;
 
-        svg = d3.select(svgContainer)
-            .append("svg")
-            .attr("width", "100%")
-            .attr("height", "100%")
-            .call(zoom);
+        // Add listener for screen size changes
+        const handleResize = (e: MediaQueryListEvent) => {
+            isCollapsed = !e.matches;
+            sidebarWidth = isCollapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH;
+        };
+        mediaQuery.addEventListener('change', handleResize);
 
-        g = svg.append("g");
+        // Initialize after DOM is ready
+        requestAnimationFrame(() => {
+            // Initialize SVG
+            width = svgContainer.clientWidth;
+            height = svgContainer.clientHeight;
 
-        // Update the force simulation configuration
-        const simulation = d3.forceSimulation(mockData.nodes as any)
-            .force("link", d3.forceLink()
-                .id((d: any) => d.id)
-                .links(mockData.links.filter(link => 
-                    mockData.nodes.some(n => n.id === link.source) && 
-                    mockData.nodes.some(n => n.id === link.target)
-                ))
-                .distance(d => {
-                    // Longer distances between main classes
-                    if (d.source.type === 'main_class' && d.target.type === 'main_class') return 300;
-                    // Medium distance for class-to-property connections
-                    if (d.type === 'has_property') return 150;
-                    // Default distance for other connections
-                    return 200;
-                })
-                .strength(0.2)  // Keep links flexible
-            )
-            .force("charge", d3.forceManyBody()
-                .strength(-600)  // Stronger repulsion
-                .distanceMax(600)  // Longer range
-                .distanceMin(50)   // Minimum spacing
-            )
-            .force("collision", d3.forceCollide()
-                .radius(d => {
-                    // Larger collision radius for main classes
-                    if (d.type === 'main_class') return 80;
-                    if (d.type === 'sub_class') return 60;
-                    return 40;
-                })
-                .strength(0.7)
-            )
-            // Gentler hierarchical positioning
-            .force("y", d3.forceY((d: any) => {
-                if (d.id === "Thing") return 50;
-                if (d.type === "main_class") return height * 0.3;
-                if (d.type === "sub_class") return height * 0.5;
-                if (d.type === "property") return height * 0.7;
-                return height * 0.6;
-            }).strength(0.1))
-            .force("x", d3.forceX((d: any) => {
-                if (d.id === "Thing") return width / 2;
-                // Spread main classes more widely
-                if (d.type === "main_class") {
-                    return width * (0.2 + Math.random() * 0.6);
+            svg = d3.select(svgContainer)
+                .append("svg")
+                .attr("width", "100%")
+                .attr("height", "100%")
+                .call(zoom);
+
+            g = svg.append("g");
+
+            // Update the force simulation configuration
+            const simulation = d3.forceSimulation(mockData.nodes as any)
+                .force("link", d3.forceLink()
+                    .id((d: any) => d.id)
+                    .links(mockData.links.filter(link => 
+                        mockData.nodes.some(n => n.id === link.source) && 
+                        mockData.nodes.some(n => n.id === link.target)
+                    ))
+                    .distance(d => {
+                        // Longer distances between main classes
+                        if (d.source.type === 'main_class' && d.target.type === 'main_class') return 300;
+                        // Medium distance for class-to-property connections
+                        if (d.type === 'has_property') return 150;
+                        // Default distance for other connections
+                        return 200;
+                    })
+                    .strength(0.2)  // Keep links flexible
+                )
+                .force("charge", d3.forceManyBody()
+                    .strength(-600)  // Stronger repulsion
+                    .distanceMax(600)  // Longer range
+                    .distanceMin(50)   // Minimum spacing
+                )
+                .force("collision", d3.forceCollide()
+                    .radius(d => {
+                        // Larger collision radius for main classes
+                        if (d.type === 'main_class') return 80;
+                        if (d.type === 'sub_class') return 60;
+                        return 40;
+                    })
+                    .strength(0.7)
+                )
+                // Gentler hierarchical positioning
+                .force("y", d3.forceY((d: any) => {
+                    if (d.id === "Thing") return 50;
+                    if (d.type === "main_class") return height * 0.3;
+                    if (d.type === "sub_class") return height * 0.5;
+                    if (d.type === "property") return height * 0.7;
+                    return height * 0.6;
+                }).strength(0.1))
+                .force("x", d3.forceX((d: any) => {
+                    if (d.id === "Thing") return width / 2;
+                    // Spread main classes more widely
+                    if (d.type === "main_class") {
+                        return width * (0.2 + Math.random() * 0.6);
+                    }
+                    return width * (0.3 + Math.random() * 0.4);
+                }).strength(0.05))
+                .alphaDecay(0.005)
+                .velocityDecay(0.3);
+
+            // Only fix the Thing node
+            mockData.nodes.forEach((node: any) => {
+                if (node.id === "Thing") {
+                    node.fx = width / 2;
+                    node.fy = 50;
+                } else {
+                    node.fx = null;
+                    node.fy = null;
                 }
-                return width * (0.3 + Math.random() * 0.4);
-            }).strength(0.05))
-            .alphaDecay(0.005)
-            .velocityDecay(0.3);
+            });
 
-        // Only fix the Thing node
-        mockData.nodes.forEach((node: any) => {
-            if (node.id === "Thing") {
-                node.fx = width / 2;
-                node.fy = 50;
-            } else {
-                node.fx = null;
-                node.fy = null;
+            // Create links
+            const link = g.append("g")
+                .selectAll("line")
+                .data(mockData.links)
+                .join("line")
+                .attr("stroke", "#999")
+                .attr("stroke-opacity", 0.6)
+                .attr("stroke-width", 2);
+
+            // Create nodes
+            const nodeGroup = g.append("g")
+                .selectAll("g")
+                .data(mockData.nodes)
+                .join("g")
+                .call(d3.drag<any, any>()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended));
+
+            // Add circles to nodes with pointer cursor
+            nodeGroup.append("circle")
+                .attr("r", (d: any) => nodeTypes.find(t => t.id === d.type)?.radius || 8)
+                .attr("fill", (d: any) => nodeTypes.find(t => t.id === d.type)?.color || '#999')
+                .style("cursor", "pointer")
+                .on('mouseover', (event, d) => {
+                    hoveredNode = d;
+                })
+                .on('mouseout', () => {
+                    hoveredNode = null;
+                });
+
+            // Add labels NEXT TO nodes with hover effect
+            nodeGroup.append("text")
+                .text((d: any) => d.id)
+                .attr("x", (d: any) => (nodeTypes.find(t => t.id === d.type)?.radius || 8) + 5)
+                .attr("y", 5)
+                .attr("text-anchor", "start")
+                .attr("fill", "currentColor")
+                .attr("font-size", "12px")
+                .style("cursor", "pointer")
+                .on('mouseover', (event, d) => {
+                    hoveredNode = d;
+                })
+                .on('mouseout', () => {
+                    hoveredNode = null;
+                });
+
+            // Update positions on simulation tick
+            simulation.on("tick", () => {
+                link
+                    .attr("x1", (d: any) => d.source.x)
+                    .attr("y1", (d: any) => d.source.y)
+                    .attr("x2", (d: any) => d.target.x)
+                    .attr("y2", (d: any) => d.target.y);
+
+                nodeGroup
+                    .attr("transform", (d: any) => `translate(${d.x},${d.y})`);
+            });
+
+            // Drag functions
+            function dragstarted(event: any) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                event.subject.fx = event.subject.x;
+                event.subject.fy = event.subject.y;
             }
-        });
 
-        // Create links
-        const link = g.append("g")
-            .selectAll("line")
-            .data(mockData.links)
-            .join("line")
-            .attr("stroke", "#999")
-            .attr("stroke-opacity", 0.6)
-            .attr("stroke-width", 2);
-
-        // Create nodes
-        const nodeGroup = g.append("g")
-            .selectAll("g")
-            .data(mockData.nodes)
-            .join("g")
-            .call(d3.drag<any, any>()
-                .on("start", dragstarted)
-                .on("drag", dragged)
-                .on("end", dragended));
-
-        // Add circles to nodes with pointer cursor
-        nodeGroup.append("circle")
-            .attr("r", (d: any) => nodeTypes.find(t => t.id === d.type)?.radius || 8)
-            .attr("fill", (d: any) => nodeTypes.find(t => t.id === d.type)?.color || '#999')
-            .style("cursor", "pointer")
-            .on('mouseover', (event, d) => {
-                hoveredNode = d;
-            })
-            .on('mouseout', () => {
-                hoveredNode = null;
-            });
-
-        // Add labels NEXT TO nodes with hover effect
-        nodeGroup.append("text")
-            .text((d: any) => d.id)
-            .attr("x", (d: any) => (nodeTypes.find(t => t.id === d.type)?.radius || 8) + 5)
-            .attr("y", 5)
-            .attr("text-anchor", "start")
-            .attr("fill", "currentColor")
-            .attr("font-size", "12px")
-            .style("cursor", "pointer")
-            .on('mouseover', (event, d) => {
-                hoveredNode = d;
-            })
-            .on('mouseout', () => {
-                hoveredNode = null;
-            });
-
-        // Update positions on simulation tick
-        simulation.on("tick", () => {
-            link
-                .attr("x1", (d: any) => d.source.x)
-                .attr("y1", (d: any) => d.source.y)
-                .attr("x2", (d: any) => d.target.x)
-                .attr("y2", (d: any) => d.target.y);
-
-            nodeGroup
-                .attr("transform", (d: any) => `translate(${d.x},${d.y})`);
-        });
-
-        // Drag functions
-        function dragstarted(event: any) {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            event.subject.fx = event.subject.x;
-            event.subject.fy = event.subject.y;
-        }
-
-        function dragged(event: any) {
-            event.subject.fx = event.x;
-            event.subject.fy = event.y;
-        }
-
-        function dragended(event: any) {
-            if (!event.active) simulation.alphaTarget(0);
-            // Don't reset fx and fy to null - this keeps nodes where we drag them
-            // Only reset if it's not the Thing node (which should stay at the top)
-            if (event.subject.id !== "Thing") {
-                // Keep the fixed position where we dropped it
+            function dragged(event: any) {
                 event.subject.fx = event.x;
                 event.subject.fy = event.y;
             }
-        }
 
-        // Handle window resize
-        const resizeObserver = new ResizeObserver(() => {
-            width = svgContainer.clientWidth;
-            height = svgContainer.clientHeight;
-            simulation.force("center", d3.forceCenter(width / 2, height / 2));
-            simulation.alpha(0.3).restart();
-        });
-
-        resizeObserver.observe(svgContainer);
-
-        // Add click handler to close sidebar when clicking canvas
-        svg.on("click", () => {
-            if (currentTool === 'pan') {
-                sheetOpen = false;
-                selectedNode = null;
+            function dragended(event: any) {
+                if (!event.active) simulation.alphaTarget(0);
+                // Don't reset fx and fy to null - this keeps nodes where we drag them
+                // Only reset if it's not the Thing node (which should stay at the top)
+                if (event.subject.id !== "Thing") {
+                    // Keep the fixed position where we dropped it
+                    event.subject.fx = event.x;
+                    event.subject.fy = event.y;
+                }
             }
-        });
 
-        // Add click handler to the node group
-        nodeGroup.on("click", (event: MouseEvent, d: any) => {
-            event.stopPropagation();
-            event.preventDefault();
-            console.log('Node clicked in D3:', d);  // Debug log
-            handleNodeClick(d);
-        });
+            // Handle window resize
+            const resizeObserver = new ResizeObserver(() => {
+                width = svgContainer.clientWidth;
+                height = svgContainer.clientHeight;
+                simulation.force("center", d3.forceCenter(width / 2, height / 2));
+                simulation.alpha(0.3).restart();
+            });
 
-        document.addEventListener('click', handleClickOutside);
+            resizeObserver.observe(svgContainer);
 
-        // Listen for fullscreen changes
-        document.addEventListener('fullscreenchange', () => {
-            isFullscreen = !!document.fullscreenElement;
+            // Add click handler to close sidebar when clicking canvas
+            svg.on("click", () => {
+                if (currentTool === 'pan') {
+                    sheetOpen = false;
+                    selectedNode = null;
+                }
+            });
+
+            // Add click handler to the node group
+            nodeGroup.on("click", (event: MouseEvent, d: any) => {
+                event.stopPropagation();
+                event.preventDefault();
+                console.log('Node clicked in D3:', d);  // Debug log
+                handleNodeClick(d);
+            });
+
+            document.addEventListener('click', handleClickOutside);
+
+            // Listen for fullscreen changes
+            document.addEventListener('fullscreenchange', () => {
+                isFullscreen = !!document.fullscreenElement;
+            });
         });
 
         return () => {
@@ -623,6 +599,7 @@
             document.removeEventListener('fullscreenchange', () => {
                 isFullscreen = !!document.fullscreenElement;
             });
+            mediaQuery.removeEventListener('change', handleResize);
         };
     });
 
@@ -695,10 +672,54 @@
     }
 
     // First, add state for tracking active tab
-    let activeTab = 'properties';
+    let activeTab = 'filters';  // Set default tab to 'filters'
 
     function handleTabChange(tab: string) {
         activeTab = tab;
+    }
+
+    // Add fullscreen state
+    let isFullscreen = false;
+
+    // Add fullscreen toggle function
+    async function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            await svgContainer.requestFullscreen();
+            isFullscreen = true;
+        } else {
+            await document.exitFullscreen();
+            isFullscreen = false;
+        }
+    }
+
+    let hoveredNode: any = null;
+
+    // Add click outside handler
+    function handleClickOutside(event: MouseEvent) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.sidebar-container') && !target.closest('.dropdown-portal')) {
+            closeDropdowns();
+        }
+    }
+
+    // Single source of truth for which dropdown is open
+    type ActiveDropdown = 'filter' | 'relationship' | 'search' | null;
+    let activeDropdown: ActiveDropdown = null;
+
+    // Function to handle dropdown toggling
+    function toggleDropdown(dropdown: ActiveDropdown) {
+        // If clicking the same dropdown, close it
+        if (activeDropdown === dropdown) {
+            activeDropdown = null;
+        } else {
+            // If clicking a different dropdown, close the current one and open the new one
+            activeDropdown = dropdown;
+        }
+    }
+
+    // Function to close all dropdowns
+    function closeDropdowns() {
+        activeDropdown = null;
     }
 </script>
 
@@ -706,7 +727,7 @@
     .sidebar-container {
         border-right: 1px solid hsl(var(--border) / 0.3);
         background-color: hsl(var(--background));
-        transition: width 200ms ease;
+        transition: width 150ms cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .toggle-button {
@@ -882,103 +903,144 @@
     <div class="flex flex-1 gap-4 relative">
         <!-- Left Filter Panel -->
         <div 
-            class="sidebar-container relative"
+            class="sidebar-container relative 2xl:w-[320px]"
             style:width="{sidebarWidth}px"
         >
             <ScrollArea.Root class="h-full">
                 <div class="p-2">
                     {#if !isCollapsed}
-                        <div class="mb-4">
-                            <h3 class="font-semibold">Filters</h3>
-                        </div>
+                        <Tabs bind:value={activeTab} defaultValue="filters" class="w-full">
+                            <TabsList class="w-full grid grid-cols-2">
+                                <TabsTrigger value="filters" class="text-sm">Filters</TabsTrigger>
+                                <TabsTrigger value="hierarchy" class="text-sm">Hierarchy</TabsTrigger>
+                            </TabsList>
 
-                        <div class="space-y-6">
-                            <!-- Node Types -->
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium">Node Types</label>
-                                {#each nodeTypeFilters as type}
+                            <!-- Filters Tab -->
+                            <TabsContent value="filters" class="space-y-6">
+                                <!-- Node Types -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium">Node Types</label>
+                                    {#each nodeTypeFilters as type}
+                                        <label class="flex items-center gap-2">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={type.checked}
+                                                class="rounded" 
+                                                onchange={(e) => handleNodeTypeFilter(type.id, e.target.checked)}
+                                            />
+                                            <span class="text-sm">{type.name}</span>
+                                        </label>
+                                    {/each}
+                                </div>
+
+                                <!-- Relationships -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium">Relationships</label>
                                     <label class="flex items-center gap-2">
                                         <input 
                                             type="checkbox" 
-                                            checked={type.checked}
+                                            checked={relationshipFilters.direct}
                                             class="rounded" 
-                                            onchange={(e) => handleNodeTypeFilter(type.id, e.target.checked)}
+                                            onchange={(e) => handleRelationshipFilter('direct', e.target.checked)}
                                         />
-                                        <span class="text-sm">{type.name}</span>
+                                        <span class="text-sm">Direct Connections</span>
                                     </label>
-                                {/each}
-                            </div>
+                                    <label class="flex items-center gap-2">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={relationshipFilters.indirect}
+                                            class="rounded" 
+                                            onchange={(e) => handleRelationshipFilter('indirect', e.target.checked)}
+                                        />
+                                        <span class="text-sm">Indirect Connections</span>
+                                    </label>
+                                </div>
+                            </TabsContent>
 
-                            <!-- Relationships -->
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium">Relationships</label>
-                                <label class="flex items-center gap-2">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={relationshipFilters.direct}
-                                        class="rounded" 
-                                        onchange={(e) => handleRelationshipFilter('direct', e.target.checked)}
-                                    />
-                                    <span class="text-sm">Direct Connections</span>
-                                </label>
-                                <label class="flex items-center gap-2">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={relationshipFilters.indirect}
-                                        class="rounded" 
-                                        onchange={(e) => handleRelationshipFilter('indirect', e.target.checked)}
-                                    />
-                                    <span class="text-sm">Indirect Connections</span>
-                                </label>
-                            </div>
-                        </div>
+                            <!-- Hierarchy Tab -->
+                            <TabsContent value="hierarchy">
+                                <Accordion type="single" collapsible>
+                                    <AccordionItem value="root">
+                                        <AccordionTrigger>
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-2 h-2 rounded-full" style="background-color: {nodeTypes[0].color}" />
+                                                Thing
+                                            </div>
+                                        </AccordionTrigger>
+                                        <AccordionContent>
+                                            {#each mockData.nodes.filter(n => n.type === 'main_class') as mainClass}
+                                                <AccordionItem value={mainClass.id}>
+                                                    <AccordionTrigger>
+                                                        <div class="flex items-center gap-2">
+                                                            <div class="w-2 h-2 rounded-full" style="background-color: {nodeTypes[1].color}" />
+                                                            {mainClass.id}
+                                                        </div>
+                                                    </AccordionTrigger>
+                                                    <AccordionContent>
+                                                        {#each mockData.nodes.filter(n => n.type === 'sub_class' && mockData.links.some(l => l.source === mainClass.id && l.target === n.id)) as subClass}
+                                                            <div class="pl-4 py-2 flex items-center gap-2">
+                                                                <div class="w-2 h-2 rounded-full" style="background-color: {nodeTypes[2].color}" />
+                                                                {subClass.id}
+                                                            </div>
+                                                        {/each}
+                                                    </AccordionContent>
+                                                </AccordionItem>
+                                            {/each}
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                </Accordion>
+                            </TabsContent>
+                        </Tabs>
                     {:else}
+                        <!-- Collapsed state content -->
                         <div class="flex flex-col items-center gap-2">
-                            <!-- Simple Filter Button that opens a popover -->
-                            <DropdownMenu.Root>
-                                <DropdownMenu.Trigger asChild>
-                                    <Button variant="ghost" size="icon" class="w-8 h-8 p-0">
-                                        <Filter class="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenu.Trigger>
-                                <DropdownMenu.Content side="right" sideOffset={8}>
-                                    <DropdownMenu.Label>Node Types</DropdownMenu.Label>
-                                    <DropdownMenu.Separator />
-                                    {#each nodeTypeFilters as type}
-                                        <DropdownMenu.CheckboxItem 
-                                            checked={type.checked}
-                                            onCheckedChange={(checked) => handleNodeTypeFilter(type.id, checked)}
-                                        >
-                                            {type.name}
-                                        </DropdownMenu.CheckboxItem>
-                                    {/each}
-                                </DropdownMenu.Content>
-                            </DropdownMenu.Root>
+                            {#if activeTab === 'filters'}
+                                <!-- Filter Types Button -->
+                                <DropdownMenu.Root>
+                                    <DropdownMenu.Trigger asChild>
+                                        <Button variant="ghost" size="icon" class="w-8 h-8 p-0">
+                                            <Filter class="h-3.5 w-3.5" />
+                                        </Button>
+                                    </DropdownMenu.Trigger>
+                                    <DropdownMenu.Content side="right" sideOffset={8}>
+                                        <DropdownMenu.Label>Node Types</DropdownMenu.Label>
+                                        <DropdownMenu.Separator />
+                                        {#each nodeTypeFilters as type}
+                                            <DropdownMenu.CheckboxItem 
+                                                checked={type.checked}
+                                                onCheckedChange={(checked) => handleNodeTypeFilter(type.id, checked)}
+                                            >
+                                                {type.name}
+                                            </DropdownMenu.CheckboxItem>
+                                        {/each}
+                                    </DropdownMenu.Content>
+                                </DropdownMenu.Root>
 
-                            <!-- Simple Relationships Button that opens a popover -->
-                            <DropdownMenu.Root>
-                                <DropdownMenu.Trigger asChild>
-                                    <Button variant="ghost" size="icon" class="w-8 h-8 p-0">
-                                        <Network class="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenu.Trigger>
-                                <DropdownMenu.Content side="right" sideOffset={8}>
-                                    <DropdownMenu.Label>Relationships</DropdownMenu.Label>
-                                    <DropdownMenu.Separator />
-                                    <DropdownMenu.CheckboxItem 
-                                        checked={relationshipFilters.direct}
-                                        onCheckedChange={(checked) => handleRelationshipFilter('direct', checked)}
-                                    >
-                                        Direct Connections
-                                    </DropdownMenu.CheckboxItem>
-                                    <DropdownMenu.CheckboxItem 
-                                        checked={relationshipFilters.indirect}
-                                        onCheckedChange={(checked) => handleRelationshipFilter('indirect', checked)}
-                                    >
-                                        Indirect Connections
-                                    </DropdownMenu.CheckboxItem>
-                                </DropdownMenu.Content>
-                            </DropdownMenu.Root>
+                                <!-- Relationships Button -->
+                                <DropdownMenu.Root>
+                                    <DropdownMenu.Trigger asChild>
+                                        <Button variant="ghost" size="icon" class="w-8 h-8 p-0">
+                                            <Network class="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenu.Trigger>
+                                    <DropdownMenu.Content side="right" sideOffset={8}>
+                                        <DropdownMenu.Label>Relationships</DropdownMenu.Label>
+                                        <DropdownMenu.Separator />
+                                        <DropdownMenu.CheckboxItem 
+                                            checked={relationshipFilters.direct}
+                                            onCheckedChange={(checked) => handleRelationshipFilter('direct', checked)}
+                                        >
+                                            Direct Connections
+                                        </DropdownMenu.CheckboxItem>
+                                        <DropdownMenu.CheckboxItem 
+                                            checked={relationshipFilters.indirect}
+                                            onCheckedChange={(checked) => handleRelationshipFilter('indirect', checked)}
+                                        >
+                                            Indirect Connections
+                                        </DropdownMenu.CheckboxItem>
+                                    </DropdownMenu.Content>
+                                </DropdownMenu.Root>
+                            {/if}
                         </div>
                     {/if}
                 </div>
