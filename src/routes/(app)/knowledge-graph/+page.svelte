@@ -30,6 +30,7 @@
     import Maximize2 from "lucide-svelte/icons/maximize-2";
     import Minimize2 from "lucide-svelte/icons/minimize-2";
     import * as Table from "$lib/components/ui/table";
+    import { Badge } from "$lib/components/ui/badge";
 
     // Add tool state
     let currentTool: 'pan' | 'node' | 'edge' | 'select' = 'pan';
@@ -511,7 +512,7 @@
             .attr("stroke-width", 2);
 
         // Create nodes
-        const node = g.append("g")
+        const nodeGroup = g.append("g")
             .selectAll("g")
             .data(mockData.nodes)
             .join("g")
@@ -521,38 +522,32 @@
                 .on("end", dragended));
 
         // Add circles to nodes with pointer cursor
-        node.append("circle")
+        nodeGroup.append("circle")
             .attr("r", (d: any) => nodeTypes.find(t => t.id === d.type)?.radius || 8)
             .attr("fill", (d: any) => nodeTypes.find(t => t.id === d.type)?.color || '#999')
-            .style("cursor", "pointer");
+            .style("cursor", "pointer")
+            .on('mouseover', (event, d) => {
+                hoveredNode = d;
+            })
+            .on('mouseout', () => {
+                hoveredNode = null;
+            });
 
-        // Add labels NEXT TO nodes
-        node.append("text")
+        // Add labels NEXT TO nodes with hover effect
+        nodeGroup.append("text")
             .text((d: any) => d.id)
             .attr("x", (d: any) => (nodeTypes.find(t => t.id === d.type)?.radius || 8) + 5)
             .attr("y", 5)
             .attr("text-anchor", "start")
             .attr("fill", "currentColor")
             .attr("font-size", "12px")
-            .style("pointer-events", "none");
-
-        // Add hover effect to nodes
-        node.on('mouseover', (event, d) => {
-            hoveredNode = d;
-            d3.select(event.currentTarget)
-                .select('circle')
-                .transition()
-                .duration(200)
-                .attr("r", (d: any) => (nodeTypes.find(t => t.id === d.type)?.radius || 8) + 2);
-        })
-        .on('mouseout', (event) => {
-            hoveredNode = null;
-            d3.select(event.currentTarget)
-                .select('circle')
-                .transition()
-                .duration(200)
-                .attr("r", (d: any) => nodeTypes.find(t => t.id === d.type)?.radius || 8);
-        });
+            .style("cursor", "pointer")
+            .on('mouseover', (event, d) => {
+                hoveredNode = d;
+            })
+            .on('mouseout', () => {
+                hoveredNode = null;
+            });
 
         // Update positions on simulation tick
         simulation.on("tick", () => {
@@ -562,7 +557,7 @@
                 .attr("x2", (d: any) => d.target.x)
                 .attr("y2", (d: any) => d.target.y);
 
-            node
+            nodeGroup
                 .attr("transform", (d: any) => `translate(${d.x},${d.y})`);
         });
 
@@ -608,7 +603,7 @@
         });
 
         // Add click handler to the node group
-        node.on("click", (event: MouseEvent, d: any) => {
+        nodeGroup.on("click", (event: MouseEvent, d: any) => {
             event.stopPropagation();
             event.preventDefault();
             console.log('Node clicked in D3:', d);  // Debug log
@@ -1022,6 +1017,29 @@
             bind:this={svgContainer}
             class="flex-1 bg-secondary/20 rounded-lg border relative overflow-hidden"
         >
+            <!-- Update the key/legend -->
+            <div class="absolute top-4 left-4 p-3 bg-background/80 backdrop-blur-sm rounded-lg border shadow-sm">
+                <div class="text-sm font-medium mb-2">Node Types</div>
+                <div class="flex flex-col gap-2">
+                    {#each nodeTypes as type}
+                        {@const count = mockData.nodes.filter(node => node.type === type.id).length}
+                        <div class="flex items-center gap-2">
+                            <Badge 
+                                variant="outline" 
+                                class="flex items-center gap-2 border-2"
+                                style="border-color: {type.color}; color: {type.color};"
+                            >
+                                <div 
+                                    class="w-2 h-2 rounded-full" 
+                                    style="background-color: {type.color};"
+                                />
+                                {type.name} ({count})
+                            </Badge>
+                        </div>
+                    {/each}
+                </div>
+            </div>
+
             <!-- Update the hover info bar -->
             <div class="absolute bottom-0 left-0 right-0 h-8 bg-secondary/10 border-t flex items-center px-4 text-sm text-muted-foreground">
                 {#if hoveredNode}
