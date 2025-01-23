@@ -27,6 +27,8 @@
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
     import { TooltipProvider } from "$lib/components/ui/tooltip";
     import { browser } from '$app/environment';
+    import Maximize2 from "lucide-svelte/icons/maximize-2";
+    import Minimize2 from "lucide-svelte/icons/minimize-2";
 
     // Add tool state
     let currentTool: 'pan' | 'node' | 'edge' | 'select' = 'pan';
@@ -142,6 +144,20 @@
         }
     }
 
+    // Add fullscreen state
+    let isFullscreen = false;
+
+    // Add fullscreen toggle function
+    async function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            await svgContainer.requestFullscreen();
+            isFullscreen = true;
+        } else {
+            await document.exitFullscreen();
+            isFullscreen = false;
+        }
+    }
+
     onMount(() => {
         // Initialize SVG
         width = svgContainer.clientWidth;
@@ -253,9 +269,18 @@
         });
 
         document.addEventListener('click', handleClickOutside);
+
+        // Listen for fullscreen changes
+        document.addEventListener('fullscreenchange', () => {
+            isFullscreen = !!document.fullscreenElement;
+        });
+
         return () => {
             resizeObserver.disconnect();
             document.removeEventListener('click', handleClickOutside);
+            document.removeEventListener('fullscreenchange', () => {
+                isFullscreen = !!document.fullscreenElement;
+            });
         };
     });
 
@@ -471,6 +496,21 @@
                         <p>Reset Zoom</p>
                     </Tooltip.Content>
                 </Tooltip.Root>
+
+                <Tooltip.Root>
+                    <Tooltip.Trigger asChild>
+                        <Button variant="ghost" size="icon" onclick={toggleFullscreen}>
+                            {#if isFullscreen}
+                                <Minimize2 class="h-4 w-4" />
+                            {:else}
+                                <Maximize2 class="h-4 w-4" />
+                            {/if}
+                        </Button>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content>
+                        <p>{isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}</p>
+                    </Tooltip.Content>
+                </Tooltip.Root>
             </div>
             
             <Separator orientation="vertical" class="h-8" />
@@ -644,6 +684,7 @@
                         <TabsList class="w-full">
                             <TabsTrigger value="properties">Properties</TabsTrigger>
                             <TabsTrigger value="styling">Styling</TabsTrigger>
+                            <TabsTrigger value="data">Data</TabsTrigger>
                         </TabsList>
                         <TabsContent value="properties">
                             <div class="space-y-4">
@@ -695,6 +736,78 @@
                                         class="w-full"
                                         value="30"
                                     />
+                                </div>
+                            </div>
+                        </TabsContent>
+                        <TabsContent value="data">
+                            <div class="space-y-4">
+                                <!-- Ontology Class Info -->
+                                <div>
+                                    <label class="text-sm font-medium">Ontology Class</label>
+                                    <div class="mt-1 p-3 rounded-md bg-secondary/20">
+                                        <div class="flex items-center gap-2">
+                                            <div class={`w-2 h-2 rounded-full ${nodeTypes.find(t => t.id === selectedNode.type)?.color ?? 'bg-gray-400'}`} />
+                                            <span>{nodeTypes.find(t => t.id === selectedNode.type)?.name ?? 'Unknown Type'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Attributes -->
+                                <div>
+                                    <label class="text-sm font-medium">Attributes</label>
+                                    <div class="mt-1 space-y-2">
+                                        {#if selectedNode.properties?.attributes?.length}
+                                            {#each selectedNode.properties.attributes as attribute}
+                                                <div class="flex items-center justify-between p-2 rounded-md bg-secondary/20">
+                                                    <span class="text-sm">{attribute}</span>
+                                                    <Button variant="ghost" size="sm">
+                                                        <Plus class="h-3 w-3" />
+                                                    </Button>
+                                                </div>
+                                            {/each}
+                                        {:else}
+                                            <div class="text-sm text-muted-foreground p-2">
+                                                No attributes defined
+                                            </div>
+                                        {/if}
+                                    </div>
+                                </div>
+
+                                <!-- Relationships -->
+                                <div>
+                                    <label class="text-sm font-medium">Relationships</label>
+                                    <div class="mt-1 space-y-2">
+                                        {#if mockData.links.some(link => link.source === selectedNode.id || link.target === selectedNode.id)}
+                                            {#each mockData.links.filter(link => link.source === selectedNode.id || link.target === selectedNode.id) as link}
+                                                <div class="flex items-center justify-between p-2 rounded-md bg-secondary/20">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-sm">
+                                                            {link.source === selectedNode.id ? 
+                                                                `→ ${link.target}` : 
+                                                                `← ${link.source}`}
+                                                        </span>
+                                                    </div>
+                                                    <Button variant="ghost" size="sm">
+                                                        <Network class="h-3 w-3" />
+                                                    </Button>
+                                                </div>
+                                            {/each}
+                                        {:else}
+                                            <div class="text-sm text-muted-foreground p-2">
+                                                No relationships defined
+                                            </div>
+                                        {/if}
+                                    </div>
+                                </div>
+
+                                <!-- Additional Metadata -->
+                                <div>
+                                    <label class="text-sm font-medium">Metadata</label>
+                                    <div class="mt-1 rounded-md bg-secondary/20 p-2">
+                                        <pre class="text-xs overflow-auto">
+                                            {JSON.stringify(selectedNode, null, 2)}
+                                        </pre>
+                                    </div>
                                 </div>
                             </div>
                         </TabsContent>
