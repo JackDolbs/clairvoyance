@@ -366,6 +366,8 @@
         }
     }
 
+    let hoveredNode: any = null;
+
     onMount(() => {
         // Initialize SVG
         width = svgContainer.clientWidth;
@@ -484,6 +486,14 @@
         // Listen for fullscreen changes
         document.addEventListener('fullscreenchange', () => {
             isFullscreen = !!document.fullscreenElement;
+        });
+
+        // Update node creation to add hover handlers
+        node.on('mouseover', (event, d) => {
+            hoveredNode = d;
+        })
+        .on('mouseout', () => {
+            hoveredNode = null;
         });
 
         return () => {
@@ -885,7 +895,34 @@
         <div 
             bind:this={svgContainer}
             class="flex-1 bg-secondary/20 rounded-lg border relative overflow-hidden"
-        />
+        >
+            <!-- Update the hover info bar -->
+            <div class="absolute bottom-0 left-0 right-0 h-8 bg-secondary/10 border-t flex items-center px-4 text-sm text-muted-foreground">
+                {#if hoveredNode}
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-2">
+                            <div class={`w-2 h-2 rounded-full`} style:background-color={nodeTypes.find(t => t.id === hoveredNode.type)?.color} />
+                            <span class="font-medium">{hoveredNode.type}</span>
+                        </div>
+                        <span>|</span>
+                        <span>{hoveredNode.id}</span>
+                        <span>|</span>
+                        <span>{hoveredNode.properties?.description || 'No description'}</span>
+                        <span>|</span>
+                        <span>Connections: {mockData.links.filter(l => l.source === hoveredNode.id || l.target === hoveredNode.id).length}</span>
+                    </div>
+                {:else}
+                    <div class="flex items-center gap-2">
+                        <span class="text-muted-foreground">Status:</span>
+                        <span>{mockData.nodes.length} nodes</span>
+                        <span>|</span>
+                        <span>{mockData.links.length} connections</span>
+                        <span>|</span>
+                        <span class="text-muted-foreground">Hover over any item to view its details</span>
+                    </div>
+                {/if}
+            </div>
+        </div>
 
         <!-- Right sidebar -->
         <Sheet.Root bind:open={sheetOpen} onOpenChange={(open) => { if (!open) selectedNode = null; }}>
