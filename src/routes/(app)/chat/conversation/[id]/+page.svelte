@@ -11,7 +11,7 @@
     import { PlusCircle, FileText, Database } from "lucide-svelte";
     import { onMount } from 'svelte';
     import * as Avatar from "$lib/components/ui/avatar";
-    import { displayName } from '$lib/stores/profile';
+    import { firstName, lastName, getFullName } from '$lib/stores/profile';
     import ChatHistorySheet from "$lib/components/chat-history-sheet.svelte";
     import ChatInput from "$lib/components/chat-input.svelte";
 
@@ -153,7 +153,7 @@
                         <div class="flex gap-6">
                             <Avatar.Root class="h-12 w-12 shrink-0 rounded-lg">
                                 <Avatar.Fallback class="rounded-lg font-orbitron">
-                                    {$displayName.slice(0, 2).toUpperCase()}
+                                    {$getFullName(firstName, lastName).slice(0, 2).toUpperCase()}
                                 </Avatar.Fallback>
                             </Avatar.Root>
                             <div class="flex-1 space-y-1">
