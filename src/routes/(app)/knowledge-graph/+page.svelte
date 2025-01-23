@@ -994,53 +994,51 @@
                     {:else}
                         <!-- Collapsed state content -->
                         <div class="flex flex-col items-center gap-2">
-                            {#if activeTab === 'filters'}
-                                <!-- Filter Types Button -->
-                                <DropdownMenu.Root>
-                                    <DropdownMenu.Trigger asChild>
-                                        <Button variant="ghost" size="icon" class="w-8 h-8 p-0">
-                                            <Filter class="h-3.5 w-3.5" />
-                                        </Button>
-                                    </DropdownMenu.Trigger>
-                                    <DropdownMenu.Content side="right" sideOffset={8}>
-                                        <DropdownMenu.Label>Node Types</DropdownMenu.Label>
-                                        <DropdownMenu.Separator />
-                                        {#each nodeTypeFilters as type}
-                                            <DropdownMenu.CheckboxItem 
-                                                checked={type.checked}
-                                                onCheckedChange={(checked) => handleNodeTypeFilter(type.id, checked)}
-                                            >
-                                                {type.name}
-                                            </DropdownMenu.CheckboxItem>
-                                        {/each}
-                                    </DropdownMenu.Content>
-                                </DropdownMenu.Root>
+                            <!-- Always show filter buttons when collapsed -->
+                            <DropdownMenu.Root>
+                                <DropdownMenu.Trigger asChild>
+                                    <Button variant="ghost" size="icon" class="w-8 h-8 p-0">
+                                        <Filter class="h-3.5 w-3.5" />
+                                    </Button>
+                                </DropdownMenu.Trigger>
+                                <DropdownMenu.Content side="right" sideOffset={8}>
+                                    <DropdownMenu.Label>Node Types</DropdownMenu.Label>
+                                    <DropdownMenu.Separator />
+                                    {#each nodeTypeFilters as type}
+                                        <DropdownMenu.CheckboxItem 
+                                            checked={type.checked}
+                                            onCheckedChange={(checked) => handleNodeTypeFilter(type.id, checked)}
+                                        >
+                                            {type.name}
+                                        </DropdownMenu.CheckboxItem>
+                                    {/each}
+                                </DropdownMenu.Content>
+                            </DropdownMenu.Root>
 
-                                <!-- Relationships Button -->
-                                <DropdownMenu.Root>
-                                    <DropdownMenu.Trigger asChild>
-                                        <Button variant="ghost" size="icon" class="w-8 h-8 p-0">
-                                            <Network class="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenu.Trigger>
-                                    <DropdownMenu.Content side="right" sideOffset={8}>
-                                        <DropdownMenu.Label>Relationships</DropdownMenu.Label>
-                                        <DropdownMenu.Separator />
-                                        <DropdownMenu.CheckboxItem 
-                                            checked={relationshipFilters.direct}
-                                            onCheckedChange={(checked) => handleRelationshipFilter('direct', checked)}
-                                        >
-                                            Direct Connections
-                                        </DropdownMenu.CheckboxItem>
-                                        <DropdownMenu.CheckboxItem 
-                                            checked={relationshipFilters.indirect}
-                                            onCheckedChange={(checked) => handleRelationshipFilter('indirect', checked)}
-                                        >
-                                            Indirect Connections
-                                        </DropdownMenu.CheckboxItem>
-                                    </DropdownMenu.Content>
-                                </DropdownMenu.Root>
-                            {/if}
+                            <!-- Relationships Button -->
+                            <DropdownMenu.Root>
+                                <DropdownMenu.Trigger asChild>
+                                    <Button variant="ghost" size="icon" class="w-8 h-8 p-0">
+                                        <Network class="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenu.Trigger>
+                                <DropdownMenu.Content side="right" sideOffset={8}>
+                                    <DropdownMenu.Label>Relationships</DropdownMenu.Label>
+                                    <DropdownMenu.Separator />
+                                    <DropdownMenu.CheckboxItem 
+                                        checked={relationshipFilters.direct}
+                                        onCheckedChange={(checked) => handleRelationshipFilter('direct', checked)}
+                                    >
+                                        Direct Connections
+                                    </DropdownMenu.CheckboxItem>
+                                    <DropdownMenu.CheckboxItem 
+                                        checked={relationshipFilters.indirect}
+                                        onCheckedChange={(checked) => handleRelationshipFilter('indirect', checked)}
+                                    >
+                                        Indirect Connections
+                                    </DropdownMenu.CheckboxItem>
+                                </DropdownMenu.Content>
+                            </DropdownMenu.Root>
                         </div>
                     {/if}
                 </div>
