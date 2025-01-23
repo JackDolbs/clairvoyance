@@ -26,6 +26,7 @@
     import * as Tooltip from "$lib/components/ui/tooltip";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
     import { TooltipProvider } from "$lib/components/ui/tooltip";
+    import { browser } from '$app/environment';
 
     // Add tool state
     let currentTool: 'pan' | 'node' | 'edge' | 'select' = 'pan';
@@ -111,6 +112,34 @@
     function toggleSidebar() {
         isCollapsed = !isCollapsed;
         sidebarWidth = isCollapsed ? 64 : 240;
+    }
+
+    // Single source of truth for which dropdown is open
+    type ActiveDropdown = 'filter' | 'relationship' | 'search' | null;
+    let activeDropdown: ActiveDropdown = null;
+
+    // Function to handle dropdown toggling
+    function toggleDropdown(dropdown: ActiveDropdown) {
+        // If clicking the same dropdown, close it
+        if (activeDropdown === dropdown) {
+            activeDropdown = null;
+        } else {
+            // If clicking a different dropdown, close the current one and open the new one
+            activeDropdown = dropdown;
+        }
+    }
+
+    // Function to close all dropdowns
+    function closeDropdowns() {
+        activeDropdown = null;
+    }
+
+    // Add click outside handler
+    function handleClickOutside(event: MouseEvent) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.sidebar-container') && !target.closest('.dropdown-portal')) {
+            closeDropdowns();
+        }
     }
 
     onMount(() => {
@@ -223,8 +252,10 @@
             handleNodeClick(d);
         });
 
+        document.addEventListener('click', handleClickOutside);
         return () => {
             resizeObserver.disconnect();
+            document.removeEventListener('click', handleClickOutside);
         };
     });
 
@@ -520,108 +551,61 @@
                     {:else}
                         <div class="flex flex-col items-center gap-2">
                             <!-- Node Types Filter -->
-                            <DropdownMenu.Root 
-                                open={filterDropdownOpen} 
-                                onOpenChange={(open) => filterDropdownOpen = open}
-                            >
+                            <div class="relative">
                                 <Tooltip.Root>
                                     <Tooltip.Trigger asChild>
-                                        <DropdownMenu.Trigger asChild>
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon"
-                                                class="w-8 h-8 p-0"
-                                            >
-                                                <Filter class="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenu.Trigger>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon"
+                                            class="w-8 h-8 p-0"
+                                            onclick={() => toggleDropdown('filter')}
+                                        >
+                                            <Filter class="h-4 w-4" />
+                                        </Button>
                                     </Tooltip.Trigger>
                                     <Tooltip.Content side="right">
                                         <p>Filter by type</p>
                                     </Tooltip.Content>
                                 </Tooltip.Root>
-                                <DropdownMenu.Content align="start" side="right">
-                                    <DropdownMenu.Label>Node Types</DropdownMenu.Label>
-                                    {#each nodeTypeFilters as type}
-                                        <DropdownMenu.CheckboxItem 
-                                            checked={type.checked}
-                                            onCheckedChange={(checked) => handleNodeTypeFilter(type.id, checked)}
-                                        >
-                                            {type.name}
-                                        </DropdownMenu.CheckboxItem>
-                                    {/each}
-                                </DropdownMenu.Content>
-                            </DropdownMenu.Root>
+                            </div>
 
                             <!-- Relationships Filter -->
-                            <DropdownMenu.Root 
-                                open={relationshipDropdownOpen} 
-                                onOpenChange={(open) => relationshipDropdownOpen = open}
-                            >
+                            <div class="relative">
                                 <Tooltip.Root>
                                     <Tooltip.Trigger asChild>
-                                        <DropdownMenu.Trigger asChild>
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon"
-                                                class="w-8 h-8 p-0"
-                                            >
-                                                <Network class="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenu.Trigger>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon"
+                                            class="w-8 h-8 p-0"
+                                            onclick={() => toggleDropdown('relationship')}
+                                        >
+                                            <Network class="h-4 w-4" />
+                                        </Button>
                                     </Tooltip.Trigger>
                                     <Tooltip.Content side="right">
                                         <p>Filter relationships</p>
                                     </Tooltip.Content>
                                 </Tooltip.Root>
-                                <DropdownMenu.Content align="start" side="right">
-                                    <DropdownMenu.Label>Relationships</DropdownMenu.Label>
-                                    <DropdownMenu.CheckboxItem 
-                                        checked={relationshipFilters.direct}
-                                        onCheckedChange={(checked) => handleRelationshipFilter('direct', checked)}
-                                    >
-                                        Direct Connections
-                                    </DropdownMenu.CheckboxItem>
-                                    <DropdownMenu.CheckboxItem 
-                                        checked={relationshipFilters.indirect}
-                                        onCheckedChange={(checked) => handleRelationshipFilter('indirect', checked)}
-                                    >
-                                        Indirect Connections
-                                    </DropdownMenu.CheckboxItem>
-                                </DropdownMenu.Content>
-                            </DropdownMenu.Root>
+                            </div>
 
                             <!-- Search -->
-                            <DropdownMenu.Root 
-                                open={searchDropdownOpen} 
-                                onOpenChange={(open) => searchDropdownOpen = open}
-                            >
+                            <div class="relative">
                                 <Tooltip.Root>
                                     <Tooltip.Trigger asChild>
-                                        <DropdownMenu.Trigger asChild>
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon"
-                                                class="w-8 h-8 p-0"
-                                            >
-                                                <Search class="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenu.Trigger>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon"
+                                            class="w-8 h-8 p-0"
+                                            onclick={() => toggleDropdown('search')}
+                                        >
+                                            <Search class="h-4 w-4" />
+                                        </Button>
                                     </Tooltip.Trigger>
                                     <Tooltip.Content side="right">
                                         <p>Search nodes</p>
                                     </Tooltip.Content>
                                 </Tooltip.Root>
-                                <DropdownMenu.Content align="start" side="right" class="w-[200px] p-2">
-                                    <input 
-                                        type="text" 
-                                        value={searchQuery}
-                                        placeholder="Search nodes..." 
-                                        class="w-full p-2 rounded-md bg-secondary/20"
-                                        onchange={(e) => handleSearch(e.target.value)}
-                                    />
-                                </DropdownMenu.Content>
-                            </DropdownMenu.Root>
+                            </div>
                         </div>
                     {/if}
                 </div>
@@ -726,4 +710,81 @@
             {/if}
         </Sheet.Root>
     </div>
-</div> 
+</div>
+
+{#if browser}
+    <div class="dropdown-portal fixed inset-0 pointer-events-none">
+        <div class="relative h-full">
+            <!-- Filter Types Dropdown Portal -->
+            {#if activeDropdown === 'filter'}
+                <div 
+                    class="absolute pointer-events-auto"
+                    style="left: {sidebarWidth + 8}px; top: 80px;"
+                >
+                    <div class="bg-popover rounded-md border shadow-md w-56 p-2">
+                        <div class="font-medium mb-2">Node Types</div>
+                        {#each nodeTypeFilters as type}
+                            <label class="flex items-center gap-2 p-1 hover:bg-muted rounded">
+                                <input 
+                                    type="checkbox" 
+                                    checked={type.checked}
+                                    class="rounded" 
+                                    onchange={(e) => handleNodeTypeFilter(type.id, e.target.checked)}
+                                />
+                                <span class="text-sm">{type.name}</span>
+                            </label>
+                        {/each}
+                    </div>
+                </div>
+            {/if}
+
+            <!-- Relationships Dropdown Portal -->
+            {#if activeDropdown === 'relationship'}
+                <div 
+                    class="absolute pointer-events-auto"
+                    style="left: {sidebarWidth + 8}px; top: 120px;"
+                >
+                    <div class="bg-popover rounded-md border shadow-md w-56 p-2">
+                        <div class="font-medium mb-2">Relationships</div>
+                        <label class="flex items-center gap-2 p-1 hover:bg-muted rounded">
+                            <input 
+                                type="checkbox" 
+                                checked={relationshipFilters.direct}
+                                class="rounded" 
+                                onchange={(e) => handleRelationshipFilter('direct', e.target.checked)}
+                            />
+                            <span class="text-sm">Direct Connections</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-1 hover:bg-muted rounded">
+                            <input 
+                                type="checkbox" 
+                                checked={relationshipFilters.indirect}
+                                class="rounded" 
+                                onchange={(e) => handleRelationshipFilter('indirect', e.target.checked)}
+                            />
+                            <span class="text-sm">Indirect Connections</span>
+                        </label>
+                    </div>
+                </div>
+            {/if}
+
+            <!-- Search Dropdown Portal -->
+            {#if activeDropdown === 'search'}
+                <div 
+                    class="absolute pointer-events-auto"
+                    style="left: {sidebarWidth + 8}px; top: 160px;"
+                >
+                    <div class="bg-popover rounded-md border shadow-md w-56 p-2">
+                        <input 
+                            type="text" 
+                            value={searchQuery}
+                            placeholder="Search nodes..." 
+                            class="w-full p-2 rounded-md bg-secondary/20"
+                            onchange={(e) => handleSearch(e.target.value)}
+                        />
+                    </div>
+                </div>
+            {/if}
+        </div>
+    </div>
+{/if} 
