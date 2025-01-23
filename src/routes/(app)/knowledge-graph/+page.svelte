@@ -684,7 +684,9 @@
     // Add fullscreen toggle function
     async function toggleFullscreen() {
         if (!document.fullscreenElement) {
-            await svgContainer.requestFullscreen();
+            // Get the container with the background
+            const whiteboardContainer = document.querySelector('.whiteboard-container');
+            await whiteboardContainer?.requestFullscreen();
             isFullscreen = true;
         } else {
             await document.exitFullscreen();
@@ -750,6 +752,19 @@
 
     .toggle-button:hover {
         background-color: hsl(var(--muted));
+    }
+
+    /* Fullscreen styles */
+    :global(.whiteboard-container:fullscreen) {
+        padding: 1rem;
+        background-color: hsl(var(--background));
+    }
+
+    :global(.whiteboard-container:fullscreen .graph-area) {
+        background-color: hsl(var(--secondary) / 0.2);
+        border: 1px solid hsl(var(--border));
+        border-radius: 0.5rem;
+        height: 100%;
     }
 
     :global(svg) {
@@ -1058,9 +1073,15 @@
 
         <!-- Main canvas area -->
         <div 
-            bind:this={svgContainer}
-            class="flex-1 bg-secondary/20 rounded-lg border relative overflow-hidden"
+            class="whiteboard-container flex-1 relative overflow-hidden"
         >
+            <div 
+                bind:this={svgContainer} 
+                class="graph-area w-full h-full bg-secondary/20 rounded-lg border"
+            >
+                <!-- SVG will be rendered here -->
+            </div>
+
             <!-- Update the key/legend -->
             <div class="absolute top-4 left-4 p-3 bg-background/80 backdrop-blur-sm rounded-lg border shadow-sm">
                 <div class="text-sm font-medium mb-2">Node Types</div>
