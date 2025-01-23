@@ -743,9 +743,9 @@
             Knowledge Graph
         </h1>
         
-        <div class="flex items-center gap-2">
-            <!-- Graph Tools -->
-            <div class="flex items-center gap-1 bg-secondary rounded-lg p-1">
+        <div class="flex items-center gap-4 p-4">
+            <!-- Tools Section -->
+            <div class="flex items-center gap-2">
                 <Tooltip.Root>
                     <Tooltip.Trigger asChild>
                         <Button 
@@ -758,21 +758,6 @@
                     </Tooltip.Trigger>
                     <Tooltip.Content>
                         <p>Pan Tool</p>
-                    </Tooltip.Content>
-                </Tooltip.Root>
-
-                <Tooltip.Root>
-                    <Tooltip.Trigger asChild>
-                        <Button 
-                            variant={currentTool === 'select' ? 'default' : 'ghost'} 
-                            size="icon"
-                            onclick={() => currentTool = 'select'}
-                        >
-                            <Circle class="h-4 w-4" />
-                        </Button>
-                    </Tooltip.Trigger>
-                    <Tooltip.Content>
-                        <p>Select Tool</p>
                     </Tooltip.Content>
                 </Tooltip.Root>
 
@@ -809,21 +794,24 @@
 
             <Separator orientation="vertical" class="h-8" />
 
+            <!-- Search Input -->
+            <div class="relative flex-1 max-w-[300px]">
+                <div class="flex items-center h-9 w-full rounded-md border bg-background">
+                    <Search class="h-4 w-4 ml-3 text-muted-foreground" />
+                    <input 
+                        type="text" 
+                        placeholder="Search nodes..." 
+                        class="h-full flex-1 bg-transparent px-3 text-sm outline-none border-none"
+                        value={searchQuery}
+                        oninput={(e) => handleSearch(e.currentTarget.value)}
+                    />
+                </div>
+            </div>
+
+            <Separator orientation="vertical" class="h-8" />
+
             <!-- Zoom Controls -->
-            <div class="flex items-center gap-1 bg-secondary rounded-lg p-1">
-                <Tooltip.Root>
-                    <Tooltip.Trigger asChild>
-                        <Button variant="ghost" size="icon" onclick={zoomOut}>
-                            <ZoomOut class="h-4 w-4" />
-                        </Button>
-                    </Tooltip.Trigger>
-                    <Tooltip.Content>
-                        <p>Zoom Out</p>
-                    </Tooltip.Content>
-                </Tooltip.Root>
-
-                <span class="w-12 text-center text-sm">{zoomLevel}%</span>
-
+            <div class="flex items-center gap-2">
                 <Tooltip.Root>
                     <Tooltip.Trigger asChild>
                         <Button variant="ghost" size="icon" onclick={zoomIn}>
@@ -835,6 +823,23 @@
                     </Tooltip.Content>
                 </Tooltip.Root>
 
+                <div class="w-[40px] text-center text-sm">
+                    {zoomLevel}%
+                </div>
+
+                <Tooltip.Root>
+                    <Tooltip.Trigger asChild>
+                        <Button variant="ghost" size="icon" onclick={zoomOut}>
+                            <ZoomOut class="h-4 w-4" />
+                        </Button>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content>
+                        <p>Zoom Out</p>
+                    </Tooltip.Content>
+                </Tooltip.Root>
+
+                <Separator orientation="vertical" class="mx-1 h-6" />
+
                 <Tooltip.Root>
                     <Tooltip.Trigger asChild>
                         <Button variant="ghost" size="icon" onclick={resetZoom}>
@@ -845,6 +850,8 @@
                         <p>Reset Zoom</p>
                     </Tooltip.Content>
                 </Tooltip.Root>
+
+                <Separator orientation="vertical" class="mx-1 h-6" />
 
                 <Tooltip.Root>
                     <Tooltip.Trigger asChild>
@@ -861,9 +868,9 @@
                     </Tooltip.Content>
                 </Tooltip.Root>
             </div>
-            
+
             <Separator orientation="vertical" class="h-8" />
-            
+
             <!-- Create Button -->
             <Button variant="default" class="gap-2">
                 <Plus class="h-4 w-4" />
@@ -924,77 +931,30 @@
                                     <span class="text-sm">Indirect Connections</span>
                                 </label>
                             </div>
-
-                            <!-- Search -->
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium">Search</label>
-                                <input 
-                                    type="text" 
-                                    value={searchQuery}
-                                    placeholder="Search nodes..." 
-                                    class="w-full p-2 rounded-md bg-secondary/20" 
-                                    onchange={(e) => handleSearch(e.target.value)}
-                                />
-                            </div>
                         </div>
                     {:else}
                         <div class="flex flex-col items-center gap-2">
-                            <!-- Node Types Filter -->
-                            <div class="relative">
-                                <Tooltip.Root>
-                                    <Tooltip.Trigger asChild>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon"
-                                            class="w-8 h-8 p-0"
-                                            onclick={() => toggleDropdown('filter')}
-                                        >
-                                            <Filter class="h-4 w-4" />
-                                        </Button>
-                                    </Tooltip.Trigger>
-                                    <Tooltip.Content side="right">
-                                        <p>Filter by type</p>
-                                    </Tooltip.Content>
-                                </Tooltip.Root>
-                            </div>
+                            <Tooltip.Root>
+                                <Tooltip.Trigger asChild>
+                                    <Button variant="ghost" size="icon" class="w-8 h-8 p-0">
+                                        <Filter class="h-4 w-4" />
+                                    </Button>
+                                </Tooltip.Trigger>
+                                <Tooltip.Content side="right">
+                                    <p>Filter by type</p>
+                                </Tooltip.Content>
+                            </Tooltip.Root>
 
-                            <!-- Relationships Filter -->
-                            <div class="relative">
-                                <Tooltip.Root>
-                                    <Tooltip.Trigger asChild>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon"
-                                            class="w-8 h-8 p-0"
-                                            onclick={() => toggleDropdown('relationship')}
-                                        >
-                                            <Network class="h-4 w-4" />
-                                        </Button>
-                                    </Tooltip.Trigger>
-                                    <Tooltip.Content side="right">
-                                        <p>Filter relationships</p>
-                                    </Tooltip.Content>
-                                </Tooltip.Root>
-                            </div>
-
-                            <!-- Search -->
-                            <div class="relative">
-                                <Tooltip.Root>
-                                    <Tooltip.Trigger asChild>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon"
-                                            class="w-8 h-8 p-0"
-                                            onclick={() => toggleDropdown('search')}
-                                        >
-                                            <Search class="h-4 w-4" />
-                                        </Button>
-                                    </Tooltip.Trigger>
-                                    <Tooltip.Content side="right">
-                                        <p>Search nodes</p>
-                                    </Tooltip.Content>
-                                </Tooltip.Root>
-                            </div>
+                            <Tooltip.Root>
+                                <Tooltip.Trigger asChild>
+                                    <Button variant="ghost" size="icon" class="w-8 h-8 p-0">
+                                        <Network class="h-4 w-4" />
+                                    </Button>
+                                </Tooltip.Trigger>
+                                <Tooltip.Content side="right">
+                                    <p>Filter relationships</p>
+                                </Tooltip.Content>
+                            </Tooltip.Root>
                         </div>
                     {/if}
                 </div>
