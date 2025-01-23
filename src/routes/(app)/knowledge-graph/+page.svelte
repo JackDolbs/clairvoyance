@@ -25,6 +25,7 @@
     import Network from "lucide-svelte/icons/network";
     import * as Tooltip from "$lib/components/ui/tooltip";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+    import { TooltipProvider } from "$lib/components/ui/tooltip";
 
     // Add tool state
     let currentTool: 'pan' | 'node' | 'edge' | 'select' = 'pan';
@@ -105,11 +106,11 @@
 
     // Add collapsible state
     let isCollapsed = false;
-    let sidebarWidth = isCollapsed ? 64 : 280;
+    let sidebarWidth = isCollapsed ? 64 : 240;
 
     function toggleSidebar() {
         isCollapsed = !isCollapsed;
-        sidebarWidth = isCollapsed ? 64 : 280;
+        sidebarWidth = isCollapsed ? 64 : 240;
     }
 
     onMount(() => {
@@ -262,6 +263,37 @@
         };
         mockData.nodes.push(newNode);
         // Restart simulation...
+    }
+
+    // Filter panel state
+    let filterDropdownOpen = false;
+    let relationshipDropdownOpen = false;
+    let searchDropdownOpen = false;
+
+    // Filter states
+    let nodeTypeFilters = nodeTypes.map(type => ({ ...type, checked: true }));
+    let relationshipFilters = {
+        direct: true,
+        indirect: true
+    };
+    let searchQuery = '';
+
+    // Filter handlers
+    function handleNodeTypeFilter(typeId: string, checked: boolean) {
+        nodeTypeFilters = nodeTypeFilters.map(t => 
+            t.id === typeId ? { ...t, checked } : t
+        );
+        // Add actual filtering logic here
+    }
+
+    function handleRelationshipFilter(type: 'direct' | 'indirect', checked: boolean) {
+        relationshipFilters[type] = checked;
+        // Add actual filtering logic here
+    }
+
+    function handleSearch(query: string) {
+        searchQuery = query;
+        // Add actual search logic here
     }
 </script>
 
@@ -429,158 +461,166 @@
             <ScrollArea.Root class="h-full">
                 <div class="p-2">
                     {#if !isCollapsed}
-                        <div class="flex items-center justify-between mb-4">
+                        <div class="mb-4">
                             <h3 class="font-semibold">Filters</h3>
-                            <Button variant="ghost" size="icon">
-                                <Settings class="h-4 w-4" />
-                            </Button>
                         </div>
 
-                        <!-- Node Type Filters -->
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium">Node Types</label>
-                            {#each nodeTypes as type}
+                        <div class="space-y-6">
+                            <!-- Node Types -->
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium">Node Types</label>
+                                {#each nodeTypeFilters as type}
+                                    <label class="flex items-center gap-2">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={type.checked}
+                                            class="rounded" 
+                                            onchange={(e) => handleNodeTypeFilter(type.id, e.target.checked)}
+                                        />
+                                        <span class="text-sm">{type.name}</span>
+                                    </label>
+                                {/each}
+                            </div>
+
+                            <!-- Relationships -->
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium">Relationships</label>
                                 <label class="flex items-center gap-2">
                                     <input 
                                         type="checkbox" 
-                                        checked 
+                                        checked={relationshipFilters.direct}
                                         class="rounded" 
+                                        onchange={(e) => handleRelationshipFilter('direct', e.target.checked)}
                                     />
-                                    <span class="text-sm">{type.name}</span>
+                                    <span class="text-sm">Direct Connections</span>
                                 </label>
-                            {/each}
-                        </div>
+                                <label class="flex items-center gap-2">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={relationshipFilters.indirect}
+                                        class="rounded" 
+                                        onchange={(e) => handleRelationshipFilter('indirect', e.target.checked)}
+                                    />
+                                    <span class="text-sm">Indirect Connections</span>
+                                </label>
+                            </div>
 
-                        <!-- Relationship Filters -->
-                        <div class="space-y-2 mt-6">
-                            <label class="text-sm font-medium">Relationships</label>
-                            <label class="flex items-center gap-2">
+                            <!-- Search -->
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium">Search</label>
                                 <input 
-                                    type="checkbox" 
-                                    checked 
-                                    class="rounded" 
+                                    type="text" 
+                                    value={searchQuery}
+                                    placeholder="Search nodes..." 
+                                    class="w-full p-2 rounded-md bg-secondary/20" 
+                                    onchange={(e) => handleSearch(e.target.value)}
                                 />
-                                <span class="text-sm">Direct Connections</span>
-                            </label>
-                            <label class="flex items-center gap-2">
-                                <input 
-                                    type="checkbox" 
-                                    checked 
-                                    class="rounded" 
-                                />
-                                <span class="text-sm">Indirect Connections</span>
-                            </label>
-                        </div>
-
-                        <!-- Search Filter -->
-                        <div class="mt-6">
-                            <label class="text-sm font-medium">Search Nodes</label>
-                            <input 
-                                type="text" 
-                                placeholder="Search..." 
-                                class="w-full p-2 rounded-md bg-secondary/20 mt-1" 
-                            />
+                            </div>
                         </div>
                     {:else}
                         <div class="flex flex-col items-center gap-2">
                             <!-- Node Types Filter -->
-                            <Tooltip.Root>
-                                <Tooltip.Trigger asChild>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        class="w-8 h-8 p-0"
-                                    >
-                                        <Filter class="h-4 w-4" />
-                                    </Button>
-                                </Tooltip.Trigger>
-                                <Tooltip.Content side="right">
-                                    <p>Filter nodes by type</p>
-                                </Tooltip.Content>
-                            </Tooltip.Root>
+                            <DropdownMenu.Root 
+                                open={filterDropdownOpen} 
+                                onOpenChange={(open) => filterDropdownOpen = open}
+                            >
+                                <Tooltip.Root>
+                                    <Tooltip.Trigger asChild>
+                                        <DropdownMenu.Trigger asChild>
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon"
+                                                class="w-8 h-8 p-0"
+                                            >
+                                                <Filter class="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenu.Trigger>
+                                    </Tooltip.Trigger>
+                                    <Tooltip.Content side="right">
+                                        <p>Filter by type</p>
+                                    </Tooltip.Content>
+                                </Tooltip.Root>
+                                <DropdownMenu.Content align="start" side="right">
+                                    <DropdownMenu.Label>Node Types</DropdownMenu.Label>
+                                    {#each nodeTypeFilters as type}
+                                        <DropdownMenu.CheckboxItem 
+                                            checked={type.checked}
+                                            onCheckedChange={(checked) => handleNodeTypeFilter(type.id, checked)}
+                                        >
+                                            {type.name}
+                                        </DropdownMenu.CheckboxItem>
+                                    {/each}
+                                </DropdownMenu.Content>
+                            </DropdownMenu.Root>
 
                             <!-- Relationships Filter -->
-                            <Tooltip.Root>
-                                <Tooltip.Trigger asChild>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon"
-                                        class="w-8 h-8 p-0"
+                            <DropdownMenu.Root 
+                                open={relationshipDropdownOpen} 
+                                onOpenChange={(open) => relationshipDropdownOpen = open}
+                            >
+                                <Tooltip.Root>
+                                    <Tooltip.Trigger asChild>
+                                        <DropdownMenu.Trigger asChild>
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon"
+                                                class="w-8 h-8 p-0"
+                                            >
+                                                <Network class="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenu.Trigger>
+                                    </Tooltip.Trigger>
+                                    <Tooltip.Content side="right">
+                                        <p>Filter relationships</p>
+                                    </Tooltip.Content>
+                                </Tooltip.Root>
+                                <DropdownMenu.Content align="start" side="right">
+                                    <DropdownMenu.Label>Relationships</DropdownMenu.Label>
+                                    <DropdownMenu.CheckboxItem 
+                                        checked={relationshipFilters.direct}
+                                        onCheckedChange={(checked) => handleRelationshipFilter('direct', checked)}
                                     >
-                                        <Network class="h-4 w-4" />
-                                    </Button>
-                                </Tooltip.Trigger>
-                                <Tooltip.Content side="right">
-                                    <p>Filter by relationships</p>
-                                </Tooltip.Content>
-                            </Tooltip.Root>
+                                        Direct Connections
+                                    </DropdownMenu.CheckboxItem>
+                                    <DropdownMenu.CheckboxItem 
+                                        checked={relationshipFilters.indirect}
+                                        onCheckedChange={(checked) => handleRelationshipFilter('indirect', checked)}
+                                    >
+                                        Indirect Connections
+                                    </DropdownMenu.CheckboxItem>
+                                </DropdownMenu.Content>
+                            </DropdownMenu.Root>
 
                             <!-- Search -->
-                            <Tooltip.Root>
-                                <Tooltip.Trigger asChild>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon"
-                                        class="w-8 h-8 p-0"
-                                    >
-                                        <Search class="h-4 w-4" />
-                                    </Button>
-                                </Tooltip.Trigger>
-                                <Tooltip.Content side="right">
-                                    <p>Search for nodes</p>
-                                </Tooltip.Content>
-                            </Tooltip.Root>
-
-                            <!-- Add Dropdown Menus -->
-                            <DropdownMenu.Root>
-                                <DropdownMenu.Trigger />
-                                <DropdownMenu.Portal>
-                                    <DropdownMenu.Content side="right">
-                                        <DropdownMenu.Label>Node Types</DropdownMenu.Label>
-                                        {#each nodeTypes as type}
-                                            <DropdownMenu.CheckboxItem 
-                                                checked={type.checked}
-                                                onCheckedChange={(checked) => handleNodeTypeFilter(type.id, checked)}
+                            <DropdownMenu.Root 
+                                open={searchDropdownOpen} 
+                                onOpenChange={(open) => searchDropdownOpen = open}
+                            >
+                                <Tooltip.Root>
+                                    <Tooltip.Trigger asChild>
+                                        <DropdownMenu.Trigger asChild>
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon"
+                                                class="w-8 h-8 p-0"
                                             >
-                                                {type.name}
-                                            </DropdownMenu.CheckboxItem>
-                                        {/each}
-                                    </DropdownMenu.Content>
-                                </DropdownMenu.Portal>
-                            </DropdownMenu.Root>
-
-                            <DropdownMenu.Root>
-                                <DropdownMenu.Trigger />
-                                <DropdownMenu.Portal>
-                                    <DropdownMenu.Content side="right">
-                                        <DropdownMenu.Label>Relationships</DropdownMenu.Label>
-                                        <DropdownMenu.CheckboxItem 
-                                            checked={relationshipFilters.direct}
-                                            onCheckedChange={(checked) => handleRelationshipFilter('direct', checked)}
-                                        >
-                                            Direct Connections
-                                        </DropdownMenu.CheckboxItem>
-                                        <DropdownMenu.CheckboxItem 
-                                            checked={relationshipFilters.indirect}
-                                            onCheckedChange={(checked) => handleRelationshipFilter('indirect', checked)}
-                                        >
-                                            Indirect Connections
-                                        </DropdownMenu.CheckboxItem>
-                                    </DropdownMenu.Content>
-                                </DropdownMenu.Portal>
-                            </DropdownMenu.Root>
-
-                            <DropdownMenu.Root>
-                                <DropdownMenu.Trigger />
-                                <DropdownMenu.Portal>
-                                    <DropdownMenu.Content side="right" class="w-[200px] p-2">
-                                        <input 
-                                            type="text" 
-                                            placeholder="Search nodes..." 
-                                            class="w-full p-2 rounded-md bg-secondary/20"
-                                        />
-                                    </DropdownMenu.Content>
-                                </DropdownMenu.Portal>
+                                                <Search class="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenu.Trigger>
+                                    </Tooltip.Trigger>
+                                    <Tooltip.Content side="right">
+                                        <p>Search nodes</p>
+                                    </Tooltip.Content>
+                                </Tooltip.Root>
+                                <DropdownMenu.Content align="start" side="right" class="w-[200px] p-2">
+                                    <input 
+                                        type="text" 
+                                        value={searchQuery}
+                                        placeholder="Search nodes..." 
+                                        class="w-full p-2 rounded-md bg-secondary/20"
+                                        onchange={(e) => handleSearch(e.target.value)}
+                                    />
+                                </DropdownMenu.Content>
                             </DropdownMenu.Root>
                         </div>
                     {/if}
