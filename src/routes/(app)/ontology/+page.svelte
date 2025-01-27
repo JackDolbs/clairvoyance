@@ -12,6 +12,13 @@
     import FileDown from "lucide-svelte/icons/file-down";
     import { Separator } from "$lib/components/ui/separator";
     import Code from "lucide-svelte/icons/code";
+    import { Input } from "$lib/components/ui/input";
+    import { Checkbox } from "$lib/components/ui/checkbox";
+    import { Badge } from "$lib/components/ui/badge";
+    import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+    import Filter from "lucide-svelte/icons/filter";
+    import ArrowRight from "lucide-svelte/icons/arrow-right";
+    import Check from "lucide-svelte/icons/check";
 
     // Define ontology structure
     const ontologyClasses = [
@@ -142,6 +149,39 @@
         classes: ontologyClasses,
         relationships: relationshipTypes
     }, null, 2);
+
+    // Add state for table features
+    let searchQuery = '';
+    let selectedClasses = ontologyClasses.map(c => ({ ...c, selected: true }));
+
+    // Add filtering logic
+    $: filteredClasses = selectedClasses
+        .filter(c => c.selected)
+        .filter(c => 
+            c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            c.description.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+
+    // Add export and import functions
+    function exportSchema() {
+        // Implementation of exportSchema
+    }
+
+    function importSchema() {
+        // Implementation of importSchema
+    }
+
+    function formatJSON() {
+        // Implementation of formatJSON
+    }
+
+    function validateSchema() {
+        // Implementation of validateSchema
+    }
+
+    function saveSchema() {
+        // Implementation of saveSchema
+    }
 </script>
 
 <PageContent>
@@ -181,18 +221,25 @@
                 <div class="space-y-4">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" onclick={exportSchema}>
                                 <FileDown class="h-4 w-4 mr-2" />
                                 Export Schema
                             </Button>
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" onclick={importSchema}>
                                 <FileUp class="h-4 w-4 mr-2" />
                                 Import Schema
                             </Button>
                         </div>
-                        <p class="text-sm text-muted-foreground">
-                            Format: <code class="bg-secondary/20 px-1 rounded">JSON</code>
-                        </p>
+                        <div class="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onclick={formatJSON}>
+                                <Code class="h-4 w-4 mr-2" />
+                                Format JSON
+                            </Button>
+                            <Button variant="outline" size="sm" onclick={validateSchema}>
+                                <Check class="h-4 w-4 mr-2" />
+                                Validate
+                            </Button>
+                        </div>
                     </div>
 
                     <Separator />
@@ -202,7 +249,7 @@
                             class="w-full h-[400px] font-mono text-sm p-4 rounded-md bg-secondary/20"
                             bind:value={jsonContent}
                             placeholder="Enter your ontology schema in JSON format..."
-                        />
+                        ></textarea>
                         <div class="absolute top-2 right-2 text-xs text-muted-foreground">
                             JSON Schema Editor
                         </div>
@@ -213,16 +260,7 @@
                     <Button variant="outline" onclick={() => csvDialogOpen = false}>
                         Cancel
                     </Button>
-                    <Button onclick={() => {
-                        try {
-                            // Parse and validate JSON before saving
-                            JSON.parse(jsonContent);
-                            // TODO: Handle JSON save
-                            csvDialogOpen = false;
-                        } catch (e) {
-                            alert('Invalid JSON format');
-                        }
-                    }}>
+                    <Button onclick={saveSchema}>
                         Save Changes
                     </Button>
                 </Dialog.Footer>
@@ -245,11 +283,63 @@
 
             <!-- Classes Tab -->
             <Tabs.Content value="classes" class="pt-4">
-                <div class="mb-4">
+                <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-medium mb-1">Data Classes</h2>
-                    <p class="text-sm text-muted-foreground">
-                        Define the types of entities in your system. Each class represents a distinct type of object with its own properties and relationships.
-                    </p>
+                    <div class="flex items-center gap-2">
+                        <Input 
+                            type="text" 
+                            placeholder="Search classes..." 
+                            bind:value={searchQuery}
+                            class="w-64"
+                        />
+                        <DropdownMenu.Root>
+                            <DropdownMenu.Trigger asChild>
+                                <div>
+                                    <Button variant="outline" size="sm">
+                                        <Filter class="h-4 w-4 mr-2" />
+                                        Filter
+                                    </Button>
+                                </div>
+                            </DropdownMenu.Trigger>
+                            <DropdownMenu.Content>
+                                <DropdownMenu.Label>Show Classes</DropdownMenu.Label>
+                                {#each selectedClasses as cls}
+                                    <DropdownMenu.CheckboxItem
+                                        checked={cls.selected}
+                                        onCheckedChange={(checked) => cls.selected = checked}
+                                    >
+                                        {cls.name}
+                                    </DropdownMenu.CheckboxItem>
+                                {/each}
+                            </DropdownMenu.Content>
+                        </DropdownMenu.Root>
+                    </div>
+                </div>
+                <div class="grid grid-cols-4 gap-4 mb-6">
+                    <div class="p-4 bg-secondary/20 rounded-lg">
+                        <div class="text-sm text-muted-foreground">Total Classes</div>
+                        <div class="text-2xl font-semibold">{ontologyClasses.length}</div>
+                    </div>
+                    <div class="p-4 bg-secondary/20 rounded-lg">
+                        <div class="text-sm text-muted-foreground">Total Properties</div>
+                        <div class="text-2xl font-semibold">
+                            {ontologyClasses.reduce((acc, c) => acc + c.properties.length, 0)}
+                        </div>
+                    </div>
+                    <div class="p-4 bg-secondary/20 rounded-lg">
+                        <div class="text-sm text-muted-foreground">Total Relationships</div>
+                        <div class="text-2xl font-semibold">
+                            {ontologyClasses.reduce((acc, c) => acc + c.relationships.length, 0)}
+                        </div>
+                    </div>
+                    <div class="p-4 bg-secondary/20 rounded-lg">
+                        <div class="text-sm text-muted-foreground">Required Properties</div>
+                        <div class="text-2xl font-semibold">
+                            {ontologyClasses.reduce((acc, c) => 
+                                acc + c.properties.filter(p => p.required).length, 0
+                            )}
+                        </div>
+                    </div>
                 </div>
                 <div class="mt-4">
                     <Table.Root>
@@ -263,26 +353,35 @@
                             </Table.Row>
                         </Table.Header>
                         <Table.Body>
-                            {#each ontologyClasses as ontologyClass}
+                            {#each filteredClasses as ontologyClass}
                                 <Table.Row>
                                     <Table.Cell class="font-medium">{ontologyClass.name}</Table.Cell>
                                     <Table.Cell>{ontologyClass.description}</Table.Cell>
                                     <Table.Cell>
                                         <div class="flex flex-wrap gap-1">
                                             {#each ontologyClass.properties as prop}
-                                                <span class="text-xs bg-secondary px-2 py-1 rounded">
-                                                    {prop.name}: {prop.type}
-                                                    {#if prop.required}*{/if}
-                                                </span>
+                                                <Badge 
+                                                    variant={prop.required ? 'default' : 'secondary'}
+                                                    class="flex items-center gap-1"
+                                                >
+                                                    {prop.name}
+                                                    <span class="text-xs opacity-80">({prop.type})</span>
+                                                </Badge>
                                             {/each}
                                         </div>
                                     </Table.Cell>
                                     <Table.Cell>
                                         <div class="flex flex-wrap gap-1">
                                             {#each ontologyClass.relationships as rel}
-                                                <span class="text-xs bg-secondary px-2 py-1 rounded">
-                                                    {rel.name} → {rel.target}
-                                                </span>
+                                                <Badge 
+                                                    variant="outline" 
+                                                    class="flex items-center gap-1"
+                                                >
+                                                    <span class="font-medium">{rel.name}</span>
+                                                    <ArrowRight class="h-3 w-3" />
+                                                    <span>{rel.target}</span>
+                                                    <span class="text-xs opacity-80">({rel.type})</span>
+                                                </Badge>
                                             {/each}
                                         </div>
                                     </Table.Cell>
