@@ -35,6 +35,9 @@
 		WithElementRef<HTMLAnchorAttributes> & {
 			variant?: ButtonVariant;
 			size?: ButtonSize;
+			isLoading?: boolean;
+			loadingText?: string;
+			as?: 'button' | 'span';
 		};
 </script>
 
@@ -49,6 +52,9 @@
 		href = undefined,
 		type = "button",
 		children,
+		isLoading = false,
+		loadingText = "Loading...",
+		as = "button",
 		...restProps
 	}: ButtonProps = $props();
 </script>
@@ -69,6 +75,20 @@
 		{type}
 		{...restProps}
 	>
-		{@render children?.()}
+		{#if isLoading}
+			<span class="flex items-center gap-2">
+				<Spinner size="sm" />
+				{loadingText}
+			</span>
+		{:else}
+			{#if as === 'button'}
+				{@render children?.()}
+			{:else}
+				<!-- Use a span when inside another button element -->
+				<span class="contents">
+					{@render children?.()}
+				</span>
+			{/if}
+		{/if}
 	</button>
 {/if}
