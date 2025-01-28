@@ -344,6 +344,7 @@
     let zoomLevel = 100;
     let width: number;
     let height: number;
+    let resizeObserver: ResizeObserver;
 
     // Create zoom behavior
     const zoom = d3.zoom<SVGSVGElement, unknown>()
@@ -560,7 +561,8 @@
             }
 
             // Handle window resize
-            const resizeObserver = new ResizeObserver(() => {
+            resizeObserver = new ResizeObserver(() => {
+                if (!svgContainer) return;
                 width = svgContainer.clientWidth;
                 height = svgContainer.clientHeight;
                 simulation.force("center", d3.forceCenter(width / 2, height / 2));
@@ -594,7 +596,9 @@
         });
 
         return () => {
-            resizeObserver.disconnect();
+            if (resizeObserver) {
+                resizeObserver.disconnect();
+            }
             document.removeEventListener('click', handleClickOutside);
             document.removeEventListener('fullscreenchange', () => {
                 isFullscreen = !!document.fullscreenElement;
