@@ -174,11 +174,11 @@
                                                     Are you sure you would like to upgrade to v1.0.0-alpha.1?
                                                 </p>
                                                 <p>
-                                                    You can review the changelogs <a href="#" class="text-primary hover:underline">here</a>.
+                                                    You can review the changelogs <a href="https://featurebase.app" class="text-primary hover:underline">here</a>.
                                                 </p>
                                                 <p class="text-amber-600">
                                                     If something goes wrong check 
-                                                    <a href="#" class="underline hover:text-amber-700">this guide</a> on what to do.
+                                                    <a href="https://docs.auriel.tech" class="underline hover:text-amber-700">this guide</a> on what to do.
                                                 </p>
                                             </AlertDialog.Description>
                                         </AlertDialog.Header>

@@ -204,7 +204,7 @@
                             handleSubmit();
                         }
                     }}
-                />
+                ></textarea>
             </div>
 
             <Button 
