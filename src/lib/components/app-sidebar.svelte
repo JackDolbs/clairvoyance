@@ -97,7 +97,7 @@
 				<Sidebar.MenuButton size="lg">
 					{#snippet child({ props })}
 						<a href="/" {...props} class="flex items-center gap-2 group mx-1">
-							<Logo size="text-lg" wrapper={false} />
+							<Logo size="text-lg"/>
 						</a>
 					{/snippet}
 				</Sidebar.MenuButton>
@@ -132,12 +132,12 @@
 													}
 												}}
 											>
-												<svelte:component this={item.icon} class="w-4 h-4" />
+												<item.icon class="w-4 h-4" />
 												<span>{item.title}</span>
 											</button>
 										{:else}
 											<a href={item.url} {...props}>
-												<svelte:component this={item.icon} class="w-4 h-4" />
+												<item.icon class="w-4 h-4" />
 												<span>{item.title}</span>
 											</a>
 										{/if}
