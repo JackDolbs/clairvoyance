@@ -156,7 +156,7 @@
         </h1>
         <div class="flex items-center gap-2 text-xs text-muted-foreground font-orbitron tracking-wider">
             <span>{currentDate}</span>
-            <span class="w-1 h-1 rounded-full bg-muted-foreground/50" />
+            <span class="w-1 h-1 rounded-full bg-muted-foreground/50"></span>
             <span>{currentTime}</span>
         </div>
         {#if isFirstVisit}
@@ -278,28 +278,28 @@
                 <div class="space-y-4">
                     <div class="flex items-center justify-between py-2 border-b">
                         <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full bg-blue-500" />
+                            <div class="w-2 h-2 rounded-full bg-blue-500"></div>
                             <span class="text-sm font-medium">Users</span>
                         </div>
                         <span class="text-xs text-muted-foreground">12 attributes</span>
                     </div>
                     <div class="flex items-center justify-between py-2 border-b">
                         <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full bg-green-500" />
+                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
                             <span class="text-sm font-medium">Organizations</span>
                         </div>
                         <span class="text-xs text-muted-foreground">8 attributes</span>
                     </div>
                     <div class="flex items-center justify-between py-2 border-b">
                         <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full bg-amber-500" />
+                            <div class="w-2 h-2 rounded-full bg-amber-500"></div>
                             <span class="text-sm font-medium">Events</span>
                         </div>
                         <span class="text-xs text-muted-foreground">15 attributes</span>
                     </div>
                     <div class="flex items-center justify-between py-2">
                         <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full bg-purple-500" />
+                            <div class="w-2 h-2 rounded-full bg-purple-500"></div>
                             <span class="text-sm font-medium">Subscriptions</span>
                         </div>
                         <span class="text-xs text-muted-foreground">6 attributes</span>
@@ -349,7 +349,7 @@
                                         </p>
                                     </div>
                                 </div>
-                                <div class="h-2 w-2 rounded-full status-dot" />
+                                <div class="h-2 w-2 rounded-full status-dot"></div>
                             </div>
                         {/each}
                     {:else}
