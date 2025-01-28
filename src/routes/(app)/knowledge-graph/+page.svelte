@@ -934,7 +934,7 @@
                             <TabsContent value="filters" class="space-y-6">
                                 <!-- Node Types -->
                                 <div class="space-y-2">
-                                    <label class="text-sm font-medium">Node Types</label>
+                                    <p class="text-sm font-medium">Node Types</p>
                                     {#each nodeTypeFilters as type}
                                         <label class="flex items-center gap-2">
                                             <input 
@@ -950,7 +950,7 @@
 
                                 <!-- Relationships -->
                                 <div class="space-y-2">
-                                    <label class="text-sm font-medium">Relationships</label>
+                                    <p class="text-sm font-medium">Relationships</p>
                                     <label class="flex items-center gap-2">
                                         <input 
                                             type="checkbox" 
@@ -978,7 +978,7 @@
                                     <AccordionItem value="root">
                                         <AccordionTrigger>
                                             <div class="flex items-center gap-2">
-                                                <div class="w-2 h-2 rounded-full" style="background-color: {nodeTypes[0].color}" />
+                                                <div class="w-2 h-2 rounded-full" style="background-color: {nodeTypes[0].color}"></div>
                                                 Thing
                                             </div>
                                         </AccordionTrigger>
@@ -987,14 +987,14 @@
                                                 <AccordionItem value={mainClass.id}>
                                                     <AccordionTrigger>
                                                         <div class="flex items-center gap-2">
-                                                            <div class="w-2 h-2 rounded-full" style="background-color: {nodeTypes[1].color}" />
+                                                            <div class="w-2 h-2 rounded-full" style="background-color: {nodeTypes[1].color}"></div>
                                                             {mainClass.id}
                                                         </div>
                                                     </AccordionTrigger>
                                                     <AccordionContent>
                                                         {#each mockData.nodes.filter(n => n.type === 'sub_class' && mockData.links.some(l => l.source === mainClass.id && l.target === n.id)) as subClass}
                                                             <div class="pl-4 py-2 flex items-center gap-2">
-                                                                <div class="w-2 h-2 rounded-full" style="background-color: {nodeTypes[2].color}" />
+                                                                <div class="w-2 h-2 rounded-full" style="background-color: {nodeTypes[2].color}"></div>
                                                                 {subClass.id}
                                                             </div>
                                                         {/each}
@@ -1097,7 +1097,7 @@
                                 <div 
                                     class="w-2 h-2 rounded-full" 
                                     style="background-color: {type.color};"
-                                />
+                                ></div>
                                 {type.name} ({count})
                             </Badge>
                         </div>
@@ -1110,7 +1110,7 @@
                 {#if hoveredNode}
                     <div class="flex items-center gap-4">
                         <div class="flex items-center gap-2">
-                            <div class={`w-2 h-2 rounded-full`} style:background-color={nodeTypes.find(t => t.id === hoveredNode.type)?.color} />
+                            <div class={`w-2 h-2 rounded-full`} style:background-color={nodeTypes.find(t => t.id === hoveredNode.type)?.color}></div>
                             <span class="font-medium">{hoveredNode.type}</span>
                         </div>
                         <span>|</span>
@@ -1154,7 +1154,7 @@
                         <TabsContent value="properties">
                             <div class="space-y-4">
                                 <div>
-                                    <label class="text-sm font-medium">ID</label>
+                                    <p class="text-sm font-medium">ID</p>
                                     <input 
                                         type="text" 
                                         class="w-full p-2 rounded-md bg-secondary/20" 
@@ -1162,7 +1162,7 @@
                                     />
                                 </div>
                                 <div>
-                                    <label class="text-sm font-medium">Type</label>
+                                    <p class="text-sm font-medium">Type</p>
                                     <select 
                                         class="w-full p-2 rounded-md bg-secondary/20"
                                         value={selectedNode.type}
@@ -1173,19 +1173,19 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="text-sm font-medium">Description</label>
+                                    <p class="text-sm font-medium">Description</p>
                                     <textarea 
                                         class="w-full p-2 rounded-md bg-secondary/20" 
                                         rows="3"
                                         value={selectedNode.properties?.description ?? ''}
-                                    />
+                                    ></textarea>
                                 </div>
                             </div>
                         </TabsContent>
                         <TabsContent value="styling">
                             <div class="space-y-4">
                                 <div>
-                                    <label class="text-sm font-medium">Color</label>
+                                    <p class="text-sm font-medium">Color</p>
                                     <input 
                                         type="color" 
                                         class="w-full"
@@ -1193,7 +1193,7 @@
                                     />
                                 </div>
                                 <div>
-                                    <label class="text-sm font-medium">Size</label>
+                                    <p class="text-sm font-medium">Size</p>
                                     <input 
                                         type="range" 
                                         min="20" 
@@ -1240,10 +1240,10 @@
                             <div class="space-y-4">
                                 <!-- Ontology Class Info -->
                                 <div>
-                                    <label class="text-sm font-medium">Ontology Class</label>
+                                    <p class="text-sm font-medium">Ontology Class</p>
                                     <div class="mt-1 p-3 rounded-md bg-secondary/20">
                                         <div class="flex items-center gap-2">
-                                            <div class={`w-2 h-2 rounded-full ${nodeTypes.find(t => t.id === selectedNode.type)?.color ?? 'bg-gray-400'}`} />
+                                            <div class={`w-2 h-2 rounded-full ${nodeTypes.find(t => t.id === selectedNode.type)?.color ?? 'bg-gray-400'}`}></div>
                                             <span>{nodeTypes.find(t => t.id === selectedNode.type)?.name ?? 'Unknown Type'}</span>
                                         </div>
                                     </div>
@@ -1251,7 +1251,7 @@
 
                                 <!-- Attributes -->
                                 <div>
-                                    <label class="text-sm font-medium">Attributes</label>
+                                    <p class="text-sm font-medium">Attributes</p>
                                     <div class="mt-1 space-y-2">
                                         {#if selectedNode.properties?.attributes?.length}
                                             {#each selectedNode.properties.attributes as attribute}
@@ -1272,7 +1272,7 @@
 
                                 <!-- Relationships -->
                                 <div>
-                                    <label class="text-sm font-medium">Relationships</label>
+                                    <p class="text-sm font-medium">Relationships</p>
                                     <div class="mt-1 space-y-2">
                                         {#if mockData.links.some(link => link.source === selectedNode.id || link.target === selectedNode.id)}
                                             {#each mockData.links.filter(link => link.source === selectedNode.id || link.target === selectedNode.id) as link}
@@ -1299,7 +1299,7 @@
 
                                 <!-- Additional Metadata -->
                                 <div>
-                                    <label class="text-sm font-medium">Metadata</label>
+                                    <p class="text-sm font-medium">Metadata</p>
                                     <div class="mt-1 rounded-md bg-secondary/20 p-2">
                                         <pre class="text-xs overflow-auto">
                                             {JSON.stringify(selectedNode, null, 2)}

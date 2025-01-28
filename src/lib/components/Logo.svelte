@@ -1,6 +1,5 @@
 <script lang="ts">
   export let size = "text-xl";
-  export let wrapper = true;
 </script>
 
 <div class="flex items-center gap-2 group">
