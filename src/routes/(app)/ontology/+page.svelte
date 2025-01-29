@@ -29,6 +29,7 @@
     import { onMount } from "svelte";
     import Download from "lucide-svelte/icons/download";
     import Settings from "lucide-svelte/icons/settings";
+    import * as Tooltip from "$lib/components/ui/tooltip";
 
     // Define ontology structure
     const ontologyClasses = [
@@ -455,39 +456,101 @@
 
                             <!-- Right side controls -->
                             <div class="flex items-center gap-2 px-2">
-                                <Button variant="ghost" size="icon" onclick={() => downloadDialogOpen = true}>
-                                    <Download class="h-4 w-4" />
-                                </Button>
+                                <Tooltip.Root>
+                                    <Tooltip.Trigger asChild>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            onclick={() => downloadDialogOpen = true}
+                                        >
+                                            <Download class="h-4 w-4" />
+                                        </Button>
+                                    </Tooltip.Trigger>
+                                    <Tooltip.Content>Download Graph</Tooltip.Content>
+                                </Tooltip.Root>
 
                                 <Separator orientation="vertical" class="mx-1 h-6" />
 
-                                <Button variant="ghost" size="icon" onclick={zoomIn}>
-                                    <ZoomIn class="h-4 w-4" />
-                                </Button>
+                                <Tooltip.Root>
+                                    <Tooltip.Trigger asChild>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            onclick={zoomIn}
+                                        >
+                                            <ZoomIn class="h-4 w-4" />
+                                        </Button>
+                                    </Tooltip.Trigger>
+                                    <Tooltip.Content>Zoom In</Tooltip.Content>
+                                </Tooltip.Root>
 
                                 <div class="w-[40px] text-center text-sm">
                                     {zoomLevel}%
                                 </div>
 
-                                <Button variant="ghost" size="icon" onclick={zoomOut}>
-                                    <ZoomOut class="h-4 w-4" />
-                                </Button>
+                                <Tooltip.Root>
+                                    <Tooltip.Trigger asChild>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            onclick={zoomOut}
+                                        >
+                                            <ZoomOut class="h-4 w-4" />
+                                        </Button>
+                                    </Tooltip.Trigger>
+                                    <Tooltip.Content>Zoom Out</Tooltip.Content>
+                                </Tooltip.Root>
 
                                 <Separator orientation="vertical" class="mx-1 h-6" />
 
-                                <Button variant="ghost" size="icon" onclick={resetZoom}>
-                                    <Focus class="h-4 w-4" />
-                                </Button>
+                                <Tooltip.Root>
+                                    <Tooltip.Trigger asChild>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            onclick={resetZoom}
+                                        >
+                                            <Focus class="h-4 w-4" />
+                                        </Button>
+                                    </Tooltip.Trigger>
+                                    <Tooltip.Content>Reset Zoom</Tooltip.Content>
+                                </Tooltip.Root>
 
                                 <Separator orientation="vertical" class="mx-1 h-6" />
 
-                                <Button variant="ghost" size="icon" onclick={toggleFullscreen}>
-                                    {#if isFullscreen}
-                                        <Minimize2 class="h-4 w-4" />
-                                    {:else}
-                                        <Maximize2 class="h-4 w-4" />
-                                    {/if}
-                                </Button>
+                                <Tooltip.Root>
+                                    <Tooltip.Trigger asChild>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            onclick={saveSchema}
+                                        >
+                                            <Check class="h-4 w-4" />
+                                        </Button>
+                                    </Tooltip.Trigger>
+                                    <Tooltip.Content>Save Changes</Tooltip.Content>
+                                </Tooltip.Root>
+
+                                <Separator orientation="vertical" class="mx-1 h-6" />
+
+                                <Tooltip.Root>
+                                    <Tooltip.Trigger asChild>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            onclick={toggleFullscreen}
+                                        >
+                                            {#if isFullscreen}
+                                                <Minimize2 class="h-4 w-4" />
+                                            {:else}
+                                                <Maximize2 class="h-4 w-4" />
+                                            {/if}
+                                        </Button>
+                                    </Tooltip.Trigger>
+                                    <Tooltip.Content>
+                                        {isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                                    </Tooltip.Content>
+                                </Tooltip.Root>
                             </div>
                         </Menubar.Root>
                     </div>
@@ -537,15 +600,6 @@
                         </div>
                     </div>
                 </div>
-
-                <Dialog.Footer>
-                    <Button variant="outline" onclick={() => csvDialogOpen = false}>
-                        Cancel
-                    </Button>
-                    <Button onclick={saveSchema}>
-                        Save Changes
-                    </Button>
-                </Dialog.Footer>
             </Dialog.Content>
         </Dialog.Root>
 
