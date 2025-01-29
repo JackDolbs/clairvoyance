@@ -20,6 +20,15 @@
     import ArrowRight from "lucide-svelte/icons/arrow-right";
     import Check from "lucide-svelte/icons/check";
     import ontologySchema from './ontology.json';
+    import * as Menubar from "$lib/components/ui/menubar/index.js";
+    import ZoomIn from "lucide-svelte/icons/zoom-in";
+    import ZoomOut from "lucide-svelte/icons/zoom-out";
+    import Focus from "lucide-svelte/icons/focus";
+    import Maximize2 from "lucide-svelte/icons/maximize-2";
+    import Minimize2 from "lucide-svelte/icons/minimize-2";
+    import { onMount } from "svelte";
+    import Download from "lucide-svelte/icons/download";
+    import Settings from "lucide-svelte/icons/settings";
 
     // Define ontology structure
     const ontologyClasses = [
@@ -225,6 +234,73 @@
             console.error('Invalid JSON format');
         }
     }
+
+    // Add these variables near the top of your script section:
+    let showLineNumbers = true;
+    let showMinimap = false;
+
+    // Add these variables near the top of your script section, after the imports:
+    let zoomLevel = 100;
+    let isFullscreen = false;
+
+    // Add zoom control functions
+    function zoomIn() {
+        zoomLevel = Math.min(zoomLevel + 10, 200);
+    }
+
+    function zoomOut() {
+        zoomLevel = Math.max(zoomLevel - 10, 50);
+    }
+
+    function resetZoom() {
+        zoomLevel = 100;
+    }
+
+    // Add fullscreen toggle function
+    async function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            // Target the Dialog content container
+            const dialogContent = document.querySelector('[role="dialog"]');
+            if (dialogContent) {
+                await dialogContent.requestFullscreen();
+                isFullscreen = true;
+            }
+        } else {
+            await document.exitFullscreen();
+            isFullscreen = false;
+        }
+    }
+
+    // Add fullscreen change listener
+    onMount(() => {
+        document.addEventListener('fullscreenchange', () => {
+            isFullscreen = !!document.fullscreenElement;
+        });
+
+        return () => {
+            document.removeEventListener('fullscreenchange', () => {
+                isFullscreen = !!document.fullscreenElement;
+            });
+        };
+    });
+
+    // Add rotate graph function
+    function rotateGraph() {
+        // Implementation of rotateGraph
+    }
+
+    // Add focus first node function
+    function focusFirstNode() {
+        // Implementation of focusFirstNode
+    }
+
+    // Add this state variable in your script section
+    let downloadDialogOpen = false;
+
+    // Add these state variables in the script section
+    let enableTrackpadGestures = true;
+    let showJsonEditor = true;
+    let enableAutoSave = false;
 </script>
 
 <style>
@@ -250,6 +326,16 @@
     :global(textarea) {
         scrollbar-width: thin;
         scrollbar-color: hsl(var(--secondary-foreground) / 0.2) transparent;
+    }
+
+    /* Fullscreen styles */
+    :global([role="dialog"]:fullscreen) {
+        background-color: hsl(var(--background));
+        padding: 1.5rem;
+    }
+
+    :global([role="dialog"]:fullscreen .split-container) {
+        height: calc(100vh - 12rem);
     }
 </style>
 
@@ -287,28 +373,123 @@
                 </Dialog.Header>
 
                 <div class="flex-1 flex flex-col h-full overflow-hidden">
-                    <!-- Top buttons section -->
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center gap-2">
-                            <Button variant="outline" size="sm" onclick={exportSchema}>
-                                <FileDown class="h-4 w-4 mr-2" />
-                                Export Schema
-                            </Button>
-                            <Button variant="outline" size="sm" onclick={importSchema}>
-                                <FileUp class="h-4 w-4 mr-2" />
-                                Import Schema
-                            </Button>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <Button variant="outline" size="sm" onclick={formatJSON}>
-                                <Code class="h-4 w-4 mr-2" />
-                                Format JSON
-                            </Button>
-                            <Button variant="outline" size="sm" onclick={validateSchema}>
-                                <Check class="h-4 w-4 mr-2" />
-                                Validate
-                            </Button>
-                        </div>
+                    <!-- Replace the top buttons section with Menubar -->
+                    <div class="mb-4">
+                        <Menubar.Root class="flex justify-between">
+                            <!-- Left side menus -->
+                            <div class="flex items-center">
+                                <!-- Add the "Editing:" label -->
+                                <span class="text-sm text-muted-foreground px-3">
+                                    Editing: {ontologySchema.ontology.name}
+                                </span>
+
+                                <Separator orientation="vertical" class="mx-1 h-6" />
+
+                                <!-- Existing menu items -->
+                                <Menubar.Menu>
+                                    <Menubar.Trigger>File</Menubar.Trigger>
+                                    <Menubar.Content>
+                                        <Menubar.Item onclick={exportSchema}>
+                                            Export Schema
+                                            <Menubar.Shortcut>⌘E</Menubar.Shortcut>
+                                        </Menubar.Item>
+                                        <Menubar.Item onclick={importSchema}>
+                                            Import Schema
+                                            <Menubar.Shortcut>⌘I</Menubar.Shortcut>
+                                        </Menubar.Item>
+                                        <Menubar.Separator />
+                                        <Menubar.Item onclick={formatJSON}>
+                                            Format JSON
+                                            <Menubar.Shortcut>⌘⇧F</Menubar.Shortcut>
+                                        </Menubar.Item>
+                                        <Menubar.Item onclick={validateSchema}>
+                                            Validate Schema
+                                            <Menubar.Shortcut>⌘V</Menubar.Shortcut>
+                                        </Menubar.Item>
+                                        <Menubar.Separator />
+                                        <Menubar.Item onclick={saveSchema}>
+                                            Save
+                                            <Menubar.Shortcut>⌘S</Menubar.Shortcut>
+                                        </Menubar.Item>
+                                    </Menubar.Content>
+                                </Menubar.Menu>
+
+                                <Menubar.Menu>
+                                    <Menubar.Trigger>View</Menubar.Trigger>
+                                    <Menubar.Content>
+                                        <Menubar.Item onclick={rotateGraph}>
+                                            Rotate Graph
+                                            <Menubar.Shortcut>⌘R</Menubar.Shortcut>
+                                        </Menubar.Item>
+                                        <Menubar.Item onclick={focusFirstNode}>
+                                            Focus First Node
+                                            <Menubar.Shortcut>⌘F</Menubar.Shortcut>
+                                        </Menubar.Item>
+                                        <Menubar.Separator />
+                                        <Menubar.CheckboxItem bind:checked={showLineNumbers}>
+                                            Line Numbers
+                                            <Menubar.Shortcut>⌘L</Menubar.Shortcut>
+                                        </Menubar.CheckboxItem>
+                                    </Menubar.Content>
+                                </Menubar.Menu>
+
+                                <Menubar.Menu>
+                                    <Menubar.Trigger>Settings</Menubar.Trigger>
+                                    <Menubar.Content>
+                                        <Menubar.CheckboxItem bind:checked={enableTrackpadGestures}>
+                                            Enable Trackpad Gestures
+                                            <Menubar.Shortcut>⌘G</Menubar.Shortcut>
+                                        </Menubar.CheckboxItem>
+                                        <Menubar.CheckboxItem bind:checked={showJsonEditor}>
+                                            Show JSON Editor
+                                            <Menubar.Shortcut>⌘J</Menubar.Shortcut>
+                                        </Menubar.CheckboxItem>
+                                        <Menubar.Separator />
+                                        <Menubar.CheckboxItem bind:checked={enableAutoSave}>
+                                            Enable Auto-Save
+                                            <Menubar.Shortcut>⌘A</Menubar.Shortcut>
+                                        </Menubar.CheckboxItem>
+                                    </Menubar.Content>
+                                </Menubar.Menu>
+                            </div>
+
+                            <!-- Right side controls -->
+                            <div class="flex items-center gap-2 px-2">
+                                <Button variant="ghost" size="icon" onclick={() => downloadDialogOpen = true}>
+                                    <Download class="h-4 w-4" />
+                                </Button>
+
+                                <Separator orientation="vertical" class="mx-1 h-6" />
+
+                                <Button variant="ghost" size="icon" onclick={zoomIn}>
+                                    <ZoomIn class="h-4 w-4" />
+                                </Button>
+
+                                <div class="w-[40px] text-center text-sm">
+                                    {zoomLevel}%
+                                </div>
+
+                                <Button variant="ghost" size="icon" onclick={zoomOut}>
+                                    <ZoomOut class="h-4 w-4" />
+                                </Button>
+
+                                <Separator orientation="vertical" class="mx-1 h-6" />
+
+                                <Button variant="ghost" size="icon" onclick={resetZoom}>
+                                    <Focus class="h-4 w-4" />
+                                </Button>
+
+                                <Separator orientation="vertical" class="mx-1 h-6" />
+
+                                <Button variant="ghost" size="icon" onclick={toggleFullscreen}>
+                                    {#if isFullscreen}
+                                        <Minimize2 class="h-4 w-4" />
+                                    {:else}
+                                        <Maximize2 class="h-4 w-4" />
+                                    {/if}
+                                </Button>
+                            </div>
+                        </Menubar.Root>
                     </div>
 
                     <Separator class="mb-4" />
@@ -363,6 +544,59 @@
                     </Button>
                     <Button onclick={saveSchema}>
                         Save Changes
+                    </Button>
+                </Dialog.Footer>
+            </Dialog.Content>
+        </Dialog.Root>
+
+        <!-- Add this new Dialog after your existing Dialog.Root -->
+        <Dialog.Root bind:open={downloadDialogOpen}>
+            <Dialog.Content class="sm:max-w-[425px]">
+                <Dialog.Header>
+                    <Dialog.Title>Download Graph</Dialog.Title>
+                    <Dialog.Description>
+                        Choose the format to download the graph visualization.
+                    </Dialog.Description>
+                </Dialog.Header>
+                <div class="grid gap-4 py-4">
+                    <div class="grid grid-cols-4 items-center gap-4">
+                        <label for="format" class="text-sm font-medium leading-none col-span-4">
+                            Format
+                        </label>
+                        <select 
+                            id="format"
+                            class="col-span-4 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
+                        >
+                            <option value="svg">SVG</option>
+                            <option value="png">PNG</option>
+                            <option value="jpg">JPG</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-4 items-center gap-4">
+                        <label class="text-sm font-medium leading-none col-span-4">
+                            Options
+                        </label>
+                        <div class="col-span-4 space-y-2">
+                            <label class="flex items-center gap-2">
+                                <Checkbox />
+                                <span class="text-sm">Include background grid</span>
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <Checkbox />
+                                <span class="text-sm">Include legend</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <Dialog.Footer>
+                    <Button variant="outline" onclick={() => downloadDialogOpen = false}>
+                        Cancel
+                    </Button>
+                    <Button onclick={() => {
+                        // Add download logic here
+                        downloadDialogOpen = false;
+                    }}>
+                        Download
                     </Button>
                 </Dialog.Footer>
             </Dialog.Content>
