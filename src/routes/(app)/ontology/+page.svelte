@@ -30,6 +30,7 @@
     import Download from "lucide-svelte/icons/download";
     import Settings from "lucide-svelte/icons/settings";
     import * as Tooltip from "$lib/components/ui/tooltip";
+    import OntologyGraph from "$lib/components/ontology-graph.svelte";
 
     // Define ontology structure
     const ontologyClasses = [
@@ -592,9 +593,8 @@
                                 <div class="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px),linear-gradient(to_right,#1f2937_0.5px,transparent_0.5px),linear-gradient(to_bottom,#1f2937_0.5px,transparent_0.5px)] bg-[size:48px_48px,48px_48px,12px_12px,12px_12px] opacity-[0.06]"></div>
                                 
                                 <!-- Content container -->
-                                <div class="relative h-full flex items-center justify-center text-muted-foreground p-4">
-                                    <!-- Add your graph visualization component here -->
-                                    <p>Graph visualization will be rendered here</p>
+                                <div class="relative h-full flex items-center justify-center">
+                                    <OntologyGraph data={ontologySchema} />
                                 </div>
                             </div>
                         </div>
