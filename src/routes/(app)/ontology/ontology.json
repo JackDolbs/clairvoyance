@@ -1,7 +1,7 @@
 {
     "ontology": {
-      "name": "B2BSaaSOntology",
-      "description": "Comprehensive schema for a B2B SaaS startup",
+      "name": "myOntology",
+      "description": "Comprehensive JSON schema for myOntology",
       "superclasses": [
         {
           "name": "CustomerData",
