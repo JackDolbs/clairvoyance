@@ -525,10 +525,10 @@
                         <!-- Right Pane (Graph Visualization) -->
                         <div class="flex-1 relative">
                             <div class="absolute inset-0 bg-secondary/20 rounded-md">
-                                <!-- Add grid background -->
-                                <div class="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:24px_24px] opacity-[0.06]"></div>
+                                <!-- Double grid background -->
+                                <div class="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px),linear-gradient(to_right,#1f2937_0.5px,transparent_0.5px),linear-gradient(to_bottom,#1f2937_0.5px,transparent_0.5px)] bg-[size:48px_48px,48px_48px,12px_12px,12px_12px] opacity-[0.06]"></div>
                                 
-                                <!-- Update the content container to be relative for proper layering -->
+                                <!-- Content container -->
                                 <div class="relative h-full flex items-center justify-center text-muted-foreground p-4">
                                     <!-- Add your graph visualization component here -->
                                     <p>Graph visualization will be rendered here</p>
