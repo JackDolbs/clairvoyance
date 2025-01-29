@@ -40,10 +40,10 @@
     
     // Update node types to include hierarchy levels
     const nodeTypes = [
-        { id: 'root_class', name: 'Root Class', color: '#333333', radius: 20 },    // Root/Thing
-        { id: 'main_class', name: 'Main Class', color: '#4CAF50', radius: 15 },    // Core entities
+        { id: 'class', name: 'Classes', color: '#333333', radius: 20 },
+        { id: 'superclass', name: 'Superclass', color: '#4CAF50', radius: 15 },
         { id: 'sub_class', name: 'Sub Class', color: '#81C784', radius: 12 },      // Sub-entities
-        { id: 'property', name: 'Property', color: '#2196F3', radius: 8 },         // Properties
+        { id: 'attribute', name: 'Attribute', color: '#2196F3', radius: 8 },         // Properties
         { id: 'enum', name: 'Enumeration', color: '#FFC107', radius: 10 }          // Enums/Options
     ];
 
@@ -52,9 +52,9 @@
         nodes: [
             // Root Entity
             {
-                id: "Thing",
+                id: "Classes",
                 group: 0,
-                type: 'root_class',
+                type: 'class',
                 properties: {
                     description: 'Root entity from which all classes inherit',
                     category: 'core'
@@ -64,7 +64,7 @@
             {
                 id: "Organization",
                 group: 1,
-                type: 'main_class',
+                type: 'superclass',
                 properties: {
                     description: 'Business entity using the platform',
                     category: 'core'
@@ -73,7 +73,7 @@
             {
                 id: "User",  // Add the missing User node
                 group: 1,
-                type: 'main_class',
+                type: 'superclass',
                 properties: {
                     description: 'User of the platform',
                     category: 'core'
@@ -83,13 +83,13 @@
             {
                 id: "org_name",
                 group: 0,
-                type: 'property',
+                type: 'attribute',
                 properties: { dataType: 'string', required: true }
             },
             {
                 id: "org_industry",
                 group: 0,
-                type: 'property',
+                type: 'attribute',
                 properties: { dataType: 'enum', required: true }
             },
             {
@@ -115,13 +115,13 @@
             {
                 id: "dept_name",
                 group: 1,
-                type: 'property',
+                type: 'attribute',
                 properties: { dataType: 'string', required: true }
             },
             {
                 id: "dept_budget",
                 group: 1,
-                type: 'property',
+                type: 'attribute',
                 properties: { dataType: 'number', required: false }
             },
 
@@ -129,7 +129,7 @@
             {
                 id: "Product",
                 group: 2,
-                type: 'main_class',
+                type: 'superclass',
                 properties: {
                     description: 'Platform product offering',
                     category: 'product'
@@ -139,13 +139,13 @@
             {
                 id: "product_name",
                 group: 2,
-                type: 'property',
+                type: 'attribute',
                 properties: { dataType: 'string', required: true }
             },
             {
                 id: "product_version",
                 group: 2,
-                type: 'property',
+                type: 'attribute',
                 properties: { dataType: 'string', required: true }
             },
             {
@@ -171,7 +171,7 @@
             {
                 id: "feature_name",
                 group: 3,
-                type: 'property',
+                type: 'attribute',
                 properties: { dataType: 'string', required: true }
             },
             {
@@ -186,36 +186,36 @@
             // Continue with User, Subscription, etc...
         ],
         links: [
-            // Connect all main classes to Thing
+            // Connect all Superclasses to Classes
             { 
                 source: "Organization", 
-                target: "Thing", 
+                target: "Classes", 
                 type: 'is_a',
-                description: 'Organization is a Thing'
+                description: 'Organization is a Class'
             },
             { 
                 source: "Product", 
-                target: "Thing", 
+                target: "Classes", 
                 type: 'is_a',
-                description: 'Product is a Thing'
+                description: 'Product is a Class'
             },
             { 
                 source: "User", 
-                target: "Thing", 
+                target: "Classes", 
                 type: 'is_a',
-                description: 'User is a Thing'
+                description: 'User is a Class'
             },
             // Organization Hierarchy
             { 
                 source: "org_name", 
                 target: "Organization", 
-                type: 'has_property',
+                type: 'has_attribute',
                 description: 'Organization name'
             },
             { 
                 source: "org_industry", 
                 target: "Organization", 
-                type: 'has_property',
+                type: 'has_attribute',
                 description: 'Industry classification'
             },
             { 
@@ -235,13 +235,13 @@
             { 
                 source: "dept_name", 
                 target: "Department", 
-                type: 'has_property',
+                type: 'has_attribute',
                 description: 'Department name'
             },
             { 
                 source: "dept_budget", 
                 target: "Department", 
-                type: 'has_property',
+                type: 'has_attribute',
                 description: 'Department budget'
             },
 
@@ -249,19 +249,19 @@
             { 
                 source: "product_name", 
                 target: "Product", 
-                type: 'has_property',
+                type: 'has_attribute',
                 description: 'Product name'
             },
             { 
                 source: "product_version", 
                 target: "Product", 
-                type: 'has_property',
+                type: 'has_attribute',
                 description: 'Product version'
             },
             { 
                 source: "product_status", 
                 target: "Product", 
-                type: 'has_property',
+                type: 'has_attribute',
                 description: 'Product status'
             },
 
@@ -275,13 +275,13 @@
             { 
                 source: "feature_name", 
                 target: "Feature", 
-                type: 'has_property',
+                type: 'has_attribute',
                 description: 'Feature name'
             },
             { 
                 source: "feature_status", 
                 target: "Feature", 
-                type: 'has_property',
+                type: 'has_attribute',
                 description: 'Feature status'
             }
         ]
@@ -425,10 +425,10 @@
                         mockData.nodes.some(n => n.id === link.target)
                     ))
                     .distance(d => {
-                        // Longer distances between main classes
-                        if (d.source.type === 'main_class' && d.target.type === 'main_class') return 300;
-                        // Medium distance for class-to-property connections
-                        if (d.type === 'has_property') return 150;
+                        // Longer distances between superclasses
+                        if (d.source.type === 'superclass' && d.target.type === 'superclass') return 300;
+                        // Medium distance for class-to-attribute connections
+                        if (d.type === 'has_attribute') return 150;
                         // Default distance for other connections
                         return 200;
                     })
@@ -441,8 +441,8 @@
                 )
                 .force("collision", d3.forceCollide()
                     .radius(d => {
-                        // Larger collision radius for main classes
-                        if (d.type === 'main_class') return 80;
+                        // Larger collision radius for superclasses
+                        if (d.type === 'superclass') return 80;
                         if (d.type === 'sub_class') return 60;
                         return 40;
                     })
@@ -450,16 +450,16 @@
                 )
                 // Gentler hierarchical positioning
                 .force("y", d3.forceY((d: any) => {
-                    if (d.id === "Thing") return 50;
-                    if (d.type === "main_class") return height * 0.3;
+                    if (d.id === "Classes") return 50;
+                    if (d.type === "superclass") return height * 0.3;
                     if (d.type === "sub_class") return height * 0.5;
-                    if (d.type === "property") return height * 0.7;
+                    if (d.type === "attribute") return height * 0.7;
                     return height * 0.6;
                 }).strength(0.1))
                 .force("x", d3.forceX((d: any) => {
-                    if (d.id === "Thing") return width / 2;
-                    // Spread main classes more widely
-                    if (d.type === "main_class") {
+                    if (d.id === "Classes") return width / 2;
+                    // Spread superclasses more widely
+                    if (d.type === "superclass") {
                         return width * (0.2 + Math.random() * 0.6);
                     }
                     return width * (0.3 + Math.random() * 0.4);
@@ -467,9 +467,9 @@
                 .alphaDecay(0.005)
                 .velocityDecay(0.3);
 
-            // Only fix the Thing node
+            // Only fix the Classes node
             mockData.nodes.forEach((node: any) => {
-                if (node.id === "Thing") {
+                if (node.id === "Classes") {
                     node.fx = width / 2;
                     node.fy = 50;
                 } else {
@@ -552,8 +552,8 @@
             function dragended(event: any) {
                 if (!event.active) simulation.alphaTarget(0);
                 // Don't reset fx and fy to null - this keeps nodes where we drag them
-                // Only reset if it's not the Thing node (which should stay at the top)
-                if (event.subject.id !== "Thing") {
+                // Only reset if it's not the Classes node (which should stay at the top)
+                if (event.subject.id !== "Classes") {
                     // Keep the fixed position where we dropped it
                     event.subject.fx = event.x;
                     event.subject.fy = event.y;
@@ -983,11 +983,11 @@
                                         <AccordionTrigger>
                                             <div class="flex items-center gap-2">
                                                 <div class="w-2 h-2 rounded-full" style="background-color: {nodeTypes[0].color}"></div>
-                                                Thing
+                                                Classes
                                             </div>
                                         </AccordionTrigger>
                                         <AccordionContent>
-                                            {#each mockData.nodes.filter(n => n.type === 'main_class') as mainClass}
+                                            {#each mockData.nodes.filter(n => n.type === 'superclass') as mainClass}
                                                 <AccordionItem value={mainClass.id}>
                                                     <AccordionTrigger>
                                                         <div class="flex items-center gap-2">

@@ -1,0 +1,297 @@
+{
+    "ontology": {
+      "name": "B2BSaaSOntology",
+      "description": "Comprehensive schema for a B2B SaaS startup",
+      "superclasses": [
+        {
+          "name": "CustomerData",
+          "description": "Encapsulates all information related to customers, both at the organizational and individual user level.",
+          "subclasses": [
+            {
+              "name": "Company",
+              "attributes": [
+                {"name": "companyName", "type": "string", "description": "Legal business name"},
+                {"name": "industry", "type": "string", "description": "Vertical classification"},
+                {"name": "ARR", "type": "number", "description": "Annual recurring revenue"},
+                {"name": "customerSegment", "type": "string", "description": "SMB/Mid-Market/Enterprise"},
+                {"name": "onboardingDate", "type": "date", "description": "First contract date"},
+                {"name": "churnDate", "type": "date", "description": "Cancellation date, if applicable"},
+                {"name": "numberOfUsers", "type": "integer", "description": "Total number of users from this company"}
+              ],
+              "relationships": [
+                {"name": "hasUsers", "target": "User", "cardinality": "one-to-many"},
+                {"name": "hasSubscriptionPlans", "target": "SubscriptionPlan", "cardinality": "one-to-many"},
+                {"name": "hasSupportTickets", "target": "SupportTicket", "cardinality": "one-to-many"},
+                {"name": "involvedIn", "target": "MarketingCampaign", "cardinality": "one-to-many"}
+              ]
+            },
+            {
+              "name": "User",
+              "attributes": [
+                {"name": "userID", "type": "string", "description": "Unique user identifier"},
+                {"name": "role", "type": "string", "description": "Admin/User/Viewer"},
+                {"name": "lastLogin", "type": "datetime", "description": "Most recent session start"},
+                {"name": "featureAdoptionScore", "type": "number", "description": "Product engagement metric"}
+              ],
+              "relationships": [
+                {"name": "belongsTo", "target": "Company", "cardinality": "many-to-one"},
+                {"name": "generates", "target": "Usage", "cardinality": "one-to-many"},
+                {"name": "provides", "target": "QualitativeUserFeedbackData", "cardinality": "one-to-many"},
+                {"name": "generates", "target": "WebProductAnalytics", "cardinality": "one-to-many"}
+              ]
+            }
+          ]
+        },
+        {
+          "name": "ProductData",
+          "description": "Contains data about the products/services offered by the startup, including detailed usage tracking.",
+          "subclasses": [
+            {
+              "name": "Product",
+              "attributes": [
+                {"name": "productID", "type": "string", "description": "Unique identifier for the product"},
+                {"name": "productName", "type": "string", "description": "Name of the product"},
+                {"name": "version", "type": "string", "description": "Current version of the product"},
+                {"name": "description", "type": "string", "description": "Brief description of the product"},
+                {"name": "subscriptionType", "type": "string", "description": "Type of subscription model"}
+              ],
+              "relationships": [
+                {"name": "hasUsageEvents", "target": "Usage", "cardinality": "one-to-many"},
+                {"name": "associatedWith", "target": "SubscriptionPlan", "cardinality": "one-to-many"}
+              ]
+            },
+            {
+              "name": "Usage",
+              "attributes": [
+                {"name": "eventID", "type": "string", "description": "Unique identifier for each usage event"},
+                {"name": "featureName", "type": "string", "description": "Name of the feature used"},
+                {"name": "userID", "type": "string", "description": "User who used the feature"},
+                {"name": "eventTimestamp", "type": "datetime", "description": "When the usage occurred"},
+                {"name": "metadata", "type": "object", "description": "Additional data about the usage event"}
+              ],
+              "relationships": [
+                {"name": "byUser", "target": "User", "cardinality": "many-to-one"},
+                {"name": "forProduct", "target": "Product", "cardinality": "many-to-one"}
+              ]
+            }
+          ]
+        },
+        {
+          "name": "PaymentData",
+          "description": "Manages all billing, revenue, and payment-related data.",
+          "subclasses": [
+            {
+              "name": "SubscriptionPlan",
+              "attributes": [
+                {"name": "planID", "type": "string", "description": "Unique plan identifier"},
+                {"name": "planName", "type": "string", "description": "Marketing name"},
+                {"name": "billingInterval", "type": "string", "description": "Monthly/Annual"},
+                {"name": "MRR", "type": "number", "description": "Monthly recurring revenue"},
+                {"name": "seatLimit", "type": "integer", "description": "Maximum users allowed"},
+                {"name": "featureFlags", "type": "array", "description": "Enabled capabilities"}
+              ],
+              "relationships": [
+                {"name": "forCompany", "target": "Company", "cardinality": "many-to-one"},
+                {"name": "generatesInvoices", "target": "Invoice", "cardinality": "one-to-many"}
+              ]
+            },
+            {
+              "name": "Invoice",
+              "attributes": [
+                {"name": "invoiceID", "type": "string", "description": "Unique transaction identifier"},
+                {"name": "subscriptionID", "type": "string", "description": "Associated plan ID"},
+                {"name": "dueDate", "type": "date", "description": "Payment deadline"},
+                {"name": "paymentStatus", "type": "string", "description": "Paid/Unpaid/Overdue"},
+                {"name": "amount", "type": "number", "description": "USD value"}
+              ],
+              "relationships": [
+                {"name": "forCompany", "target": "Company", "cardinality": "many-to-one"},
+                {"name": "fromPlan", "target": "SubscriptionPlan", "cardinality": "many-to-one"},
+                {"name": "hasStripeData", "target": "StripeBillingData", "cardinality": "one-to-one"}
+              ]
+            },
+            {
+              "name": "StripeBillingData",
+              "attributes": [
+                {"name": "stripeCustomerID", "type": "string", "description": "Stripe's unique customer identifier"},
+                {"name": "stripeSubscriptionID", "type": "string", "description": "Stripe's unique subscription identifier"},
+                {"name": "stripePaymentMethodID", "type": "string", "description": "Stripe's payment method identifier"},
+                {"name": "stripeInvoiceID", "type": "string", "description": "Stripe's invoice identifier"},
+                {"name": "lastPaymentAttempt", "type": "datetime", "description": "Timestamp of last payment attempt"},
+                {"name": "nextBillingDate", "type": "date", "description": "Date of next scheduled billing"},
+                {"name": "paymentStatus", "type": "string", "description": "Status of recent payment"}
+              ],
+              "relationships": [
+                {"name": "forInvoice", "target": "Invoice", "cardinality": "one-to-one"}
+              ]
+            }
+          ]
+        },
+        {
+          "name": "WebProductAnalytics",
+          "description": "Focuses on website and application usage metrics for analytics purposes.",
+          "attributes": [
+            {"name": "sessionID", "type": "string", "description": "Unique session identifier"},
+            {"name": "userAgent", "type": "string", "description": "Browser and device information"},
+            {"name": "pageViews", "type": "number", "description": "Number of pages viewed"},
+            {"name": "sessionDuration", "type": "number", "description": "Length of user session in seconds"},
+            {"name": "bounceRate", "type": "number", "description": "Percentage of single-page sessions"},
+            {"name": "conversionRate", "type": "number", "description": "Percentage of sessions that resulted in defined conversions"},
+            {"name": "trafficSource", "type": "string", "description": "Referral source"}
+          ],
+          "relationships": [
+            {"name": "byUser", "target": "User", "cardinality": "many-to-one"}
+          ]
+        },
+        {
+          "name": "Metrics",
+          "description": "Aggregates various quantitative metrics that help understand and track business performance.",
+          "attributes": [
+            {"name": "metricID", "type": "string", "description": "Unique identifier for the metric"},
+            {"name": "metricName", "type": "string", "description": "Name of the metric"},
+            {"name": "value", "type": "number", "description": "The value of the metric"},
+            {"name": "metricType", "type": "string", "description": "Type or category of metric"},
+            {"name": "measurementDate", "type": "date", "description": "When the metric was measured"}
+          ],
+          "subclasses": [
+            {
+              "name": "CustomerMetrics",
+              "attributes": [
+                {"name": "churnRate", "type": "number", "description": "Percentage of customers who have left"},
+                {"name": "customerAcquisitionCost", "type": "number", "description": "Cost to acquire a new customer"},
+                {"name": "lifetimeValue", "type": "number", "description": "Predicted revenue a customer will generate over their lifetime"}
+              ],
+              "relationships": [
+                {"name": "forCompany", "target": "Company", "cardinality": "many-to-one"}
+              ]
+            },
+            {
+              "name": "ProductMetrics",
+              "attributes": [
+                {"name": "dailyActiveUsers", "type": "number", "description": "Number of users active in a day"},
+                {"name": "monthlyActiveUsers", "type": "number", "description": "Number of users active in a month"},
+                {"name": "featureAdoptionRate", "type": "number", "description": "Rate at which new features are adopted"}
+              ],
+              "relationships": [
+                {"name": "forProduct", "target": "Product", "cardinality": "many-to-one"}
+              ]
+            },
+            {
+              "name": "OperationalMetrics",
+              "attributes": [
+                {"name": "systemUptime", "type": "number", "description": "Percentage of time systems are up"},
+                {"name": "averageResponseTime", "type": "number", "description": "Average time to respond to queries/system requests"}
+              ]
+            }
+          ]
+        },
+        {
+          "name": "SupportData",
+          "description": "Manages data related to customer support interactions.",
+          "subclasses": [
+            {
+              "name": "SupportTicket",
+              "attributes": [
+                {"name": "ticketID", "type": "string", "description": "Unique case identifier"},
+                {"name": "severity", "type": "string", "description": "Priority level"},
+                {"name": "resolutionTime", "type": "number", "description": "Hours to close"},
+                {"name": "csatScore", "type": "number", "description": "Customer satisfaction rating"}
+              ],
+              "relationships": [
+                {"name": "forCompany", "target": "Company", "cardinality": "many-to-one"}
+              ]
+            }
+          ]
+        },
+        {
+          "name": "FinancialData",
+          "description": "Tracks business financial health, expenses, and revenue not directly tied to customer billing.",
+          "attributes": [
+            {"name": "financialReportID", "type": "string", "description": "Identifier for financial reports"},
+            {"name": "period", "type": "string", "description": "Time period covered"},
+            {"name": "totalRevenue", "type": "number", "description": "Total income generated"},
+            {"name": "totalExpenses", "type": "number", "description": "Total expenses incurred"},
+            {"name": "netIncome", "type": "number", "description": "Revenue minus expenses"}
+          ],
+          "subclasses": [
+            {
+              "name": "Expense",
+              "attributes": [
+                {"name": "expenseID", "type": "string", "description": "Unique expense identifier"},
+                {"name": "category", "type": "string", "description": "Type of expense"},
+                {"name": "amount", "type": "number", "description": "Cost of the expense"},
+                {"name": "date", "type": "date", "description": "When the expense was incurred"}
+              ],
+              "relationships": [
+                {"name": "belongsTo", "target": "FinancialData", "cardinality": "many-to-one"}
+              ]
+            }
+          ]
+        },
+        {
+          "name": "QualitativeUserFeedbackData",
+          "description": "Collects and organizes feedback from users in a non-numeric format.",
+          "attributes": [
+            {"name": "feedbackID", "type": "string", "description": "Unique identifier for feedback"},
+            {"name": "feedbackText", "type": "string", "description": "Content of the feedback"},
+            {"name": "feedbackType", "type": "string", "description": "Type of feedback"},
+            {"name": "submissionDate", "type": "date", "description": "When the feedback was submitted"}
+          ],
+          "relationships": [
+            {"name": "fromUser", "target": "User", "cardinality": "many-to-one"}
+          ]
+        },
+        {
+          "name": "AcquisitionSalesData",
+          "description": "Covers data related to sales, lead generation, and customer acquisition processes.",
+          "subclasses": [
+            {
+              "name": "MarketingCampaign",
+              "attributes": [
+                {"name": "campaignID", "type": "string", "description": "Unique initiative identifier"},
+                {"name": "channel", "type": "string", "description": "Paid Social/SEO/Webinars etc."},
+                {"name": "cost", "type": "number", "description": "Total spend"},
+                {"name": "acceptedLeads", "type": "integer", "description": "Sales-qualified leads"},
+                {"name": "cvr", "type": "number", "description": "Lead to opportunity rate"}
+              ],
+              "relationships": [
+                {"name": "targets", "target": "Company", "cardinality": "one-to-many"},
+                {"name": "generates", "target": "SalesLead", "cardinality": "one-to-many"}
+              ]
+            },
+            {
+              "name": "SalesLead",
+              "attributes": [
+                {"name": "leadID", "type": "string", "description": "Unique identifier for each lead"},
+                {"name": "source", "type": "string", "description": "Where the lead came from"},
+                {"name": "stage", "type": "string", "description": "Current stage in the sales funnel"},
+                {"name": "conversionProbability", "type": "number", "description": "Likelihood of conversion to customer"},
+                {"name": "dealValue", "type": "number", "description": "Potential value of the deal if converted"}
+              ],
+              "relationships": [
+                {"name": "fromCampaign", "target": "MarketingCampaign", "cardinality": "many-to-one"},
+                {"name": "convertedTo", "target": "Company", "cardinality": "many-to-one"}
+              ]
+            }
+          ]
+        }
+      ],
+      "rules": [
+        "Every Company must have at least one User.",
+        "A User can only belong to one Company.",
+        "Every Invoice must be associated with one SubscriptionPlan and one Company.",
+        "If a Company has a churnDate, it cannot have active SubscriptionPlans.",
+        "All Usage events must have a valid userID and productID.",
+        "Every SupportTicket must be associated with a Company.",
+        "A MarketingCampaign must generate at least one SalesLead.",
+        "All CustomerMetrics must be linked to a Company.",
+        "All ProductMetrics must be linked to a Product.",
+        "Qualitative feedback must come from a User.",
+        "Each Expense must be logged under FinancialData.",
+        "StripeBillingData must correspond to an Invoice.",
+        "The sum of all Expenses for a period should not exceed the totalExpenses in FinancialData for that period.",
+        "WebProductAnalytics must be linked to a User.",
+        "OperationalMetrics apply globally and do not require specific relationships."
+      ]
+    }
+  }
