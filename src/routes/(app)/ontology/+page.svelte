@@ -19,6 +19,7 @@
     import Filter from "lucide-svelte/icons/filter";
     import ArrowRight from "lucide-svelte/icons/arrow-right";
     import Check from "lucide-svelte/icons/check";
+    import ontologySchema from './ontology.json';
 
     // Define ontology structure
     const ontologyClasses = [
@@ -145,10 +146,7 @@
 
     // Add state for dialog
     let csvDialogOpen = false;
-    let jsonContent = JSON.stringify({
-        classes: ontologyClasses,
-        relationships: relationshipTypes
-    }, null, 2);
+    let jsonContent = JSON.stringify(ontologySchema, null, 2);
 
     // Add state for table features
     let searchQuery = '';
@@ -171,18 +169,89 @@
         // Implementation of importSchema
     }
 
+    // Add these variables for the resizer
+    let isResizing = false;
+    let leftPaneWidth = 30; // Initial width in percentage
+
+    function startResizing() {
+        isResizing = true;
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', stopResizing);
+    }
+
+    function stopResizing() {
+        isResizing = false;
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', stopResizing);
+    }
+
+    function handleMouseMove(e: MouseEvent) {
+        if (!isResizing) return;
+        
+        const container = document.getElementById('split-container');
+        if (!container) return;
+
+        const containerRect = container.getBoundingClientRect();
+        const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+        
+        // Constrain the width between 20% and 40%
+        leftPaneWidth = Math.min(Math.max(newWidth, 20), 40);
+    }
+
     function formatJSON() {
-        // Implementation of formatJSON
+        try {
+            const parsed = JSON.parse(jsonContent);
+            jsonContent = JSON.stringify(parsed, null, 2);
+        } catch (e) {
+            console.error('Invalid JSON format');
+        }
     }
 
     function validateSchema() {
-        // Implementation of validateSchema
+        try {
+            const parsed = JSON.parse(jsonContent);
+            // Add validation logic here if needed
+        } catch (e) {
+            console.error('Invalid JSON format');
+        }
     }
 
     function saveSchema() {
-        // Implementation of saveSchema
+        try {
+            const parsed = JSON.parse(jsonContent);
+            // Add save logic here
+            csvDialogOpen = false;
+        } catch (e) {
+            console.error('Invalid JSON format');
+        }
     }
 </script>
+
+<style>
+    /* Custom scrollbar styles */
+    :global(textarea::-webkit-scrollbar) {
+        width: 8px;
+    }
+
+    :global(textarea::-webkit-scrollbar-track) {
+        background: transparent;
+    }
+
+    :global(textarea::-webkit-scrollbar-thumb) {
+        background-color: hsl(var(--secondary-foreground) / 0.2);
+        border-radius: 4px;
+    }
+
+    :global(textarea::-webkit-scrollbar-thumb:hover) {
+        background-color: hsl(var(--secondary-foreground) / 0.4);
+    }
+
+    /* Firefox */
+    :global(textarea) {
+        scrollbar-width: thin;
+        scrollbar-color: hsl(var(--secondary-foreground) / 0.2) transparent;
+    }
+</style>
 
 <PageContent>
     <div class="space-y-6">
@@ -209,17 +278,17 @@
 
         <!-- Add CSV Dialog -->
         <Dialog.Root bind:open={csvDialogOpen}>
-            <Dialog.Content class="max-w-3xl">
+            <Dialog.Content class="max-w-[90vw] h-[90vh] flex flex-col">
                 <Dialog.Header>
                     <Dialog.Title>Edit Full Schema</Dialog.Title>
                     <Dialog.Description>
                         Edit the complete ontology structure in JSON format. This includes all classes, relationships, and validation rules.
-                        Changes here will update your entire data model.
                     </Dialog.Description>
                 </Dialog.Header>
 
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between">
+                <div class="flex-1 flex flex-col h-full overflow-hidden">
+                    <!-- Top buttons section -->
+                    <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-2">
                             <Button variant="outline" size="sm" onclick={exportSchema}>
                                 <FileDown class="h-4 w-4 mr-2" />
@@ -242,16 +311,48 @@
                         </div>
                     </div>
 
-                    <Separator />
+                    <Separator class="mb-4" />
 
-                    <div class="relative">
-                        <textarea 
-                            class="w-full h-[400px] font-mono text-sm p-4 rounded-md bg-secondary/20"
-                            bind:value={jsonContent}
-                            placeholder="Enter your ontology schema in JSON format..."
-                        ></textarea>
-                        <div class="absolute top-2 right-2 text-xs text-muted-foreground">
-                            JSON Schema Editor
+                    <!-- Split container - make it take up remaining space -->
+                    <div 
+                        id="split-container"
+                        class="border rounded-2xl flex flex-1 min-h-0"
+                    >
+                        <!-- Left Pane (JSON Editor) -->
+                        <div 
+                            class="relative"
+                            style="width: {leftPaneWidth}%"
+                        >
+                            <textarea 
+                                class="w-full h-full font-mono text-sm p-4 rounded-md bg-secondary/20 resize-none absolute inset-0"
+                                bind:value={jsonContent}
+                                placeholder="Enter your ontology schema in JSON format..."
+                            ></textarea>
+                        </div>
+
+                        <!-- Resizer -->
+                        <div
+                            class="w-1 hover:w-2 bg-border hover:bg-primary transition-all cursor-col-resize flex-shrink-0 relative"
+                            on:mousedown={startResizing}
+                            role="separator"
+                            aria-orientation="vertical"
+                            aria-valuenow={leftPaneWidth}
+                        >
+                            <div class="absolute inset-y-0 -left-2 right-0"></div>
+                        </div>
+
+                        <!-- Right Pane (Graph Visualization) -->
+                        <div class="flex-1 relative">
+                            <div class="absolute inset-0 bg-secondary/20 rounded-md">
+                                <!-- Add grid background -->
+                                <div class="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:24px_24px] opacity-[0.06]"></div>
+                                
+                                <!-- Update the content container to be relative for proper layering -->
+                                <div class="relative h-full flex items-center justify-center text-muted-foreground p-4">
+                                    <!-- Add your graph visualization component here -->
+                                    <p>Graph visualization will be rendered here</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
