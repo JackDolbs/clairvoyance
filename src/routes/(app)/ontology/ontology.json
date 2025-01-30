@@ -9,6 +9,7 @@
           "subclasses": [
             {
               "name": "Company",
+              "description": "Represents enterprise customers with organizational attributes, tracking business relationship lifecycle from onboarding to churn",
               "attributes": [
                 {"name": "companyName", "type": "string", "description": "Legal business name"},
                 {"name": "industry", "type": "string", "description": "Vertical classification"},
@@ -27,6 +28,7 @@
             },
             {
               "name": "User",
+              "description": "Individual user accounts within customer organizations, tracking product engagement and access patterns",
               "attributes": [
                 {"name": "userID", "type": "string", "description": "Unique user identifier"},
                 {"name": "role", "type": "string", "description": "Admin/User/Viewer"},
@@ -48,6 +50,7 @@
           "subclasses": [
             {
               "name": "Product",
+              "description": "Core product/service offerings with versioning and subscription model details",
               "attributes": [
                 {"name": "productID", "type": "string", "description": "Unique identifier for the product"},
                 {"name": "productName", "type": "string", "description": "Name of the product"},
@@ -62,6 +65,7 @@
             },
             {
               "name": "Usage",
+              "description": "Granular tracking of feature adoption and product interaction patterns",
               "attributes": [
                 {"name": "eventID", "type": "string", "description": "Unique identifier for each usage event"},
                 {"name": "featureName", "type": "string", "description": "Name of the feature used"},
@@ -82,6 +86,7 @@
           "subclasses": [
             {
               "name": "SubscriptionPlan",
+              "description": "Recurring billing configurations defining pricing tiers and feature access",
               "attributes": [
                 {"name": "planID", "type": "string", "description": "Unique plan identifier"},
                 {"name": "planName", "type": "string", "description": "Marketing name"},
@@ -97,6 +102,7 @@
             },
             {
               "name": "Invoice",
+              "description": "Financial transactions and payment records tied to subscription agreements",
               "attributes": [
                 {"name": "invoiceID", "type": "string", "description": "Unique transaction identifier"},
                 {"name": "subscriptionID", "type": "string", "description": "Associated plan ID"},
@@ -112,6 +118,7 @@
             },
             {
               "name": "StripeBillingData",
+              "description": "Payment gateway integration details and transaction audit trail",
               "attributes": [
                 {"name": "stripeCustomerID", "type": "string", "description": "Stripe's unique customer identifier"},
                 {"name": "stripeSubscriptionID", "type": "string", "description": "Stripe's unique subscription identifier"},
@@ -156,6 +163,7 @@
           "subclasses": [
             {
               "name": "CustomerMetrics",
+              "description": "Key performance indicators tracking customer lifecycle and value",
               "attributes": [
                 {"name": "churnRate", "type": "number", "description": "Percentage of customers who have left"},
                 {"name": "customerAcquisitionCost", "type": "number", "description": "Cost to acquire a new customer"},
@@ -167,6 +175,7 @@
             },
             {
               "name": "ProductMetrics",
+              "description": "Quantitative measures of product adoption and engagement",
               "attributes": [
                 {"name": "dailyActiveUsers", "type": "number", "description": "Number of users active in a day"},
                 {"name": "monthlyActiveUsers", "type": "number", "description": "Number of users active in a month"},
@@ -178,6 +187,7 @@
             },
             {
               "name": "OperationalMetrics",
+              "description": "Infrastructure reliability and system performance measurements",
               "attributes": [
                 {"name": "systemUptime", "type": "number", "description": "Percentage of time systems are up"},
                 {"name": "averageResponseTime", "type": "number", "description": "Average time to respond to queries/system requests"}
@@ -191,6 +201,7 @@
           "subclasses": [
             {
               "name": "SupportTicket",
+              "description": "Customer-reported issues and resolution tracking",
               "attributes": [
                 {"name": "ticketID", "type": "string", "description": "Unique case identifier"},
                 {"name": "severity", "type": "string", "description": "Priority level"},
@@ -216,6 +227,7 @@
           "subclasses": [
             {
               "name": "Expense",
+              "description": "Operational cost tracking and financial allocation records",
               "attributes": [
                 {"name": "expenseID", "type": "string", "description": "Unique expense identifier"},
                 {"name": "category", "type": "string", "description": "Type of expense"},
@@ -247,6 +259,7 @@
           "subclasses": [
             {
               "name": "MarketingCampaign",
+              "description": "Targeted outreach initiatives and performance tracking",
               "attributes": [
                 {"name": "campaignID", "type": "string", "description": "Unique initiative identifier"},
                 {"name": "channel", "type": "string", "description": "Paid Social/SEO/Webinars etc."},
@@ -261,6 +274,7 @@
             },
             {
               "name": "SalesLead",
+              "description": "Prospect engagement pipeline and conversion probability tracking",
               "attributes": [
                 {"name": "leadID", "type": "string", "description": "Unique identifier for each lead"},
                 {"name": "source", "type": "string", "description": "Where the lead came from"},
