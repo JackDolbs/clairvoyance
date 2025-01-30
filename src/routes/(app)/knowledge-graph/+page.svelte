@@ -533,21 +533,19 @@
         <div class="flex items-center gap-4 p-4">
             <!-- Update the filter dropdown structure -->
             <div class="flex items-center gap-2">
-                <!-- Fixed Node Types Filter -->
                 <DropdownMenu.Root>
-                    <Tooltip.Root>
-                        <Tooltip.Trigger asChild>
-                            <DropdownMenu.Trigger asChild>
+                    <DropdownMenu.Trigger asChild>
+                        <Tooltip.Root>
+                            <Tooltip.Trigger asChild>
                                 <Button variant="ghost" size="icon">
                                     <Filter class="h-4 w-4" />
                                 </Button>
-                            </DropdownMenu.Trigger>
-                        </Tooltip.Trigger>
-                        <Tooltip.Content>
-                            <p>Filter Node Types</p>
-                        </Tooltip.Content>
-                    </Tooltip.Root>
-                    
+                            </Tooltip.Trigger>
+                            <Tooltip.Content>
+                                <p>Filter Node Types</p>
+                            </Tooltip.Content>
+                        </Tooltip.Root>
+                    </DropdownMenu.Trigger>
                     <DropdownMenu.Content>
                         <DropdownMenu.Label>Node Types</DropdownMenu.Label>
                         <DropdownMenu.Separator />
@@ -562,21 +560,19 @@
                     </DropdownMenu.Content>
                 </DropdownMenu.Root>
 
-                <!-- Fixed Relationships Filter -->
                 <DropdownMenu.Root>
-                    <Tooltip.Root>
-                        <Tooltip.Trigger asChild>
-                            <DropdownMenu.Trigger asChild>
+                    <DropdownMenu.Trigger asChild>
+                        <Tooltip.Root>
+                            <Tooltip.Trigger asChild>
                                 <Button variant="ghost" size="icon">
                                     <Network class="h-4 w-4" />
                                 </Button>
-                            </DropdownMenu.Trigger>
-                        </Tooltip.Trigger>
-                        <Tooltip.Content>
-                            <p>Filter Relationships</p>
-                        </Tooltip.Content>
-                    </Tooltip.Root>
-                    
+                            </Tooltip.Trigger>
+                            <Tooltip.Content>
+                                <p>Filter Relationships</p>
+                            </Tooltip.Content>
+                        </Tooltip.Root>
+                    </DropdownMenu.Trigger>
                     <DropdownMenu.Content>
                         <DropdownMenu.Label>Relationships</DropdownMenu.Label>
                         <DropdownMenu.Separator />
