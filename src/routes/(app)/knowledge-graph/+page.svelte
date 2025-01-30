@@ -38,14 +38,84 @@
     let sheetOpen = false;
     let selectedNode: any = null;
     
-    // Update node types to include hierarchy levels
+    // Replace nodeTypes definition
     const nodeTypes = [
-        { id: 'class', name: 'Classes', color: '#333333', radius: 20 },
-        { id: 'superclass', name: 'Superclass', color: '#4CAF50', radius: 15 },
-        { id: 'sub_class', name: 'Sub Class', color: '#81C784', radius: 12 },      // Sub-entities
-        { id: 'attribute', name: 'Attribute', color: '#2196F3', radius: 8 },         // Properties
-        { id: 'enum', name: 'Enumeration', color: '#FFC107', radius: 10 }          // Enums/Options
+        { id: 'class', name: 'Ontology', color: '#333333', radius: 25 },
+        { id: 'superclass', name: 'Superclass', color: '#4CAF50', radius: 20 },
+        { id: 'subclass', name: 'Subclass', color: '#81C784', radius: 16 },
+        { id: 'attribute', name: 'Attribute', color: '#2196F3', radius: 10 }
     ];
+
+    // Import ontology data
+    import ontologyData from '../ontology/ontology.json';
+
+    // Transform ontology data into graph nodes/links
+    let ontologyGraph = {
+        nodes: [],
+        links: []
+    };
+
+    // Create root node
+    const rootNode = {
+        id: ontologyData.ontology.name,
+        type: 'class',
+        properties: {
+            description: ontologyData.ontology.description
+        }
+    };
+    ontologyGraph.nodes.push(rootNode);
+
+    // Process superclasses and subclasses
+    ontologyData.ontology.superclasses.forEach(superclass => {
+        const superNode = {
+            id: superclass.name,
+            type: 'superclass',
+            properties: {
+                description: superclass.description
+            }
+        };
+        ontologyGraph.nodes.push(superNode);
+        ontologyGraph.links.push({
+            source: rootNode.id,
+            target: superNode.id,
+            type: 'is_a'
+        });
+
+        // Process subclasses
+        superclass.subclasses?.forEach(subclass => {
+            const subNode = {
+                id: subclass.name,
+                type: 'subclass',
+                properties: {
+                    description: subclass.description,
+                    attributes: subclass.attributes
+                }
+            };
+            ontologyGraph.nodes.push(subNode);
+            ontologyGraph.links.push({
+                source: superNode.id,
+                target: subNode.id,
+                type: 'has_subclass'
+            });
+
+            // Process attributes
+            subclass.attributes?.forEach(attr => {
+                const attrNode = {
+                    id: `${subNode.id}.${attr.name}`,
+                    type: 'attribute',
+                    properties: {
+                        ...attr
+                    }
+                };
+                ontologyGraph.nodes.push(attrNode);
+                ontologyGraph.links.push({
+                    source: subNode.id,
+                    target: attrNode.id,
+                    type: 'has_attribute'
+                });
+            });
+        });
+    });
 
     // Create a comprehensive B2B SaaS ontology
     const mockData = {
@@ -417,58 +487,29 @@
             g = svg.append("g");
 
             // Update the force simulation configuration
-            const simulation = d3.forceSimulation(mockData.nodes as any)
+            const simulation = d3.forceSimulation(ontologyGraph.nodes as any)
                 .force("link", d3.forceLink()
                     .id((d: any) => d.id)
-                    .links(mockData.links.filter(link => 
-                        mockData.nodes.some(n => n.id === link.source) && 
-                        mockData.nodes.some(n => n.id === link.target)
-                    ))
+                    .links(ontologyGraph.links)
                     .distance(d => {
-                        // Longer distances between superclasses
-                        if (d.source.type === 'superclass' && d.target.type === 'superclass') return 300;
-                        // Medium distance for class-to-attribute connections
-                        if (d.type === 'has_attribute') return 150;
-                        // Default distance for other connections
-                        return 200;
+                        if (d.type === 'is_a') return 150;
+                        if (d.type === 'has_subclass') return 100;
+                        if (d.type === 'has_attribute') return 50;
+                        return 80;
                     })
-                    .strength(0.2)  // Keep links flexible
                 )
-                .force("charge", d3.forceManyBody()
-                    .strength(-600)  // Stronger repulsion
-                    .distanceMax(600)  // Longer range
-                    .distanceMin(50)   // Minimum spacing
-                )
-                .force("collision", d3.forceCollide()
-                    .radius(d => {
-                        // Larger collision radius for superclasses
-                        if (d.type === 'superclass') return 80;
-                        if (d.type === 'sub_class') return 60;
-                        return 40;
-                    })
-                    .strength(0.7)
-                )
-                // Gentler hierarchical positioning
-                .force("y", d3.forceY((d: any) => {
-                    if (d.id === "Classes") return 50;
-                    if (d.type === "superclass") return height * 0.3;
-                    if (d.type === "sub_class") return height * 0.5;
-                    if (d.type === "attribute") return height * 0.7;
-                    return height * 0.6;
-                }).strength(0.1))
-                .force("x", d3.forceX((d: any) => {
-                    if (d.id === "Classes") return width / 2;
-                    // Spread superclasses more widely
-                    if (d.type === "superclass") {
-                        return width * (0.2 + Math.random() * 0.6);
-                    }
-                    return width * (0.3 + Math.random() * 0.4);
-                }).strength(0.05))
-                .alphaDecay(0.005)
-                .velocityDecay(0.3);
+                .force("charge", d3.forceManyBody().strength(-500))
+                .force("collision", d3.forceCollide().radius(d => {
+                    if (d.type === 'class') return 30;
+                    if (d.type === 'superclass') return 25;
+                    if (d.type === 'subclass') return 20;
+                    return 10;
+                }))
+                .force("x", d3.forceX().strength(0.1))
+                .force("y", d3.forceY().strength(0.2));
 
             // Only fix the Classes node
-            mockData.nodes.forEach((node: any) => {
+            ontologyGraph.nodes.forEach((node: any) => {
                 if (node.id === "Classes") {
                     node.fx = width / 2;
                     node.fy = 50;
@@ -481,7 +522,7 @@
             // Create links
             const link = g.append("g")
                 .selectAll("line")
-                .data(mockData.links)
+                .data(ontologyGraph.links)
                 .join("line")
                 .attr("stroke", "#999")
                 .attr("stroke-opacity", 0.6)
@@ -490,7 +531,7 @@
             // Create nodes
             const nodeGroup = g.append("g")
                 .selectAll("g")
-                .data(mockData.nodes)
+                .data(ontologyGraph.nodes)
                 .join("g")
                 .call(d3.drag<any, any>()
                     .on("start", dragstarted)
@@ -502,11 +543,13 @@
                 .attr("r", (d: any) => nodeTypes.find(t => t.id === d.type)?.radius || 8)
                 .attr("fill", (d: any) => nodeTypes.find(t => t.id === d.type)?.color || '#999')
                 .style("cursor", "pointer")
+                .style("stroke", d => hoveredNode?.id === d.id ? "#fff" : "none")
+                .style("stroke-width", 2)
                 .on('mouseover', (event, d) => {
-                    hoveredNode = d;
+                    selectedNode = d;
                 })
                 .on('mouseout', () => {
-                    hoveredNode = null;
+                    selectedNode = null;
                 });
 
             // Add labels NEXT TO nodes with hover effect
@@ -519,10 +562,10 @@
                 .attr("font-size", "12px")
                 .style("cursor", "pointer")
                 .on('mouseover', (event, d) => {
-                    hoveredNode = d;
+                    selectedNode = d;
                 })
                 .on('mouseout', () => {
-                    hoveredNode = null;
+                    selectedNode = null;
                 });
 
             // Update positions on simulation tick
@@ -593,6 +636,15 @@
             document.addEventListener('fullscreenchange', () => {
                 isFullscreen = !!document.fullscreenElement;
             });
+
+            // Add this in the nodeGroup section
+            nodeGroup.on("mouseover", (event, d) => {
+                if (d.type === 'subclass') {
+                    hoveredNode = d;
+                }
+            }).on("mouseout", () => {
+                hoveredNode = null;
+            });
         });
 
         return () => {
@@ -630,17 +682,16 @@
 
     // Add new node
     function addNode(type: string) {
-        const id = `New ${type} ${mockData.nodes.length + 1}`;
+        const id = `New ${type} ${ontologyGraph.nodes.length + 1}`;
         const newNode = {
             id,
-            group: nodeTypes.findIndex(t => t.id === type) + 1,
             type,
             properties: {
                 description: '',
                 attributes: []
             }
         };
-        mockData.nodes.push(newNode);
+        ontologyGraph.nodes.push(newNode);
         // Restart simulation...
     }
 
@@ -987,7 +1038,7 @@
                                             </div>
                                         </AccordionTrigger>
                                         <AccordionContent>
-                                            {#each mockData.nodes.filter(n => n.type === 'superclass') as mainClass}
+                                            {#each ontologyGraph.nodes.filter(n => n.type === 'superclass') as mainClass}
                                                 <AccordionItem value={mainClass.id}>
                                                     <AccordionTrigger>
                                                         <div class="flex items-center gap-2">
@@ -996,7 +1047,7 @@
                                                         </div>
                                                     </AccordionTrigger>
                                                     <AccordionContent>
-                                                        {#each mockData.nodes.filter(n => n.type === 'sub_class' && mockData.links.some(l => l.source === mainClass.id && l.target === n.id)) as subClass}
+                                                        {#each ontologyGraph.nodes.filter(n => n.type === 'subclass' && ontologyGraph.links.some(l => l.source === mainClass.id && l.target === n.id)) as subClass}
                                                             <div class="pl-4 py-2 flex items-center gap-2">
                                                                 <div class="w-2 h-2 rounded-full" style="background-color: {nodeTypes[2].color}"></div>
                                                                 {subClass.id}
@@ -1091,7 +1142,7 @@
                 <div class="text-sm font-medium mb-2">Node Types</div>
                 <div class="flex flex-col gap-2">
                     {#each nodeTypes as type}
-                        {@const count = mockData.nodes.filter(node => node.type === type.id).length}
+                        {@const count = ontologyGraph.nodes.filter(node => node.type === type.id).length}
                         <div class="flex items-center gap-2">
                             <Badge 
                                 variant="outline" 
@@ -1114,24 +1165,28 @@
                 {#if hoveredNode}
                     <div class="flex items-center gap-4">
                         <div class="flex items-center gap-2">
-                            <div class={`w-2 h-2 rounded-full`} style:background-color={nodeTypes.find(t => t.id === hoveredNode.type)?.color}></div>
+                            <div class={`w-2 h-2 rounded-full`} 
+                                 style:background-color={nodeTypes.find(t => t.id === hoveredNode.type)?.color}></div>
                             <span class="font-medium">{hoveredNode.type}</span>
                         </div>
                         <span>|</span>
                         <span>{hoveredNode.id}</span>
                         <span>|</span>
                         <span>{hoveredNode.properties?.description || 'No description'}</span>
-                        <span>|</span>
-                        <span>Connections: {mockData.links.filter(l => l.source === hoveredNode.id || l.target === hoveredNode.id).length}</span>
+                        {#if hoveredNode.type === 'subclass'}
+                            <span>|</span>
+                            <div class="flex gap-2">
+                                {#each hoveredNode.properties.attributes as attr}
+                                    <Badge variant="outline" class="text-xs">
+                                        {attr.name}: {attr.type}
+                                    </Badge>
+                                {/each}
+                            </div>
+                        {/if}
                     </div>
                 {:else}
                     <div class="flex items-center gap-2">
-                        <span class="text-muted-foreground">Status:</span>
-                        <span>{mockData.nodes.length} nodes</span>
-                        <span>|</span>
-                        <span>{mockData.links.length} connections</span>
-                        <span>|</span>
-                        <span class="text-muted-foreground">Hover over any item to view its details</span>
+                        <span class="text-muted-foreground">Hover over a subclass to view attributes</span>
                     </div>
                 {/if}
             </div>
@@ -1278,8 +1333,8 @@
                                 <div>
                                     <p class="text-sm font-medium">Relationships</p>
                                     <div class="mt-1 space-y-2">
-                                        {#if mockData.links.some(link => link.source === selectedNode.id || link.target === selectedNode.id)}
-                                            {#each mockData.links.filter(link => link.source === selectedNode.id || link.target === selectedNode.id) as link}
+                                        {#if ontologyGraph.links.some(link => link.source === selectedNode.id || link.target === selectedNode.id)}
+                                            {#each ontologyGraph.links.filter(link => link.source === selectedNode.id || link.target === selectedNode.id) as link}
                                                 <div class="flex items-center justify-between p-2 rounded-md bg-secondary/20">
                                                     <div class="flex items-center gap-2">
                                                         <span class="text-sm">
