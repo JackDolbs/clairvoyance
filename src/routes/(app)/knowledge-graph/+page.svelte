@@ -33,7 +33,7 @@
     import { Badge } from "$lib/components/ui/badge";
     import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "$lib/components/ui/accordion";
 
-    // Add tool state
+    // Restore tool state type
     let currentTool: 'pan' | 'node' | 'edge' | 'select' = 'pan';
     let sheetOpen = false;
     let selectedNode: any = null;
@@ -117,297 +117,6 @@
         });
     });
 
-    // Create a comprehensive B2B SaaS ontology
-    const mockData = {
-        nodes: [
-            // Root Entity
-            {
-                id: "Classes",
-                group: 0,
-                type: 'class',
-                properties: {
-                    description: 'Root entity from which all classes inherit',
-                    category: 'core'
-                }
-            },
-            // Core Business Entities
-            {
-                id: "Organization",
-                group: 1,
-                type: 'superclass',
-                properties: {
-                    description: 'Business entity using the platform',
-                    category: 'core'
-                }
-            },
-            {
-                id: "User",  // Add the missing User node
-                group: 1,
-                type: 'superclass',
-                properties: {
-                    description: 'User of the platform',
-                    category: 'core'
-                }
-            },
-            // Organization Properties
-            {
-                id: "org_name",
-                group: 0,
-                type: 'attribute',
-                properties: { dataType: 'string', required: true }
-            },
-            {
-                id: "org_industry",
-                group: 0,
-                type: 'attribute',
-                properties: { dataType: 'enum', required: true }
-            },
-            {
-                id: "org_size",
-                group: 0,
-                type: 'enum',
-                properties: {
-                    values: ['Small', 'Medium', 'Enterprise']
-                }
-            },
-
-            // Department (Sub-class of Organization)
-            {
-                id: "Department",
-                group: 1,
-                type: 'sub_class',
-                properties: {
-                    description: 'Organizational unit',
-                    category: 'organizational'
-                }
-            },
-            // Department Properties
-            {
-                id: "dept_name",
-                group: 1,
-                type: 'attribute',
-                properties: { dataType: 'string', required: true }
-            },
-            {
-                id: "dept_budget",
-                group: 1,
-                type: 'attribute',
-                properties: { dataType: 'number', required: false }
-            },
-
-            // Product Hierarchy
-            {
-                id: "Product",
-                group: 2,
-                type: 'superclass',
-                properties: {
-                    description: 'Platform product offering',
-                    category: 'product'
-                }
-            },
-            // Product Properties
-            {
-                id: "product_name",
-                group: 2,
-                type: 'attribute',
-                properties: { dataType: 'string', required: true }
-            },
-            {
-                id: "product_version",
-                group: 2,
-                type: 'attribute',
-                properties: { dataType: 'string', required: true }
-            },
-            {
-                id: "product_status",
-                group: 2,
-                type: 'enum',
-                properties: {
-                    values: ['Active', 'Beta', 'Deprecated']
-                }
-            },
-
-            // Feature (Sub-class of Product)
-            {
-                id: "Feature",
-                group: 3,
-                type: 'sub_class',
-                properties: {
-                    description: 'Product feature',
-                    category: 'product'
-                }
-            },
-            // Feature Properties
-            {
-                id: "feature_name",
-                group: 3,
-                type: 'attribute',
-                properties: { dataType: 'string', required: true }
-            },
-            {
-                id: "feature_status",
-                group: 3,
-                type: 'enum',
-                properties: {
-                    values: ['Enabled', 'Disabled', 'Beta']
-                }
-            },
-
-            // Continue with User, Subscription, etc...
-        ],
-        links: [
-            // Connect all Superclasses to Classes
-            { 
-                source: "Organization", 
-                target: "Classes", 
-                type: 'is_a',
-                description: 'Organization is a Class'
-            },
-            { 
-                source: "Product", 
-                target: "Classes", 
-                type: 'is_a',
-                description: 'Product is a Class'
-            },
-            { 
-                source: "User", 
-                target: "Classes", 
-                type: 'is_a',
-                description: 'User is a Class'
-            },
-            // Organization Hierarchy
-            { 
-                source: "org_name", 
-                target: "Organization", 
-                type: 'has_attribute',
-                description: 'Organization name'
-            },
-            { 
-                source: "org_industry", 
-                target: "Organization", 
-                type: 'has_attribute',
-                description: 'Industry classification'
-            },
-            { 
-                source: "org_size", 
-                target: "org_industry", 
-                type: 'enum_values',
-                description: 'Available size categories'
-            },
-
-            // Department Relations
-            { 
-                source: "Department", 
-                target: "Organization", 
-                type: 'belongs_to',
-                description: 'Department belongs to Organization'
-            },
-            { 
-                source: "dept_name", 
-                target: "Department", 
-                type: 'has_attribute',
-                description: 'Department name'
-            },
-            { 
-                source: "dept_budget", 
-                target: "Department", 
-                type: 'has_attribute',
-                description: 'Department budget'
-            },
-
-            // Product Hierarchy
-            { 
-                source: "product_name", 
-                target: "Product", 
-                type: 'has_attribute',
-                description: 'Product name'
-            },
-            { 
-                source: "product_version", 
-                target: "Product", 
-                type: 'has_attribute',
-                description: 'Product version'
-            },
-            { 
-                source: "product_status", 
-                target: "Product", 
-                type: 'has_attribute',
-                description: 'Product status'
-            },
-
-            // Feature Relations
-            { 
-                source: "Feature", 
-                target: "Product", 
-                type: 'belongs_to',
-                description: 'Feature belongs to Product'
-            },
-            { 
-                source: "feature_name", 
-                target: "Feature", 
-                type: 'has_attribute',
-                description: 'Feature name'
-            },
-            { 
-                source: "feature_status", 
-                target: "Feature", 
-                type: 'has_attribute',
-                description: 'Feature status'
-            }
-        ]
-    };
-
-    // Add mock data for different node types
-    const mockCustomerData = [
-        { 
-            id: 'Acme Corp',
-            industry: 'Technology',
-            employees: 500,
-            activeUsers: 50,
-            mrr: 2500,
-            status: 'Active',
-            startDate: '2023-01-15'
-        },
-        // Add more customer examples...
-    ];
-
-    const mockUserData = [
-        {
-            id: 'John Smith',
-            email: 'john@acmecorp.com',
-            role: 'Admin',
-            lastLogin: '2024-03-20',
-            department: 'Sales',
-            activeModules: ['Analytics', 'Reporting', 'API']
-        },
-        // Add more user examples...
-    ];
-
-    const mockTicketData = [
-        {
-            id: 'Support #123',
-            title: 'API Integration Issue',
-            status: 'Open',
-            priority: 'High',
-            created: '2024-03-19',
-            updated: '2024-03-20',
-            category: 'Technical'
-        },
-        // Add more ticket examples...
-    ];
-
-    const mockInvoiceData = [
-        {
-            id: 'INV-2024-001',
-            date: '2024-03-01',
-            amount: 2500,
-            status: 'Paid',
-            items: ['Enterprise Plan - Monthly'],
-            paymentMethod: 'Credit Card'
-        },
-        // Add more invoice examples...
-    ];
-
     let svgContainer: HTMLDivElement;
     let svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
     let g: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -460,18 +169,6 @@
 
     // Add responsive initialization on mount
     onMount(() => {
-        // Check if screen is 2xl or larger
-        const mediaQuery = window.matchMedia('(min-width: 1536px)');
-        isCollapsed = !mediaQuery.matches;  // Expand on xl screens
-        sidebarWidth = isCollapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH;
-
-        // Add listener for screen size changes
-        const handleResize = (e: MediaQueryListEvent) => {
-            isCollapsed = !e.matches;
-            sidebarWidth = isCollapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH;
-        };
-        mediaQuery.addEventListener('change', handleResize);
-
         // Initialize after DOM is ready
         requestAnimationFrame(() => {
             // Initialize SVG
@@ -655,7 +352,6 @@
             document.removeEventListener('fullscreenchange', () => {
                 isFullscreen = !!document.fullscreenElement;
             });
-            mediaQuery.removeEventListener('change', handleResize);
         };
     });
 
@@ -678,21 +374,6 @@
         console.log('Node clicked:', node);
         selectedNode = { ...node };
         sheetOpen = true;
-    }
-
-    // Add new node
-    function addNode(type: string) {
-        const id = `New ${type} ${ontologyGraph.nodes.length + 1}`;
-        const newNode = {
-            id,
-            type,
-            properties: {
-                description: '',
-                attributes: []
-            }
-        };
-        ontologyGraph.nodes.push(newNode);
-        // Restart simulation...
     }
 
     // Filter panel state
@@ -778,6 +459,21 @@
     function closeDropdowns() {
         activeDropdown = null;
     }
+
+    // Restore addNode function
+    function addNode(type: string) {
+        const id = `New ${type} ${ontologyGraph.nodes.length + 1}`;
+        const newNode = {
+            id,
+            type,
+            properties: {
+                description: '',
+                attributes: []
+            }
+        };
+        ontologyGraph.nodes.push(newNode);
+        // Restart simulation...
+    }
 </script>
 
 <style lang="postcss">
@@ -835,52 +531,69 @@
         </h1>
         
         <div class="flex items-center gap-4 p-4">
-            <!-- Tools Section -->
+            <!-- Update the filter dropdown structure -->
             <div class="flex items-center gap-2">
-                <Tooltip.Root>
-                    <Tooltip.Trigger asChild>
-                        <Button 
-                            variant={currentTool === 'pan' ? 'default' : 'ghost'} 
-                            size="icon"
-                            onclick={() => currentTool = 'pan'}
-                        >
-                            <Hand class="h-4 w-4" />
-                        </Button>
-                    </Tooltip.Trigger>
-                    <Tooltip.Content>
-                        <p>Pan Tool</p>
-                    </Tooltip.Content>
-                </Tooltip.Root>
+                <!-- Fixed Node Types Filter -->
+                <DropdownMenu.Root>
+                    <Tooltip.Root>
+                        <Tooltip.Trigger asChild>
+                            <DropdownMenu.Trigger asChild>
+                                <Button variant="ghost" size="icon">
+                                    <Filter class="h-4 w-4" />
+                                </Button>
+                            </DropdownMenu.Trigger>
+                        </Tooltip.Trigger>
+                        <Tooltip.Content>
+                            <p>Filter Node Types</p>
+                        </Tooltip.Content>
+                    </Tooltip.Root>
+                    
+                    <DropdownMenu.Content>
+                        <DropdownMenu.Label>Node Types</DropdownMenu.Label>
+                        <DropdownMenu.Separator />
+                        {#each nodeTypeFilters as type}
+                            <DropdownMenu.CheckboxItem 
+                                checked={type.checked}
+                                onCheckedChange={(checked) => handleNodeTypeFilter(type.id, checked)}
+                            >
+                                {type.name}
+                            </DropdownMenu.CheckboxItem>
+                        {/each}
+                    </DropdownMenu.Content>
+                </DropdownMenu.Root>
 
-                <Tooltip.Root>
-                    <Tooltip.Trigger asChild>
-                        <Button 
-                            variant={currentTool === 'node' ? 'default' : 'ghost'} 
-                            size="icon"
-                            onclick={() => currentTool = 'node'}
+                <!-- Fixed Relationships Filter -->
+                <DropdownMenu.Root>
+                    <Tooltip.Root>
+                        <Tooltip.Trigger asChild>
+                            <DropdownMenu.Trigger asChild>
+                                <Button variant="ghost" size="icon">
+                                    <Network class="h-4 w-4" />
+                                </Button>
+                            </DropdownMenu.Trigger>
+                        </Tooltip.Trigger>
+                        <Tooltip.Content>
+                            <p>Filter Relationships</p>
+                        </Tooltip.Content>
+                    </Tooltip.Root>
+                    
+                    <DropdownMenu.Content>
+                        <DropdownMenu.Label>Relationships</DropdownMenu.Label>
+                        <DropdownMenu.Separator />
+                        <DropdownMenu.CheckboxItem 
+                            checked={relationshipFilters.direct}
+                            onCheckedChange={(checked) => handleRelationshipFilter('direct', checked)}
                         >
-                            <Plus class="h-4 w-4" />
-                        </Button>
-                    </Tooltip.Trigger>
-                    <Tooltip.Content>
-                        <p>Add Node</p>
-                    </Tooltip.Content>
-                </Tooltip.Root>
-
-                <Tooltip.Root>
-                    <Tooltip.Trigger asChild>
-                        <Button 
-                            variant={currentTool === 'edge' ? 'default' : 'ghost'} 
-                            size="icon"
-                            onclick={() => currentTool = 'edge'}
+                            Direct Connections
+                        </DropdownMenu.CheckboxItem>
+                        <DropdownMenu.CheckboxItem 
+                            checked={relationshipFilters.indirect}
+                            onCheckedChange={(checked) => handleRelationshipFilter('indirect', checked)}
                         >
-                            <MinusIcon class="h-4 w-4" />
-                        </Button>
-                    </Tooltip.Trigger>
-                    <Tooltip.Content>
-                        <p>Add Edge</p>
-                    </Tooltip.Content>
-                </Tooltip.Root>
+                            Indirect Connections
+                        </DropdownMenu.CheckboxItem>
+                    </DropdownMenu.Content>
+                </DropdownMenu.Root>
             </div>
 
             <Separator orientation="vertical" class="h-8" />
@@ -959,173 +672,10 @@
                     </Tooltip.Content>
                 </Tooltip.Root>
             </div>
-
-            <Separator orientation="vertical" class="h-8" />
-
-            <!-- Create Button -->
-            <Button variant="default" class="gap-2">
-                <Plus class="h-4 w-4" />
-                Create
-            </Button>
         </div>
     </div>
 
     <div class="flex flex-1 gap-4 relative">
-        <!-- Left Filter Panel -->
-        <div 
-            class="sidebar-container relative 2xl:w-[320px]"
-            style:width="{sidebarWidth}px"
-        >
-            <ScrollArea.Root class="h-full">
-                <div class="p-2">
-                    {#if !isCollapsed}
-                        <Tabs bind:value={activeTab} defaultValue="filters" class="w-full">
-                            <TabsList class="w-full grid grid-cols-2">
-                                <TabsTrigger value="filters" class="text-sm">Filters</TabsTrigger>
-                                <TabsTrigger value="hierarchy" class="text-sm">Hierarchy</TabsTrigger>
-                            </TabsList>
-
-                            <!-- Filters Tab -->
-                            <TabsContent value="filters" class="space-y-6">
-                                <!-- Node Types -->
-                                <div class="space-y-2">
-                                    <p class="text-sm font-medium">Node Types</p>
-                                    {#each nodeTypeFilters as type}
-                                        <label class="flex items-center gap-2">
-                                            <input 
-                                                type="checkbox" 
-                                                checked={type.checked}
-                                                class="rounded" 
-                                                onchange={(e) => handleNodeTypeFilter(type.id, e.target.checked)}
-                                            />
-                                            <span class="text-sm">{type.name}</span>
-                                        </label>
-                                    {/each}
-                                </div>
-
-                                <!-- Relationships -->
-                                <div class="space-y-2">
-                                    <p class="text-sm font-medium">Relationships</p>
-                                    <label class="flex items-center gap-2">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={relationshipFilters.direct}
-                                            class="rounded" 
-                                            onchange={(e) => handleRelationshipFilter('direct', e.target.checked)}
-                                        />
-                                        <span class="text-sm">Direct Connections</span>
-                                    </label>
-                                    <label class="flex items-center gap-2">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={relationshipFilters.indirect}
-                                            class="rounded" 
-                                            onchange={(e) => handleRelationshipFilter('indirect', e.target.checked)}
-                                        />
-                                        <span class="text-sm">Indirect Connections</span>
-                                    </label>
-                                </div>
-                            </TabsContent>
-
-                            <!-- Hierarchy Tab -->
-                            <TabsContent value="hierarchy">
-                                <Accordion type="single" collapsible>
-                                    <AccordionItem value="root">
-                                        <AccordionTrigger>
-                                            <div class="flex items-center gap-2">
-                                                <div class="w-2 h-2 rounded-full" style="background-color: {nodeTypes[0].color}"></div>
-                                                Classes
-                                            </div>
-                                        </AccordionTrigger>
-                                        <AccordionContent>
-                                            {#each ontologyGraph.nodes.filter(n => n.type === 'superclass') as mainClass}
-                                                <AccordionItem value={mainClass.id}>
-                                                    <AccordionTrigger>
-                                                        <div class="flex items-center gap-2">
-                                                            <div class="w-2 h-2 rounded-full" style="background-color: {nodeTypes[1].color}"></div>
-                                                            {mainClass.id}
-                                                        </div>
-                                                    </AccordionTrigger>
-                                                    <AccordionContent>
-                                                        {#each ontologyGraph.nodes.filter(n => n.type === 'subclass' && ontologyGraph.links.some(l => l.source === mainClass.id && l.target === n.id)) as subClass}
-                                                            <div class="pl-4 py-2 flex items-center gap-2">
-                                                                <div class="w-2 h-2 rounded-full" style="background-color: {nodeTypes[2].color}"></div>
-                                                                {subClass.id}
-                                                            </div>
-                                                        {/each}
-                                                    </AccordionContent>
-                                                </AccordionItem>
-                                            {/each}
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                </Accordion>
-                            </TabsContent>
-                        </Tabs>
-                    {:else}
-                        <!-- Collapsed state content -->
-                        <div class="flex flex-col items-center gap-2">
-                            <!-- Always show filter buttons when collapsed -->
-                            <DropdownMenu.Root>
-                                <DropdownMenu.Trigger asChild>
-                                    <Button variant="ghost" size="icon" class="w-8 h-8 p-0">
-                                        <Filter class="h-3.5 w-3.5" />
-                                    </Button>
-                                </DropdownMenu.Trigger>
-                                <DropdownMenu.Content side="right" sideOffset={8}>
-                                    <DropdownMenu.Label>Node Types</DropdownMenu.Label>
-                                    <DropdownMenu.Separator />
-                                    {#each nodeTypeFilters as type}
-                                        <DropdownMenu.CheckboxItem 
-                                            checked={type.checked}
-                                            onCheckedChange={(checked) => handleNodeTypeFilter(type.id, checked)}
-                                        >
-                                            {type.name}
-                                        </DropdownMenu.CheckboxItem>
-                                    {/each}
-                                </DropdownMenu.Content>
-                            </DropdownMenu.Root>
-
-                            <!-- Relationships Button -->
-                            <DropdownMenu.Root>
-                                <DropdownMenu.Trigger asChild>
-                                    <Button variant="ghost" size="icon" class="w-8 h-8 p-0">
-                                        <Network class="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenu.Trigger>
-                                <DropdownMenu.Content side="right" sideOffset={8}>
-                                    <DropdownMenu.Label>Relationships</DropdownMenu.Label>
-                                    <DropdownMenu.Separator />
-                                    <DropdownMenu.CheckboxItem 
-                                        checked={relationshipFilters.direct}
-                                        onCheckedChange={(checked) => handleRelationshipFilter('direct', checked)}
-                                    >
-                                        Direct Connections
-                                    </DropdownMenu.CheckboxItem>
-                                    <DropdownMenu.CheckboxItem 
-                                        checked={relationshipFilters.indirect}
-                                        onCheckedChange={(checked) => handleRelationshipFilter('indirect', checked)}
-                                    >
-                                        Indirect Connections
-                                    </DropdownMenu.CheckboxItem>
-                                </DropdownMenu.Content>
-                            </DropdownMenu.Root>
-                        </div>
-                    {/if}
-                </div>
-            </ScrollArea.Root>
-
-            <!-- Toggle Button -->
-            <button
-                class="toggle-button"
-                onclick={toggleSidebar}
-                aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-                <ChevronLeft 
-                    class={`w-4 h-4 transition-transform duration-200 ${isCollapsed ? 'rotate-180' : ''}`}
-                />
-            </button>
-        </div>
-
         <!-- Main canvas area -->
         <div 
             class="whiteboard-container flex-1 relative overflow-hidden"
