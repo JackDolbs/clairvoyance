@@ -275,8 +275,10 @@
                 .data(ontologyGraph.links)
                 .join("line")
                 .attr("stroke", "#999")
-                .attr("stroke-opacity", d => d.type === 'has_attribute' ? 0 : 0.6)
-                .attr("stroke-width", 2);
+                .attr("stroke-width", 2)
+                .style("stroke-opacity", d => 
+                    d.type === 'has_attribute' ? 0 : 0.6
+                );
 
             // Create nodes
             const nodeGroup = g.append("g")
@@ -295,18 +297,21 @@
                 .style("cursor", "pointer")
                 .style("opacity", d => d.type === 'attribute' ? 0 : 1)
                 .style("stroke", "#fff")
-                .style("stroke-width", 2);
+                .style("stroke-width", 2)
+                .classed('attribute-node', d => d.type === 'attribute');
 
             // Add labels NEXT TO nodes with hover effect
             nodeGroup.append("text")
                 .text((d: any) => d.id)
-                .attr("x", 0)  // Centered under node
+                .attr("x", 0)
                 .attr("y", (d: any) => nodeTypes.find(t => t.id === d.type)?.radius + 15)
                 .attr("text-anchor", "middle")
                 .attr("fill", "currentColor")
                 .attr("font-size", "10px")
                 .style("pointer-events", "none")
-                .call(wrapText, 120);
+                .call(wrapText, 120)
+                .classed('attribute-label', d => d.type === 'attribute')
+                .style('opacity', d => d.type === 'attribute' ? 0 : 1);
 
             // Update positions on simulation tick
             simulation.on("tick", () => {
@@ -391,6 +396,42 @@
                 .append("feGaussianBlur")
                 .attr("stdDeviation", "2.5")
                 .attr("result", "coloredBlur");
+
+            // Update node event handlers
+            nodeGroup
+                .on('mouseover', (event, d) => {
+                    hoveredNode = d;
+                    
+                    // Only force show labels for attributes
+                    if (d.type === 'subclass') {
+                        d3.selectAll('.attribute-node, .attribute-label')
+                            .filter((node: any) => 
+                                ontologyGraph.links.some(link => 
+                                    link.source.id === d.id && 
+                                    link.type === 'has_attribute' &&
+                                    link.target.id === node.id
+                                )
+                            )
+                            .style('opacity', 1);
+                        
+                        link.filter((l: any) => 
+                            l.type === 'has_attribute' && l.source.id === d.id
+                        ).style('stroke-opacity', 0.6);
+                    }
+                })
+                .on('mouseout', (event, d) => {
+                    hoveredNode = null; // Clear info box
+                    
+                    if (d.type === 'subclass') {
+                        // Hide all attributes
+                        d3.selectAll('.attribute-node, .attribute-label')
+                            .style('opacity', 0);
+                        
+                        // Hide attribute connections
+                        link.filter((l: any) => l.type === 'has_attribute')
+                            .style('stroke-opacity', 0);
+                    }
+                });
         });
 
         return () => {
