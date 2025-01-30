@@ -33,6 +33,7 @@
     import OntologyGraph from "$lib/components/ontology-graph.svelte";
     import ChevronDown from "lucide-svelte/icons/chevron-down";
     import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "$lib/components/ui/accordion";
+    import Info from "lucide-svelte/icons/info";
 
     // Ensure the state is properly declared
     let csvDialogOpen = $state(false);
@@ -665,8 +666,38 @@
                                             <Table.Row>
                                                 <Table.Head class="w-[250px]">Name</Table.Head>
                                                 <Table.Head>Description</Table.Head>
-                                                <Table.Head>Attributes</Table.Head>
-                                                <Table.Head>Relationships</Table.Head>
+                                                <Table.Head>
+                                                    <div class="flex items-center gap-1">
+                                                        Attributes
+                                                        <Tooltip.Root>
+                                                            <Tooltip.Trigger>
+                                                                <Info class="h-4 w-4 text-muted-foreground" />
+                                                            </Tooltip.Trigger>
+                                                            <Tooltip.Content>
+                                                                <p class="max-w-[300px] text-sm p-2 rounded-sm font-light">
+                                                                    Attributes define the properties of a class. They specify the data type
+                                                                    and constraints for values that instances of this class can hold.
+                                                                </p>
+                                                            </Tooltip.Content>
+                                                        </Tooltip.Root>
+                                                    </div>
+                                                </Table.Head>
+                                                <Table.Head>
+                                                    <div class="flex items-center gap-1">
+                                                        Relationships
+                                                        <Tooltip.Root>
+                                                            <Tooltip.Trigger>
+                                                                <Info class="h-4 w-4 text-muted-foreground" />
+                                                            </Tooltip.Trigger>
+                                                            <Tooltip.Content>
+                                                                <p class="max-w-[300px] text-sm p-2 rounded-sm font-light">
+                                                                    Relationships define how classes connect to each other. They specify
+                                                                    target classes and cardinality (how many instances can be related).
+                                                                </p>
+                                                            </Tooltip.Content>
+                                                        </Tooltip.Root>
+                                                    </div>
+                                                </Table.Head>
                                             </Table.Row>
                                         </Table.Header>
                                         <Table.Body>
