@@ -241,7 +241,7 @@
                     Edit Full Schema
                 </Button>
                 <Tooltip.Root>
-                    <Tooltip.Trigger asChild>
+                    <Tooltip.Trigger>
                         <Button 
                             variant="default" 
                             class="cursor-not-allowed"
@@ -352,7 +352,7 @@
                             <!-- Right side controls -->
                             <div class="flex items-center gap-2 px-2">
                                 <Tooltip.Root>
-                                    <Tooltip.Trigger asChild>
+                                    <Tooltip.Trigger>
                                         <Button 
                                             variant="ghost" 
                                             size="icon" 
@@ -367,7 +367,7 @@
                                 <Separator orientation="vertical" class="mx-1 h-6" />
 
                                 <Tooltip.Root>
-                                    <Tooltip.Trigger asChild>
+                                    <Tooltip.Trigger>
                                         <Button 
                                             variant="ghost" 
                                             size="icon" 
@@ -384,7 +384,7 @@
                                 </div>
 
                                 <Tooltip.Root>
-                                    <Tooltip.Trigger asChild>
+                                    <Tooltip.Trigger>
                                         <Button 
                                             variant="ghost" 
                                             size="icon" 
@@ -399,7 +399,7 @@
                                 <Separator orientation="vertical" class="mx-1 h-6" />
 
                                 <Tooltip.Root>
-                                    <Tooltip.Trigger asChild>
+                                    <Tooltip.Trigger>
                                         <Button 
                                             variant="ghost" 
                                             size="icon" 
@@ -414,7 +414,7 @@
                                 <Separator orientation="vertical" class="mx-1 h-6" />
 
                                 <Tooltip.Root>
-                                    <Tooltip.Trigger asChild>
+                                    <Tooltip.Trigger>
                                         <Button 
                                             variant="ghost" 
                                             size="icon" 
@@ -429,7 +429,7 @@
                                 <Separator orientation="vertical" class="mx-1 h-6" />
 
                                 <Tooltip.Root>
-                                    <Tooltip.Trigger asChild>
+                                    <Tooltip.Trigger>
                                         <Button 
                                             variant="ghost" 
                                             size="icon" 
@@ -592,7 +592,7 @@
                             class="w-64"
                         />
                         <DropdownMenu.Root>
-                            <DropdownMenu.Trigger asChild>
+                            <DropdownMenu.Trigger>
                                 <Button variant="outline" size="sm">
                                     <Filter class="h-4 w-4" />
                                 </Button>
