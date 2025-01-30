@@ -313,7 +313,7 @@
             <Card.Header>
                 <div class="flex items-center justify-between">
                     <div>
-                        <Card.Title>Integrated Data Sources</Card.Title>
+                        <Card.Title>Connected Data Sources</Card.Title>
                     </div>
                     <Button 
                         variant="ghost" 
