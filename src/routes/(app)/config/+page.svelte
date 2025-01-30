@@ -121,6 +121,44 @@
 
                 <Card.Root>
                     <Card.Header>
+                        <Card.Title>Notification Settings</Card.Title>
+                        <Card.Description>
+                            Configure system notifications and alerts
+                        </Card.Description>
+                    </Card.Header>
+                    <Card.Content class="space-y-6">
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2">
+                                <Label>SMTP Configuration</Label>
+                                <Tooltip.Root>
+                                    <Tooltip.Trigger>
+                                        <AlertCircle class="w-4 h-4 text-amber-500" />
+                                    </Tooltip.Trigger>
+                                    <Tooltip.Content>
+                                        <p>System notifications coming soon</p>
+                                    </Tooltip.Content>
+                                </Tooltip.Root>
+                            </div>
+                            <Input disabled class="opacity-50 cursor-not-allowed" placeholder="SMTP Host" />
+                            <Input disabled class="opacity-50 cursor-not-allowed" placeholder="SMTP Port" />
+                            <Input disabled class="opacity-50 cursor-not-allowed" placeholder="SMTP Username" />
+                            <Input disabled class="opacity-50 cursor-not-allowed" type="password" placeholder="SMTP Password" />
+                        </div>
+
+                        <div class="space-y-2">
+                            <Label>From Address</Label>
+                            <Input 
+                                disabled 
+                                class="opacity-50 cursor-not-allowed" 
+                                placeholder="noreply@your-instance.com" 
+                            />
+                            <p class="text-xs text-muted-foreground">Address used to send notifications and summaries</p>
+                        </div>
+                    </Card.Content>
+                </Card.Root>
+
+                <Card.Root>
+                    <Card.Header>
                         <Card.Title>Instance Information</Card.Title>
                         <Card.Description>
                             Details about your application instance
@@ -433,44 +471,6 @@
                             </div>
                             <Input disabled class="opacity-50 cursor-not-allowed" placeholder="Apple Service ID" />
                             <Input disabled class="opacity-50 cursor-not-allowed" placeholder="Apple Private Key" />
-                        </div>
-                    </Card.Content>
-                </Card.Root>
-
-                <Card.Root>
-                    <Card.Header>
-                        <Card.Title>Notification Settings</Card.Title>
-                        <Card.Description>
-                            Configure system notifications and alerts
-                        </Card.Description>
-                    </Card.Header>
-                    <Card.Content class="space-y-6">
-                        <div class="space-y-2">
-                            <div class="flex items-center gap-2">
-                                <Label>SMTP Configuration</Label>
-                                <Tooltip.Root>
-                                    <Tooltip.Trigger>
-                                        <AlertCircle class="w-4 h-4 text-amber-500" />
-                                    </Tooltip.Trigger>
-                                    <Tooltip.Content>
-                                        <p>System notifications coming soon</p>
-                                    </Tooltip.Content>
-                                </Tooltip.Root>
-                            </div>
-                            <Input disabled class="opacity-50 cursor-not-allowed" placeholder="SMTP Host" />
-                            <Input disabled class="opacity-50 cursor-not-allowed" placeholder="SMTP Port" />
-                            <Input disabled class="opacity-50 cursor-not-allowed" placeholder="SMTP Username" />
-                            <Input disabled class="opacity-50 cursor-not-allowed" type="password" placeholder="SMTP Password" />
-                        </div>
-
-                        <div class="space-y-2">
-                            <Label>From Address</Label>
-                            <Input 
-                                disabled 
-                                class="opacity-50 cursor-not-allowed" 
-                                placeholder="noreply@your-instance.com" 
-                            />
-                            <p class="text-xs text-muted-foreground">Address used to send notifications and summaries</p>
                         </div>
                     </Card.Content>
                 </Card.Root>
