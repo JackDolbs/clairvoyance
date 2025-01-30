@@ -40,10 +40,10 @@
     
     // Replace nodeTypes definition
     const nodeTypes = [
-        { id: 'class', name: 'Ontology', color: '#333333', radius: 25 },
-        { id: 'superclass', name: 'Superclass', color: '#4CAF50', radius: 20 },
-        { id: 'subclass', name: 'Subclass', color: '#81C784', radius: 16 },
-        { id: 'attribute', name: 'Attribute', color: '#2196F3', radius: 10 }
+        { id: 'class', name: 'Ontology', color: '#333333', radius: 30 },  // Dark gray
+        { id: 'superclass', name: 'Superclass', color: '#4CAF50', radius: 24 },  // Green
+        { id: 'subclass', name: 'Subclass', color: '#2196F3', radius: 20 },  // Blue
+        { id: 'attribute', name: 'Attribute', color: '#FFEB3B', radius: 12 }  // Yellow
     ];
 
     // Import ontology data
@@ -189,32 +189,85 @@
                     .id((d: any) => d.id)
                     .links(ontologyGraph.links)
                     .distance(d => {
-                        if (d.type === 'is_a') return 150;
-                        if (d.type === 'has_subclass') return 100;
-                        if (d.type === 'has_attribute') return 50;
-                        return 80;
+                        if (d.type === 'is_a') return 250;    // Root to superclass
+                        if (d.type === 'has_subclass') return 200;  // Superclass to subclass
+                        if (d.type === 'has_attribute') return 100;
+                        return 150;
                     })
                 )
-                .force("charge", d3.forceManyBody().strength(-500))
-                .force("collision", d3.forceCollide().radius(d => {
-                    if (d.type === 'class') return 30;
-                    if (d.type === 'superclass') return 25;
-                    if (d.type === 'subclass') return 20;
-                    return 10;
-                }))
-                .force("x", d3.forceX().strength(0.1))
-                .force("y", d3.forceY().strength(0.2));
+                .force("charge", d3.forceManyBody().strength(-1200))
+                .force("collision", d3.forceCollide()
+                    .radius(d => nodeTypes.find(t => t.id === d.type)?.radius + 20)
+                )
+                .force("hierarchy", d3.forceY()
+                    .strength(0.4)
+                    .y(d => {
+                        if (d.type === 'class') return 100;
+                        if (d.type === 'superclass') return 300;
+                        if (d.type === 'subclass') return 500;
+                        return 700;
+                    })
+                )
+                .force("cluster", () => {
+                    ontologyGraph.nodes.forEach(node => {
+                        if (node.type === 'subclass') {
+                            const superclassLink = ontologyGraph.links.find(l => 
+                                l.target.id === node.id && l.type === 'has_subclass'
+                            );
+                            if (superclassLink) {
+                                const superclass = ontologyGraph.nodes.find(n => n.id === superclassLink.source.id);
+                                if (superclass) {
+                                    const totalSubclasses = ontologyGraph.links.filter(l => 
+                                        l.source.id === superclass.id && l.type === 'has_subclass'
+                                    ).length;
+                                    
+                                    const index = ontologyGraph.links.filter(l => 
+                                        l.source.id === superclass.id && l.type === 'has_subclass'
+                                    ).findIndex(l => l.target.id === node.id);
+                                    
+                                    const angle = (index / totalSubclasses) * Math.PI * 2;
+                                    const radius = 200 + (totalSubclasses * 20);
+                                    
+                                    node.fx = superclass.x + Math.cos(angle) * radius;
+                                    node.fy = superclass.y + Math.sin(angle) * radius + 200;
+                                }
+                            }
+                        }
+                    });
+                })
+                .force("center", d3.forceX().x(width / 2));
 
-            // Only fix the Classes node
+            // Update initial positioning
             ontologyGraph.nodes.forEach((node: any) => {
-                if (node.id === "Classes") {
-                    node.fx = width / 2;
-                    node.fy = 50;
+                if (node.type === 'class') {
+                    node.x = width / 2;
+                    node.y = 50;
+                } else if (node.type === 'superclass') {
+                    node.x = width / 2 + (node.index - 1.5) * 300;
+                    node.y = 300;
+                } else if (node.type === 'subclass') {
+                    const superclassLink = ontologyGraph.links.find(l => 
+                        l.target.id === node.id && l.type === 'has_subclass'
+                    );
+                    if (superclassLink) {
+                        const superclass = ontologyGraph.nodes.find(n => n.id === superclassLink.source.id);
+                        if (superclass) {
+                            const angle = (node.index % 6) * (Math.PI * 2) / 6;
+                            const radius = 150;
+                            node.x = superclass.x + Math.cos(angle) * radius;
+                            node.y = superclass.y + Math.sin(angle) * radius + 200;
+                        }
+                    }
                 } else {
-                    node.fx = null;
-                    node.fy = null;
+                    node.x = width / 2;
+                    node.y = 700;
                 }
             });
+
+            // Add this to the simulation initialization
+            simulation.alphaDecay(0.05)  // Slower cooling
+                .alphaTarget(0.1)        // Keep slightly active
+                .restart();
 
             // Create links
             const link = g.append("g")
@@ -222,7 +275,7 @@
                 .data(ontologyGraph.links)
                 .join("line")
                 .attr("stroke", "#999")
-                .attr("stroke-opacity", 0.6)
+                .attr("stroke-opacity", d => d.type === 'has_attribute' ? 0 : 0.6)
                 .attr("stroke-width", 2);
 
             // Create nodes
@@ -240,30 +293,20 @@
                 .attr("r", (d: any) => nodeTypes.find(t => t.id === d.type)?.radius || 8)
                 .attr("fill", (d: any) => nodeTypes.find(t => t.id === d.type)?.color || '#999')
                 .style("cursor", "pointer")
-                .style("stroke", d => hoveredNode?.id === d.id ? "#fff" : "none")
-                .style("stroke-width", 2)
-                .on('mouseover', (event, d) => {
-                    selectedNode = d;
-                })
-                .on('mouseout', () => {
-                    selectedNode = null;
-                });
+                .style("opacity", d => d.type === 'attribute' ? 0 : 1)
+                .style("stroke", "#fff")
+                .style("stroke-width", 2);
 
             // Add labels NEXT TO nodes with hover effect
             nodeGroup.append("text")
                 .text((d: any) => d.id)
-                .attr("x", (d: any) => (nodeTypes.find(t => t.id === d.type)?.radius || 8) + 5)
-                .attr("y", 5)
-                .attr("text-anchor", "start")
+                .attr("x", 0)  // Centered under node
+                .attr("y", (d: any) => nodeTypes.find(t => t.id === d.type)?.radius + 15)
+                .attr("text-anchor", "middle")
                 .attr("fill", "currentColor")
-                .attr("font-size", "12px")
-                .style("cursor", "pointer")
-                .on('mouseover', (event, d) => {
-                    selectedNode = d;
-                })
-                .on('mouseout', () => {
-                    selectedNode = null;
-                });
+                .attr("font-size", "10px")
+                .style("pointer-events", "none")
+                .call(wrapText, 120);
 
             // Update positions on simulation tick
             simulation.on("tick", () => {
@@ -334,14 +377,20 @@
                 isFullscreen = !!document.fullscreenElement;
             });
 
-            // Add this in the nodeGroup section
-            nodeGroup.on("mouseover", (event, d) => {
-                if (d.type === 'subclass') {
-                    hoveredNode = d;
-                }
-            }).on("mouseout", () => {
-                hoveredNode = null;
-            });
+            // Add glow effects definition (place this before the simulation initialization)
+            svg.append("defs")
+                .append("filter")
+                .attr("id", "root-glow")
+                .append("feGaussianBlur")
+                .attr("stdDeviation", "3.5")
+                .attr("result", "coloredBlur");
+
+            svg.append("defs")
+                .append("filter")
+                .attr("id", "superclass-glow")
+                .append("feGaussianBlur")
+                .attr("stdDeviation", "2.5")
+                .attr("result", "coloredBlur");
         });
 
         return () => {
@@ -473,6 +522,59 @@
         };
         ontologyGraph.nodes.push(newNode);
         // Restart simulation...
+    }
+
+    // Add radial layout for attributes when hovered
+    function positionAttributes(subclass: any) {
+        const attributes = ontologyGraph.nodes.filter(n => 
+            ontologyGraph.links.some(l => 
+                l.source.id === subclass.id && 
+                l.type === 'has_attribute'
+            )
+        );
+        
+        attributes.forEach((attr, i) => {
+            const angle = (i % 6) * (Math.PI * 2) / 6;
+            const radius = 60;
+            attr.fx = subclass.x + Math.cos(angle) * radius;
+            attr.fy = subclass.y + Math.sin(angle) * radius;
+        });
+    }
+
+    // Add text wrapping function
+    function wrapText(text: d3.Selection<SVGTextElement, any, any, any>, width: number) {
+        text.each(function(this: SVGTextElement, d) {
+            const text = d3.select(this);
+            const words = d.id.split(/(?=[A-Z][a-z])/);
+            let line: string[] = [];
+            let lineNumber = 0;
+            const lineHeight = 1.2;
+            const y = text.attr("y");
+            const dy = parseFloat(text.attr("dy") || "0");
+            
+            text.text(null);
+            
+            let tspan = text.append("tspan")
+                .attr("x", 0)
+                .attr("y", y)
+                .attr("dy", dy + "em");
+            
+            words.forEach(word => {
+                const testLine = line.concat(word).join(" ");
+                if (tspan.text(testLine).node()!.getComputedTextLength() < width) {
+                    line.push(word);
+                } else {
+                    line = [word];
+                    tspan.text(line.join(" "));
+                    tspan = text.append("tspan")
+                        .attr("x", 0)
+                        .attr("y", y)
+                        .attr("dy", ++lineNumber * lineHeight + dy + "em")
+                        .text(word);
+                }
+            });
+            tspan.text(line.join(" "));
+        });
     }
 </script>
 
