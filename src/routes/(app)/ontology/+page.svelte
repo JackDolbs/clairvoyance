@@ -236,7 +236,7 @@
                 </p>
             </div>
             <div class="flex items-center gap-2">
-                <Button variant="outline" onClick={() => csvDialogOpen = true}>
+                <Button variant="outline" onclick={() => csvDialogOpen = true}>
                     <Code class="h-4 w-4 mr-2" />
                     Edit Full Schema
                 </Button>
