@@ -31,145 +31,28 @@
     import Settings from "lucide-svelte/icons/settings";
     import * as Tooltip from "$lib/components/ui/tooltip";
     import OntologyGraph from "$lib/components/ontology-graph.svelte";
+    import ChevronDown from "lucide-svelte/icons/chevron-down";
+    import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "$lib/components/ui/accordion";
 
-    // Define ontology structure
-    const ontologyClasses = [
-        {
-            id: 'organization',
-            name: 'Organization',
-            description: 'A company or business entity using the SaaS platform',
-            properties: [
-                { name: 'industry', type: 'string', required: true },
-                { name: 'employees', type: 'number', required: true },
-                { name: 'annualRevenue', type: 'string', required: false },
-                { name: 'region', type: 'string', required: true },
-                { name: 'customerSince', type: 'date', required: true },
-                { name: 'status', type: 'enum', required: true }
-            ],
-            relationships: [
-                { target: 'department', type: 'hasMany', name: 'departments' },
-                { target: 'subscription', type: 'hasMany', name: 'subscriptions' },
-                { target: 'user', type: 'hasMany', name: 'users' }
-            ]
-        },
-        {
-            id: 'department',
-            name: 'Department',
-            description: 'Organizational unit within a company',
-            properties: [
-                { name: 'name', type: 'string', required: true },
-                { name: 'headcount', type: 'number', required: true },
-                { name: 'budget', type: 'number', required: false },
-                { name: 'location', type: 'string', required: false }
-            ],
-            relationships: [
-                { target: 'organization', type: 'belongsTo', name: 'organization' },
-                { target: 'user', type: 'hasMany', name: 'members' }
-            ]
-        },
-        {
-            id: 'user',
-            name: 'User',
-            description: 'End user of the platform',
-            properties: [
-                { name: 'email', type: 'string', required: true },
-                { name: 'role', type: 'enum', required: true },
-                { name: 'lastLogin', type: 'datetime', required: false },
-                { name: 'preferences', type: 'json', required: false }
-            ],
-            relationships: [
-                { target: 'organization', type: 'belongsTo', name: 'organization' },
-                { target: 'department', type: 'belongsTo', name: 'department' },
-                { target: 'session', type: 'hasMany', name: 'sessions' }
-            ]
-        },
-        {
-            id: 'product_module',
-            name: 'Product Module',
-            description: 'Core functional module of the platform',
-            properties: [
-                { name: 'name', type: 'string', required: true },
-                { name: 'version', type: 'string', required: true },
-                { name: 'status', type: 'enum', required: true },
-                { name: 'releaseDate', type: 'date', required: true }
-            ],
-            relationships: [
-                { target: 'feature', type: 'hasMany', name: 'features' },
-                { target: 'subscription', type: 'belongsToMany', name: 'subscriptions' }
-            ]
-        },
-        {
-            id: 'subscription',
-            name: 'Subscription',
-            description: 'Product subscription and billing plan',
-            properties: [
-                { name: 'plan', type: 'enum', required: true },
-                { name: 'startDate', type: 'date', required: true },
-                { name: 'endDate', type: 'date', required: false },
-                { name: 'seats', type: 'number', required: true },
-                { name: 'billingCycle', type: 'enum', required: true }
-            ],
-            relationships: [
-                { target: 'organization', type: 'belongsTo', name: 'organization' },
-                { target: 'product_module', type: 'hasMany', name: 'modules' },
-                { target: 'invoice', type: 'hasMany', name: 'invoices' }
-            ]
-        }
-    ];
-
-    const relationshipTypes = [
-        { 
-            id: 'belongs_to',
-            name: 'Belongs To',
-            description: 'One-to-many ownership relationship',
-            sourceTypes: ['department', 'user', 'subscription'],
-            targetTypes: ['organization', 'department']
-        },
-        { 
-            id: 'has_many',
-            name: 'Has Many',
-            description: 'One-to-many collection relationship',
-            sourceTypes: ['organization', 'department', 'product_module'],
-            targetTypes: ['user', 'department', 'feature', 'subscription']
-        },
-        { 
-            id: 'belongs_to_many',
-            name: 'Belongs To Many',
-            description: 'Many-to-many relationship',
-            sourceTypes: ['product_module', 'feature'],
-            targetTypes: ['subscription', 'user']
-        },
-        { 
-            id: 'uses',
-            name: 'Uses',
-            description: 'Usage tracking relationship',
-            sourceTypes: ['user'],
-            targetTypes: ['product_module', 'feature']
-        },
-        { 
-            id: 'manages',
-            name: 'Manages',
-            description: 'Administrative relationship',
-            sourceTypes: ['user'],
-            targetTypes: ['department', 'product_module']
-        }
-    ];
-
-    // Add state for dialog
-    let csvDialogOpen = false;
+    // Ensure the state is properly declared
+    let csvDialogOpen = $state(false);
     let jsonContent = JSON.stringify(ontologySchema, null, 2);
 
     // Add state for table features
     let searchQuery = '';
-    let selectedClasses = ontologyClasses.map(c => ({ ...c, selected: true }));
+    let selectedClasses = ontologySchema.ontology.superclasses.flatMap(s => 
+        [s, ...(s.subclasses || [])
+    ]).map(c => ({ ...c, selected: true }));
 
-    // Add filtering logic
-    $: filteredClasses = selectedClasses
-        .filter(c => c.selected)
-        .filter(c => 
-            c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            c.description.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+    // Replace the reactive statement with $derived
+    const filteredClasses = $derived(
+        selectedClasses
+            .filter(c => c.selected)
+            .filter(c => 
+                c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                c.description.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+    );
 
     // Add export and import functions
     function exportSchema() {
@@ -184,7 +67,7 @@
     let isResizing = false;
     let leftPaneWidth = 30; // Initial width in percentage
 
-    function startResizing() {
+    function startResizing(event: MouseEvent) {
         isResizing = true;
         window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('mouseup', stopResizing);
@@ -353,14 +236,25 @@
                 </p>
             </div>
             <div class="flex items-center gap-2">
-                <Button variant="outline" onclick={() => csvDialogOpen = true}>
+                <Button variant="outline" onClick={() => csvDialogOpen = true}>
                     <Code class="h-4 w-4 mr-2" />
                     Edit Full Schema
                 </Button>
-                <Button>
-                    <Plus class="h-4 w-4 mr-2" />
-                    Add Class
-                </Button>
+                <Tooltip.Root>
+                    <Tooltip.Trigger asChild>
+                        <Button 
+                            variant="default" 
+                            class="cursor-not-allowed"
+                            disabled
+                        >
+                            <Plus class="h-4 w-4 mr-2" />
+                            Add Class
+                        </Button>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content>
+                        <p>This feature is coming soon!</p>
+                    </Tooltip.Content>
+                </Tooltip.Root>
             </div>
         </div>
 
@@ -578,7 +472,7 @@
                         <!-- Resizer -->
                         <div
                             class="w-1 hover:w-2 bg-border hover:bg-primary transition-all cursor-col-resize flex-shrink-0 relative"
-                            on:mousedown={startResizing}
+                            onmousedown={startResizing}
                             role="separator"
                             aria-orientation="vertical"
                             aria-valuenow={leftPaneWidth}
@@ -661,19 +555,35 @@
             <Tabs.List class="border-b">
                 <Tabs.Trigger value="classes" class="px-4 py-2 -mb-px">
                     Classes
-                    <span class="ml-2 text-xs text-muted-foreground">({ontologyClasses.length})</span>
+                    <span class="ml-2 text-xs text-muted-foreground">({ontologySchema.ontology.superclasses.length + 
+             ontologySchema.ontology.superclasses.reduce((acc, s) => acc + (s.subclasses?.length || 0), 0)})</span>
                 </Tabs.Trigger>
                 <Tabs.Trigger value="relationships" class="px-4 py-2 -mb-px">
                     Relationships
-                    <span class="ml-2 text-xs text-muted-foreground">({relationshipTypes.length})</span>
+                    <span class="ml-2 text-xs text-muted-foreground">({
+                        ontologySchema.ontology.superclasses.reduce((acc, s) => 
+                            acc + (s.relationships?.length || 0) + 
+                            (s.subclasses?.reduce((subAcc, sub) => subAcc + (sub.relationships?.length || 0), 0) || 0)
+                        , 0)
+                    })</span>
                 </Tabs.Trigger>
-                <Tabs.Trigger value="validation" class="px-4 py-2 -mb-px">Validation Rules</Tabs.Trigger>
+                <Tabs.Trigger value="validation" class="px-4 py-2 -mb-px">
+                    Validation Rules
+                    <span class="ml-2 text-xs text-muted-foreground">
+                        ({ontologySchema.ontology.rules.length})
+                    </span>
+                </Tabs.Trigger>
             </Tabs.List>
 
             <!-- Classes Tab -->
             <Tabs.Content value="classes" class="pt-4">
+                <div class="mb-4">
+                    <h2 class="text-lg font-medium mb-1">All Classes</h2>
+                    <p class="text-sm text-muted-foreground">
+                        All entities and their properties in the ontology grouped into Superclasses
+                    </p>
+                </div>
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-medium mb-1">Data Classes</h2>
                     <div class="flex items-center gap-2">
                         <Input 
                             type="text" 
@@ -683,12 +593,9 @@
                         />
                         <DropdownMenu.Root>
                             <DropdownMenu.Trigger asChild>
-                                <div>
-                                    <Button variant="outline" size="sm">
-                                        <Filter class="h-4 w-4 mr-2" />
-                                        Filter
-                                    </Button>
-                                </div>
+                                <Button variant="outline" size="sm">
+                                    <Filter class="h-4 w-4" />
+                                </Button>
                             </DropdownMenu.Trigger>
                             <DropdownMenu.Content>
                                 <DropdownMenu.Label>Show Classes</DropdownMenu.Label>
@@ -706,148 +613,181 @@
                 </div>
                 <div class="grid grid-cols-4 gap-4 mb-6">
                     <div class="p-4 bg-secondary/20 rounded-lg">
-                        <div class="text-sm text-muted-foreground">Total Classes</div>
-                        <div class="text-2xl font-semibold">{ontologyClasses.length}</div>
+                        <div class="text-sm text-muted-foreground">Total Superclasses</div>
+                        <div class="text-2xl font-semibold">
+                            {ontologySchema.ontology.superclasses.length}
+                        </div>
+                    </div>
+                    <div class="p-4 bg-secondary/20 rounded-lg">
+                        <div class="text-sm text-muted-foreground">Total Subclasses</div>
+                        <div class="text-2xl font-semibold">
+                            {ontologySchema.ontology.superclasses.reduce((acc, s) => acc + (s.subclasses?.length || 0), 0)}
+                        </div>
                     </div>
                     <div class="p-4 bg-secondary/20 rounded-lg">
                         <div class="text-sm text-muted-foreground">Total Properties</div>
                         <div class="text-2xl font-semibold">
-                            {ontologyClasses.reduce((acc, c) => acc + c.properties.length, 0)}
+                            {ontologySchema.ontology.superclasses.reduce((acc, s) => 
+                                acc + (s.attributes?.length || 0) + 
+                                (s.subclasses?.reduce((subAcc, sub) => subAcc + (sub.attributes?.length || 0), 0) || 0)
+                            , 0)}
                         </div>
                     </div>
                     <div class="p-4 bg-secondary/20 rounded-lg">
                         <div class="text-sm text-muted-foreground">Total Relationships</div>
                         <div class="text-2xl font-semibold">
-                            {ontologyClasses.reduce((acc, c) => acc + c.relationships.length, 0)}
-                        </div>
-                    </div>
-                    <div class="p-4 bg-secondary/20 rounded-lg">
-                        <div class="text-sm text-muted-foreground">Required Properties</div>
-                        <div class="text-2xl font-semibold">
-                            {ontologyClasses.reduce((acc, c) => 
-                                acc + c.properties.filter(p => p.required).length, 0
-                            )}
+                            {ontologySchema.ontology.superclasses.reduce((acc, s) => 
+                                acc + (s.relationships?.length || 0) + 
+                                (s.subclasses?.reduce((subAcc, sub) => subAcc + (sub.relationships?.length || 0), 0) || 0)
+                            , 0)}
                         </div>
                     </div>
                 </div>
                 <div class="mt-4">
-                    <Table.Root>
-                        <Table.Header>
-                            <Table.Row>
-                                <Table.Head>Name</Table.Head>
-                                <Table.Head>Description</Table.Head>
-                                <Table.Head>Properties</Table.Head>
-                                <Table.Head>Relationships</Table.Head>
-                                <Table.Head class="w-[100px]">Actions</Table.Head>
-                            </Table.Row>
-                        </Table.Header>
-                        <Table.Body>
-                            {#each filteredClasses as ontologyClass}
-                                <Table.Row>
-                                    <Table.Cell class="font-medium">{ontologyClass.name}</Table.Cell>
-                                    <Table.Cell>{ontologyClass.description}</Table.Cell>
-                                    <Table.Cell>
-                                        <div class="flex flex-wrap gap-1">
-                                            {#each ontologyClass.properties as prop}
-                                                <Badge 
-                                                    variant={prop.required ? 'default' : 'secondary'}
-                                                    class="flex items-center gap-1"
-                                                >
-                                                    {prop.name}
-                                                    <span class="text-xs opacity-80">({prop.type})</span>
-                                                </Badge>
-                                            {/each}
+                    <Accordion type="single" collapsible class="space-y-5">
+                        {#each ontologySchema.ontology.superclasses as superclass}
+                            <AccordionItem class="border rounded-lg shadow-sm" value={superclass.name}>
+                                <AccordionTrigger class="hover:no-underline bg-secondary/50 hover:bg-secondary px-2">
+                                    <div class="flex items-center justify-between w-full pr-4">
+                                        <div>
+                                            <div class="font-medium text-left">{superclass.name}</div>
+                                            {#if superclass.description}
+                                                <div class="text-sm text-muted-foreground font-light mt-1 text-left">
+                                                    {superclass.description}
+                                                </div>
+                                            {/if}
                                         </div>
-                                    </Table.Cell>
-                                    <Table.Cell>
-                                        <div class="flex flex-wrap gap-1">
-                                            {#each ontologyClass.relationships as rel}
-                                                <Badge 
-                                                    variant="outline" 
-                                                    class="flex items-center gap-1"
-                                                >
-                                                    <span class="font-medium">{rel.name}</span>
-                                                    <ArrowRight class="h-3 w-3" />
-                                                    <span>{rel.target}</span>
-                                                    <span class="text-xs opacity-80">({rel.type})</span>
-                                                </Badge>
-                                            {/each}
-                                        </div>
-                                    </Table.Cell>
-                                    <Table.Cell>
-                                        <div class="flex items-center gap-2">
-                                            <Button variant="ghost" size="icon">
-                                                <Edit class="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon">
-                                                <Trash class="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </Table.Cell>
-                                </Table.Row>
-                            {/each}
-                        </Table.Body>
-                    </Table.Root>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                    <Table.Root>
+                                        <Table.Header>
+                                            <Table.Row>
+                                                <Table.Head class="w-[250px]">Name</Table.Head>
+                                                <Table.Head>Description</Table.Head>
+                                                <Table.Head>Attributes</Table.Head>
+                                                <Table.Head>Relationships</Table.Head>
+                                            </Table.Row>
+                                        </Table.Header>
+                                        <Table.Body>
+                                            <!-- Superclass Row -->
+                                            <Table.Row>
+                                                <Table.Cell class="font-medium">
+                                                    {superclass.name}
+                                                </Table.Cell>
+                                                <Table.Cell>{superclass.description}</Table.Cell>
+                                                <Table.Cell>
+                                                    {#if superclass.attributes}
+                                                        <div class="flex flex-wrap gap-1">
+                                                            {#each superclass.attributes as attr}
+                                                                <Badge variant="secondary">
+                                                                    {attr.name} ({attr.type})
+                                                                </Badge>
+                                                            {/each}
+                                                        </div>
+                                                    {:else}
+                                                        <span class="text-muted-foreground">-</span>
+                                                    {/if}
+                                                </Table.Cell>
+                                                <Table.Cell>
+                                                    {#if superclass.relationships}
+                                                        <div class="flex flex-wrap gap-1">
+                                                            {#each superclass.relationships as rel}
+                                                                <Badge variant="outline">
+                                                                    {rel.name} → {rel.target}
+                                                                </Badge>
+                                                            {/each}
+                                                        </div>
+                                                    {:else}
+                                                        <span class="text-muted-foreground">-</span>
+                                                    {/if}
+                                                </Table.Cell>
+                                            </Table.Row>
+
+                                            <!-- Subclasses -->
+                                            {#if superclass.subclasses}
+                                                {#each superclass.subclasses as subclass}
+                                                    <Table.Row class="bg-muted/10">
+                                                        <Table.Cell class="font-medium">
+                                                            <span class="text-muted-foreground mr-2">→</span>
+                                                            {subclass.name}
+                                                        </Table.Cell>
+                                                        <Table.Cell>{subclass.description}</Table.Cell>
+                                                        <Table.Cell>
+                                                            <div class="flex flex-wrap gap-1">
+                                                                {#each subclass.attributes as attr}
+                                                                    <Badge variant="secondary">
+                                                                        {attr.name} ({attr.type})
+                                                                    </Badge>
+                                                                {/each}
+                                                            </div>
+                                                        </Table.Cell>
+                                                        <Table.Cell>
+                                                            <div class="flex flex-wrap gap-1">
+                                                                {#each subclass.relationships as rel}
+                                                                    <Badge variant="outline">
+                                                                        {rel.name} → {rel.target}
+                                                                    </Badge>
+                                                                {/each}
+                                                            </div>
+                                                        </Table.Cell>
+                                                    </Table.Row>
+                                                {/each}
+                                            {/if}
+                                        </Table.Body>
+                                    </Table.Root>
+                                </AccordionContent>
+                            </AccordionItem>
+                        {/each}
+                    </Accordion>
                 </div>
             </Tabs.Content>
 
             <!-- Relationships Tab -->
             <Tabs.Content value="relationships" class="pt-4">
                 <div class="mb-4">
-                    <h2 class="text-lg font-medium mb-1">Relationship Types</h2>
+                    <h2 class="text-lg font-medium mb-1">Relationships</h2>
                     <p class="text-sm text-muted-foreground">
-                        Define how different classes can be connected. These relationships form the structure of your knowledge graph.
+                        All relationships between classes in the ontology
                     </p>
                 </div>
-                <div class="mt-4">
-                    <Table.Root>
-                        <Table.Header>
-                            <Table.Row>
-                                <Table.Head>Name</Table.Head>
-                                <Table.Head>Description</Table.Head>
-                                <Table.Head>Source Types</Table.Head>
-                                <Table.Head>Target Types</Table.Head>
-                                <Table.Head class="w-[100px]">Actions</Table.Head>
-                            </Table.Row>
-                        </Table.Header>
-                        <Table.Body>
-                            {#each relationshipTypes as rel}
-                                <Table.Row>
-                                    <Table.Cell class="font-medium">{rel.name}</Table.Cell>
-                                    <Table.Cell>{rel.description}</Table.Cell>
-                                    <Table.Cell>
-                                        <div class="flex flex-wrap gap-1">
-                                            {#each rel.sourceTypes as type}
-                                                <span class="text-xs bg-secondary px-2 py-1 rounded">
-                                                    {type}
-                                                </span>
-                                            {/each}
-                                        </div>
-                                    </Table.Cell>
-                                    <Table.Cell>
-                                        <div class="flex flex-wrap gap-1">
-                                            {#each rel.targetTypes as type}
-                                                <span class="text-xs bg-secondary px-2 py-1 rounded">
-                                                    {type}
-                                                </span>
-                                            {/each}
-                                        </div>
-                                    </Table.Cell>
-                                    <Table.Cell>
-                                        <div class="flex items-center gap-2">
-                                            <Button variant="ghost" size="icon">
-                                                <Edit class="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon">
-                                                <Trash class="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </Table.Cell>
-                                </Table.Row>
+
+                <Table.Root>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.Head>Source</Table.Head>
+                            <Table.Head>Relationship</Table.Head>
+                            <Table.Head>Target</Table.Head>
+                            <Table.Head>Cardinality</Table.Head>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                        {#each ontologySchema.ontology.superclasses as superclass}
+                            {#each superclass.subclasses as subclass}
+                                {#each subclass.relationships as rel}
+                                    <Table.Row>
+                                        <Table.Cell class="font-medium">
+                                            {subclass.name}
+                                        </Table.Cell>
+                                        <Table.Cell>
+                                            <Badge variant="outline">
+                                                {rel.name}
+                                            </Badge>
+                                        </Table.Cell>
+                                        <Table.Cell class="font-medium">
+                                            {rel.target}
+                                        </Table.Cell>
+                                        <Table.Cell>
+                                            <Badge variant="secondary">
+                                                {rel.cardinality}
+                                            </Badge>
+                                        </Table.Cell>
+                                    </Table.Row>
+                                {/each}
                             {/each}
-                        </Table.Body>
-                    </Table.Root>
-                </div>
+                        {/each}
+                    </Table.Body>
+                </Table.Root>
             </Tabs.Content>
 
             <!-- Validation Rules Tab -->
@@ -855,11 +795,17 @@
                 <div class="mb-4">
                     <h2 class="text-lg font-medium mb-1">Validation Rules</h2>
                     <p class="text-sm text-muted-foreground">
-                        Set constraints and validation rules to ensure data integrity across your ontology.
+                        Rules that ensure data integrity across the ontology
                     </p>
                 </div>
-                <div class="mt-4">
-                    <!-- Add validation rules management here -->
+
+                <div class="space-y-2">
+                    {#each ontologySchema.ontology.rules as rule}
+                        <div class="p-4 bg-secondary/10 rounded-lg flex items-start gap-3">
+                            <Check class="h-4 w-4 mt-1 text-primary" />
+                            <span class="text-sm">{rule}</span>
+                        </div>
+                    {/each}
                 </div>
             </Tabs.Content>
         </Tabs.Root>
