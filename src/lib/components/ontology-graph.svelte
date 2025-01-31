@@ -74,17 +74,17 @@
         const g = svgEl.append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        // Add curved links
+        // Add simple relationship lines
         const link = g.selectAll(".link")
             .data(root.links())
-            .enter().append("path")
+            .enter().append("line") // Changed from path to line
             .attr("class", "link")
-            .attr("d", d3.linkHorizontal()
-                .x(d => d.y)
-                .y(d => d.x)
-            )
-            .style("stroke", "hsl(var(--foreground)/0.2)")
-            .style("stroke-width", 1.5)
+            .attr("x1", d => d.source.y)
+            .attr("y1", d => d.source.x)
+            .attr("x2", d => d.target.y)
+            .attr("y2", d => d.target.x)
+            .style("stroke", "#ccc") // Simple gray color
+            .style("stroke-width", 1) // Thinner line
             .style("stroke-linecap", "round");
 
         // Create node groups
@@ -184,15 +184,14 @@
 <style>
     .link {
         fill: none;
-        stroke: hsl(var(--foreground)/0.2);
-        stroke-width: 1.5px;
-        stroke-linecap: round;
+        stroke: #ccc;
+        stroke-width: 1;
         transition: stroke 0.2s ease;
     }
 
     .link:hover {
-        stroke: hsl(var(--foreground)/0.4);
-        stroke-width: 2px;
+        stroke: #999;
+        stroke-width: 1.2;
     }
 
     .node--superclass circle {
