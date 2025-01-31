@@ -20,31 +20,31 @@
 
         // Create a cluster layout with better spacing
         const cluster = d3.cluster()
-            .size([innerHeight * 20, innerWidth * 2.5]) // Increased horizontal space (from 1.5 to 2.5)
+            .size([innerHeight * 20, innerWidth * 4]) // Increased from 2.5 to 4
             .separation((a: any, b: any) => {
                 // Maximum separation between category and non-category nodes
                 if (a.data.type === 'category' && b.data.type !== 'category' ||
                     a.data.type !== 'category' && b.data.type === 'category') {
-                    return 35; // Increased from 25
+                    return 50; // Increased from 35
                 }
                 // Large separation between categories
                 if (a.data.type === 'category' && b.data.type === 'category') {
-                    return 25; // Increased from 15
+                    return 40; // Increased from 25
                 }
                 // Add extra space for attributes
                 if (a.data.type === 'attribute' || b.data.type === 'attribute') {
-                    return 30; // Increased from 20
+                    return 45; // Increased from 30
                 }
                 // Add extra space for subclasses
                 if (a.data.type === 'subclass' || b.data.type === 'subclass') {
-                    return 35; // Increased from 25
+                    return 50; // Increased from 35
                 }
                 // Add extra space for relationships
                 if (a.data.type === 'relationship' || b.data.type === 'relationship') {
-                    return 30; // Increased from 20
+                    return 45; // Increased from 30
                 }
                 // Default separation for siblings vs non-siblings
-                return a.parent === b.parent ? 25 : 40; // Increased from 15:30
+                return a.parent === b.parent ? 40 : 60; // Increased from 25:40
             });
 
         // Process data into hierarchical structure with category nodes
@@ -108,21 +108,7 @@
         const g = svgEl.append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        // Add arrow marker definition
-        svgEl.append("defs")
-            .append("marker")
-            .attr("id", "arrowhead")
-            .attr("viewBox", "0 -5 10 10")
-            .attr("refX", 10)
-            .attr("refY", 0)
-            .attr("markerWidth", 8)
-            .attr("markerHeight", 8)
-            .attr("orient", "auto")
-            .append("path")
-            .attr("d", "M0,-5L10,0L0,5")
-            .style("fill", "#4a72bf"); // Match the line color
-
-        // Add simple relationship lines with arrows
+        // Add simple relationship lines (without arrows)
         const link = g.selectAll(".link")
             .data(root.links())
             .enter().append("line")
@@ -131,9 +117,8 @@
             .attr("y1", d => d.source.x)
             .attr("x2", d => d.target.y)
             .attr("y2", d => d.target.x)
-            .style("stroke", "#4a72bf") // Match box border color
-            .style("stroke-width", 1.5)
-            .attr("marker-end", "url(#arrowhead)"); // Add arrowhead
+            .style("stroke", "#4a72bf")
+            .style("stroke-width", 1.5);
 
         // Create node groups
         const node = g.selectAll(".node")
@@ -158,7 +143,7 @@
                     .attr("y", 0)
                     .style("font-family", "monospace")
                     .style("font-size", "12px")
-                    .style("fill", "#e65d20") // Darker orange
+                    .style("fill", "#e65d20")
                     .style("text-anchor", "middle")
                     .text(d.data.name);
 
@@ -169,71 +154,79 @@
                     .attr("class", "category-rect")
                     .attr("x", bbox.x - 10)
                     .attr("y", bbox.y - 5)
-                    .attr("width", bbox.width + 45) // Extra width for eye icon on right
+                    .attr("width", bbox.width + 45)
                     .attr("height", bbox.height + 10)
                     .attr("rx", 4)
-                    .style("fill", "#ffffff") // White background
-                    .style("stroke", "#4a72bf") // Blue border to match regular nodes
+                    .style("fill", "#ffffff")
+                    .style("stroke", "#4a72bf")
                     .style("stroke-width", 1);
 
                 // Add vertical separator line
                 container.append("line")
-                    .attr("x1", bbox.x + bbox.width + 5) // 5px after text
-                    .attr("y1", bbox.y - 2) // Stay within box
+                    .attr("x1", bbox.x + bbox.width + 5)
+                    .attr("y1", bbox.y - 2)
                     .attr("x2", bbox.x + bbox.width + 5)
-                    .attr("y2", bbox.y + bbox.height + 2) // Stay within box
-                    .style("stroke", "#4a72bf") // Blue separator to match
+                    .attr("y2", bbox.y + bbox.height + 2)
+                    .style("stroke", "#4a72bf")
                     .style("stroke-width", 1);
 
-                // Add flashlight icon
-                const eyeGroup = container.append("g")
-                    .attr("class", "flashlight-icon")
-                    .attr("transform", `translate(${bbox.x + bbox.width + 10}, ${bbox.y + (bbox.height/2)})`)
+                // Add clickable area for the right side
+                const toggleArea = container.append("rect")
+                    .attr("x", bbox.x + bbox.width + 6)
+                    .attr("y", bbox.y - 4)
+                    .attr("width", 28)
+                    .attr("height", bbox.height + 8)
+                    .style("fill", "transparent")
                     .style("cursor", "pointer")
                     .on("click", (event) => {
-                        const isHidden = eyeGroup.property("isHidden") || false;
-                        eyeGroup.property("isHidden", !isHidden);
+                        const isHidden = container.property("isHidden") || false;
+                        container.property("isHidden", !isHidden);
                         
-                        // Only get direct children that aren't categories
-                        const directDescendants = d.children
-                            ? d.children.filter(n => n.data.type !== 'category')
-                            : [];
+                        // Get ALL descendants instead of just direct children
+                        const allDescendants = d.descendants();
+                        // Remove the category node itself from the list
+                        allDescendants.shift();
                         
-                        // Toggle visibility of only direct descendant nodes
+                        // Toggle visibility of all descendant nodes
                         g.selectAll(".node")
-                            .filter(node => directDescendants.includes(node))
+                            .filter(node => allDescendants.includes(node))
                             .style("opacity", !isHidden ? 0 : 1)
                             .style("pointer-events", !isHidden ? "none" : "all");
 
-                        // Toggle visibility of only direct descendant links
+                        // Toggle visibility of all descendant links
                         g.selectAll(".link")
-                            .filter(link => directDescendants.includes(link.target))
+                            .filter(link => allDescendants.includes(link.target))
                             .style("opacity", !isHidden ? 0 : 1);
 
                         // Update flashlight icon colors
-                        eyeGroup.select(".flashlight-body")
+                        flashlightIcon.select(".flashlight-body")
                             .style("stroke", !isHidden ? "#666" : "#e65d20");
-                        eyeGroup.select(".flashlight-beam")
+                        flashlightIcon.select(".flashlight-beam")
                             .style("fill", !isHidden ? "#666" : "#e65d20");
                     });
 
+                // Add flashlight icon (now just for visual indication)
+                const flashlightIcon = container.append("g")
+                    .attr("class", "flashlight-icon")
+                    .attr("transform", `translate(${bbox.x + bbox.width + 10}, ${bbox.y + (bbox.height/2)})`);
+
                 // Flashlight body
-                eyeGroup.append("path")
+                flashlightIcon.append("path")
                     .attr("class", "flashlight-body")
-                    .attr("d", "M2,7 L8,7 L12,3 L12,11 L8,7") // Flashlight shape
+                    .attr("d", "M2,7 L8,7 L12,3 L12,11 L8,7")
                     .attr("transform", "scale(0.8) translate(-2, -5)")
                     .style("fill", "none")
-                    .style("stroke", "#e65d20") // Match darker orange
+                    .style("stroke", "#e65d20")
                     .style("stroke-width", 2)
                     .style("stroke-linejoin", "round")
                     .style("stroke-linecap", "round");
 
                 // Flashlight beam
-                eyeGroup.append("path")
+                flashlightIcon.append("path")
                     .attr("class", "flashlight-beam")
-                    .attr("d", "M12,7 L15,7 L18,4 L18,10 L15,7") // Beam shape
+                    .attr("d", "M12,7 L15,7 L18,4 L18,10 L15,7")
                     .attr("transform", "scale(0.8) translate(-2, -5)")
-                    .style("fill", "#e65d20") // Match darker orange
+                    .style("fill", "#e65d20")
                     .style("fill-opacity", 0.5);
 
                 return;
@@ -242,15 +235,15 @@
             // Regular node rendering code for non-category nodes
             const text = node.append("text")
                 .attr("class", "node-text")
-                .attr("x", -140)
+                .attr("x", -180)
                 .attr("y", -20)
                 .style("font-family", "monospace")
                 .style("font-size", "13px")
-                .style("fill", "#000000"); // Changed to black
+                .style("fill", "#000000");
 
             // Add name with blue color for property name
             const nameText = text.append("tspan")
-                .attr("x", -140)
+                .attr("x", -180)
                 .attr("dy", 0);
             
             nameText.append("tspan")
@@ -263,7 +256,7 @@
 
             // Add description with blue property name
             const descText = text.append("tspan")
-                .attr("x", -140)
+                .attr("x", -180)
                 .attr("dy", "2.5em");
             
             // Add description label in blue
@@ -276,7 +269,7 @@
             const words = descValue.split(/\s+/);
             let line = [words[0]]; // Start with first word
             let lineNumber = 1;
-            const maxWidth = 260;
+            const maxWidth = 340;
 
             // Test first line including "description: "
             const firstLine = descText.append("tspan")
@@ -297,7 +290,7 @@
                         firstLine.text(line.join(" ")); // Update first line
                     } else {
                         text.append("tspan")
-                            .attr("x", -140)
+                            .attr("x", -180)
                             .attr("dy", "1.4em")
                             .style("fill", "#000000") // Changed from #fff to black
                             .text(line.join(" "));
@@ -313,7 +306,7 @@
                     firstLine.text(line.join(" ")); // Update first line
                 } else {
                     text.append("tspan")
-                        .attr("x", -140)
+                        .attr("x", -180)
                         .attr("dy", "1.4em")
                         .style("fill", "#000000") // Changed from #fff to black
                         .text(line.join(" "));
@@ -323,25 +316,25 @@
             // Get the bounding box of all the text
             const textBox = text.node().getBBox();
             
-            // Add rectangle with white background and blue border
+            // Add rectangle with more width
             node.insert("rect", "text")
                 .attr("class", "node-rect")
-                .attr("x", textBox.x - 20)
+                .attr("x", textBox.x - 30)
                 .attr("y", textBox.y - 20)
-                .attr("width", textBox.width + 40)
+                .attr("width", textBox.width + 60)
                 .attr("height", textBox.height + 40)
                 .attr("rx", 4)
-                .style("fill", "#ffffff") // White background
-                .style("stroke", "#4a72bf") // Blue border
+                .style("fill", "#ffffff")
+                .style("stroke", "#4a72bf")
                 .style("stroke-width", 1);
 
-            // Add separator line in blue
+            // Update separator line width
             node.insert("line", "text")
-                .attr("x1", textBox.x - 20)
+                .attr("x1", textBox.x - 30)
                 .attr("y1", -5)
-                .attr("x2", textBox.x + textBox.width + 20)
+                .attr("x2", textBox.x + textBox.width + 30)
                 .attr("y2", -5)
-                .attr("stroke", "#4a72bf") // Blue separator
+                .attr("stroke", "#4a72bf")
                 .attr("stroke-width", 1);
         });
 
