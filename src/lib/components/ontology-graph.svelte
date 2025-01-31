@@ -20,31 +20,31 @@
 
         // Create a cluster layout with better spacing
         const cluster = d3.cluster()
-            .size([innerHeight * 20, innerWidth * 1.5]) // Dramatically increase both dimensions
+            .size([innerHeight * 20, innerWidth * 2.5]) // Increased horizontal space (from 1.5 to 2.5)
             .separation((a: any, b: any) => {
                 // Maximum separation between category and non-category nodes
                 if (a.data.type === 'category' && b.data.type !== 'category' ||
                     a.data.type !== 'category' && b.data.type === 'category') {
-                    return 25; // Much more space between categories and nodes
+                    return 35; // Increased from 25
                 }
                 // Large separation between categories
                 if (a.data.type === 'category' && b.data.type === 'category') {
-                    return 15;
+                    return 25; // Increased from 15
                 }
                 // Add extra space for attributes
                 if (a.data.type === 'attribute' || b.data.type === 'attribute') {
-                    return 20;
+                    return 30; // Increased from 20
                 }
                 // Add extra space for subclasses
                 if (a.data.type === 'subclass' || b.data.type === 'subclass') {
-                    return 25;
+                    return 35; // Increased from 25
                 }
                 // Add extra space for relationships
                 if (a.data.type === 'relationship' || b.data.type === 'relationship') {
-                    return 20;
+                    return 30; // Increased from 20
                 }
                 // Default separation for siblings vs non-siblings
-                return a.parent === b.parent ? 15 : 30;
+                return a.parent === b.parent ? 25 : 40; // Increased from 15:30
             });
 
         // Process data into hierarchical structure with category nodes
@@ -108,18 +108,32 @@
         const g = svgEl.append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        // Add simple relationship lines
+        // Add arrow marker definition
+        svgEl.append("defs")
+            .append("marker")
+            .attr("id", "arrowhead")
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", 10)
+            .attr("refY", 0)
+            .attr("markerWidth", 8)
+            .attr("markerHeight", 8)
+            .attr("orient", "auto")
+            .append("path")
+            .attr("d", "M0,-5L10,0L0,5")
+            .style("fill", "#4a72bf"); // Match the line color
+
+        // Add simple relationship lines with arrows
         const link = g.selectAll(".link")
             .data(root.links())
-            .enter().append("line") // Changed from path to line
+            .enter().append("line")
             .attr("class", "link")
             .attr("x1", d => d.source.y)
             .attr("y1", d => d.source.x)
             .attr("x2", d => d.target.y)
             .attr("y2", d => d.target.x)
-            .style("stroke", "#ccc") // Simple gray color
-            .style("stroke-width", 1) // Thinner line
-            .style("stroke-linecap", "round");
+            .style("stroke", "#4a72bf") // Match box border color
+            .style("stroke-width", 1.5)
+            .attr("marker-end", "url(#arrowhead)"); // Add arrowhead
 
         // Create node groups
         const node = g.selectAll(".node")
@@ -133,42 +147,106 @@
             const node = d3.select(this);
             
             if (d.data.type === 'category') {
+                // Create container for category
+                const container = node.append("g")
+                    .attr("class", "category-container");
+
                 // Add simple category label
-                const text = node.append("text")
+                const text = container.append("text")
                     .attr("class", "category-text")
                     .attr("x", 0)
                     .attr("y", 0)
                     .style("font-family", "monospace")
                     .style("font-size", "12px")
-                    .style("fill", "#666")
+                    .style("fill", "#e65d20") // Darker orange
                     .style("text-anchor", "middle")
                     .text(d.data.name);
 
-                // Add subtle background
                 const bbox = text.node().getBBox();
-                node.insert("rect", "text")
+
+                // Add subtle background
+                container.insert("rect", "text")
                     .attr("class", "category-rect")
                     .attr("x", bbox.x - 10)
                     .attr("y", bbox.y - 5)
-                    .attr("width", bbox.width + 20)
+                    .attr("width", bbox.width + 45) // Extra width for eye icon on right
                     .attr("height", bbox.height + 10)
                     .attr("rx", 4)
-                    .style("fill", "#2a2a2a")
-                    .style("stroke", "#444")
+                    .style("fill", "#ffffff") // White background
+                    .style("stroke", "#4a72bf") // Blue border to match regular nodes
                     .style("stroke-width", 1);
 
-                return; // Skip the regular node rendering for category nodes
+                // Add vertical separator line
+                container.append("line")
+                    .attr("x1", bbox.x + bbox.width + 5) // 5px after text
+                    .attr("y1", bbox.y - 2) // Stay within box
+                    .attr("x2", bbox.x + bbox.width + 5)
+                    .attr("y2", bbox.y + bbox.height + 2) // Stay within box
+                    .style("stroke", "#4a72bf") // Blue separator to match
+                    .style("stroke-width", 1);
+
+                // Add flashlight icon
+                const eyeGroup = container.append("g")
+                    .attr("class", "flashlight-icon")
+                    .attr("transform", `translate(${bbox.x + bbox.width + 10}, ${bbox.y + (bbox.height/2)})`)
+                    .style("cursor", "pointer")
+                    .on("click", (event) => {
+                        const isHidden = eyeGroup.property("isHidden") || false;
+                        eyeGroup.property("isHidden", !isHidden);
+                        
+                        // Only get direct children that aren't categories
+                        const directDescendants = d.children
+                            ? d.children.filter(n => n.data.type !== 'category')
+                            : [];
+                        
+                        // Toggle visibility of only direct descendant nodes
+                        g.selectAll(".node")
+                            .filter(node => directDescendants.includes(node))
+                            .style("opacity", !isHidden ? 0 : 1)
+                            .style("pointer-events", !isHidden ? "none" : "all");
+
+                        // Toggle visibility of only direct descendant links
+                        g.selectAll(".link")
+                            .filter(link => directDescendants.includes(link.target))
+                            .style("opacity", !isHidden ? 0 : 1);
+
+                        // Update flashlight icon colors
+                        eyeGroup.select(".flashlight-body")
+                            .style("stroke", !isHidden ? "#666" : "#e65d20");
+                        eyeGroup.select(".flashlight-beam")
+                            .style("fill", !isHidden ? "#666" : "#e65d20");
+                    });
+
+                // Flashlight body
+                eyeGroup.append("path")
+                    .attr("class", "flashlight-body")
+                    .attr("d", "M2,7 L8,7 L12,3 L12,11 L8,7") // Flashlight shape
+                    .attr("transform", "scale(0.8) translate(-2, -5)")
+                    .style("fill", "none")
+                    .style("stroke", "#e65d20") // Match darker orange
+                    .style("stroke-width", 2)
+                    .style("stroke-linejoin", "round")
+                    .style("stroke-linecap", "round");
+
+                // Flashlight beam
+                eyeGroup.append("path")
+                    .attr("class", "flashlight-beam")
+                    .attr("d", "M12,7 L15,7 L18,4 L18,10 L15,7") // Beam shape
+                    .attr("transform", "scale(0.8) translate(-2, -5)")
+                    .style("fill", "#e65d20") // Match darker orange
+                    .style("fill-opacity", 0.5);
+
+                return;
             }
 
             // Regular node rendering code for non-category nodes
-            // Add text content first (to measure it)
             const text = node.append("text")
                 .attr("class", "node-text")
                 .attr("x", -140)
                 .attr("y", -20)
                 .style("font-family", "monospace")
                 .style("font-size", "13px")
-                .style("fill", "#fff");
+                .style("fill", "#000000"); // Changed to black
 
             // Add name with blue color for property name
             const nameText = text.append("tspan")
@@ -176,11 +254,11 @@
                 .attr("dy", 0);
             
             nameText.append("tspan")
-                .style("fill", "#5fb0ff")
+                .style("fill", "#4a72bf") // Blue for property name
                 .text("name: ");
             
             nameText.append("tspan")
-                .style("fill", "#fff")
+                .style("fill", "#000000") // Black for value
                 .text(`"${d.data.name}"`);
 
             // Add description with blue property name
@@ -188,11 +266,11 @@
                 .attr("x", -140)
                 .attr("dy", "2.5em");
             
-            // Add description label
+            // Add description label in blue
             descText.append("tspan")
-                .style("fill", "#5fb0ff")
+                .style("fill", "#4a72bf") // Blue for property name
                 .text("description: ");
-            
+
             // Add description value with wrapping, starting on same line
             const descValue = `"${d.data.description || 'N/A'}"`;
             const words = descValue.split(/\s+/);
@@ -202,7 +280,7 @@
 
             // Test first line including "description: "
             const firstLine = descText.append("tspan")
-                .style("fill", "#fff")
+                .style("fill", "#000000") // Changed from #fff to black
                 .text(line[0]);
 
             // Process remaining words
@@ -221,7 +299,7 @@
                         text.append("tspan")
                             .attr("x", -140)
                             .attr("dy", "1.4em")
-                            .style("fill", "#fff")
+                            .style("fill", "#000000") // Changed from #fff to black
                             .text(line.join(" "));
                     }
                     line = [words[i]];
@@ -237,7 +315,7 @@
                     text.append("tspan")
                         .attr("x", -140)
                         .attr("dy", "1.4em")
-                        .style("fill", "#fff")
+                        .style("fill", "#000000") // Changed from #fff to black
                         .text(line.join(" "));
                 }
             }
@@ -245,7 +323,7 @@
             // Get the bounding box of all the text
             const textBox = text.node().getBBox();
             
-            // Add rectangle sized to fit text with more padding
+            // Add rectangle with white background and blue border
             node.insert("rect", "text")
                 .attr("class", "node-rect")
                 .attr("x", textBox.x - 20)
@@ -253,17 +331,17 @@
                 .attr("width", textBox.width + 40)
                 .attr("height", textBox.height + 40)
                 .attr("rx", 4)
-                .style("fill", "#1c1c1c")
-                .style("stroke", "#333")
+                .style("fill", "#ffffff") // White background
+                .style("stroke", "#4a72bf") // Blue border
                 .style("stroke-width", 1);
 
-            // Add separator line after measuring text height
+            // Add separator line in blue
             node.insert("line", "text")
                 .attr("x1", textBox.x - 20)
                 .attr("y1", -5)
                 .attr("x2", textBox.x + textBox.width + 20)
                 .attr("y2", -5)
-                .attr("stroke", "#333")
+                .attr("stroke", "#4a72bf") // Blue separator
                 .attr("stroke-width", 1);
         });
 
@@ -302,7 +380,7 @@
 
 <svg 
     bind:this={svg} 
-    class="w-full h-full bg-white rounded-lg shadow-lg"
+    class="w-full h-full rounded-lg"
     viewBox="0 0 1200 800"
     preserveAspectRatio="xMidYMid meet"
 >
@@ -311,14 +389,14 @@
 <style>
     .link {
         fill: none;
-        stroke: #ccc;
-        stroke-width: 1;
-        transition: stroke 0.2s ease;
+        stroke: #4a72bf; /* Match box border color */
+        stroke-width: 1.5;
+        transition: all 0.2s ease;
     }
 
     .link:hover {
-        stroke: #999;
-        stroke-width: 1.2;
+        stroke: #6889cf; /* Slightly lighter blue on hover */
+        stroke-width: 2;
     }
 
     .node--superclass circle {
@@ -360,7 +438,7 @@
     }
 
     .node-rect {
-        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
     }
 
     .node-text {
@@ -369,8 +447,9 @@
     }
 
     .node-text tspan {
-        font-family: monospace; /* For better alignment */
+        font-family: monospace;
         font-size: 11px;
+        fill: #000000; /* Default text color black */
     }
 
     .node-text tspan:first-child {
@@ -382,10 +461,23 @@
         font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", monospace;
         text-transform: uppercase;
         letter-spacing: 0.05em;
+        fill: #e65d20; /* Darker orange */
     }
 
     .category-rect {
         filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
         opacity: 0.8;
+    }
+
+    .flashlight-icon {
+        transition: all 0.2s ease;
+    }
+
+    .flashlight-icon:hover .flashlight-body {
+        stroke-width: 2.5;
+    }
+
+    .flashlight-icon:hover .flashlight-beam {
+        filter: brightness(1.2);
     }
 </style> 
