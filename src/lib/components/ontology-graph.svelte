@@ -1,245 +1,204 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import * as d3 from 'd3';
+    import { scaleOrdinal } from 'd3-scale';
+    import { schemeCategory10 } from 'd3-scale-chromatic';
 
     export let data: any;
     let svg: SVGElement;
+
+    // Color scale for different node types
+    const colorScale = scaleOrdinal(schemeCategory10);
 
     onMount(() => {
         const width = svg.clientWidth;
         const height = svg.clientHeight;
         
-        const margin = { top: 60, right: 120, bottom: 60, left: 120 };
+        const margin = { top: 40, right: 120, bottom: 40, left: 120 };
         const innerWidth = width - margin.left - margin.right;
         const innerHeight = height - margin.top - margin.bottom;
 
-        const treeLayout = d3.tree()
-            .size([innerWidth, innerHeight])
-            .nodeSize([250, 150])  // Increased spacing
-            .separation((a, b) => {
-                return a.parent === b.parent ? 2 : 3;
-            });
+        // Create a cluster layout with better spacing
+        const cluster = d3.cluster()
+            .size([innerHeight, innerWidth - 200]) // More horizontal space
+            .separation((a, b) => a.parent === b.parent ? 1 : 1.5);
 
-        // Improved data processing to show complete structure
+        // Process data into hierarchical structure
         function processData(data: any) {
-            // Root node
-            const root = {
-                name: "root",
-                children: [{
-                    name: "ontology",
+            return {
+                name: data.ontology.name,
+                description: data.ontology.description,
+                children: data.ontology.superclasses.map(superclass => ({
+                    ...superclass,
+                    type: 'superclass',
                     children: [
-                        // Name and description node
-                        {
-                            name: "metadata",
+                        ...(superclass.attributes?.map(attr => ({
+                            ...attr,
+                            type: 'attribute'
+                        })) || []),
+                        ...(superclass.subclasses?.map(subclass => ({
+                            ...subclass,
+                            type: 'subclass',
                             children: [
-                                { 
-                                    name: "name",
-                                    value: data.ontology.name
-                                },
-                                {
-                                    name: "description",
-                                    value: data.ontology.description
-                                }
+                                ...(subclass.attributes?.map(attr => ({
+                                    ...attr,
+                                    type: 'attribute'
+                                })) || []),
+                                ...(subclass.relationships?.map(rel => ({
+                                    ...rel,
+                                    type: 'relationship'
+                                })) || [])
                             ]
-                        },
-                        // Superclasses node
-                        {
-                            name: "superclasses",
-                            children: data.ontology.superclasses.map(superclass => ({
-                                name: superclass.name,
-                                description: superclass.description,
-                                children: [
-                                    // Attributes if they exist
-                                    superclass.attributes && {
-                                        name: "attributes",
-                                        children: superclass.attributes.map(attr => ({
-                                            name: `${attr.name}: ${attr.type}`,
-                                            description: attr.description
-                                        }))
-                                    },
-                                    // Subclasses if they exist
-                                    superclass.subclasses && {
-                                        name: "subclasses",
-                                        children: superclass.subclasses.map(sub => ({
-                                            name: sub.name,
-                                            children: [
-                                                // Subclass attributes
-                                                {
-                                                    name: "attributes",
-                                                    children: sub.attributes?.map(attr => ({
-                                                        name: `${attr.name}: ${attr.type}`
-                                                    }))
-                                                },
-                                                // Subclass relationships
-                                                {
-                                                    name: "relationships",
-                                                    children: sub.relationships?.map(rel => ({
-                                                        name: `${rel.name} → ${rel.target}`
-                                                    }))
-                                                }
-                                            ]
-                                        }))
-                                    }
-                                ].filter(Boolean)  // Remove undefined items
-                            }))
-                        },
-                        // Rules node
-                        {
-                            name: "rules",
-                            children: data.ontology.rules.map((rule, index) => ({
-                                name: `Rule ${index + 1}`,
-                                value: rule
-                            }))
-                        }
+                        })) || [])
                     ]
-                }]
+                }))
             };
-
-            return root;
         }
 
-        // Rest of the visualization code remains similar, but update node styling
-        const hierarchyData = processData(data);
-        const root = d3.hierarchy(hierarchyData);
+        const root = d3.hierarchy(processData(data));
+        cluster(root);
 
-        // Apply the tree layout
-        treeLayout(root);
-
-        // Create SVG elements
         const svgEl = d3.select(svg);
         svgEl.selectAll("*").remove();
         
         const g = svgEl.append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        // Create links
-        const links = g.selectAll(".link")
+        // Add curved links
+        const link = g.selectAll(".link")
             .data(root.links())
-            .enter()
-            .append("path")
+            .enter().append("path")
             .attr("class", "link")
-            .attr("d", d3.linkVertical()
-                .x(d => d.x)
-                .y(d => d.y)
-            );
+            .attr("d", d3.linkHorizontal()
+                .x(d => d.y)
+                .y(d => d.x)
+            )
+            .style("stroke", "hsl(var(--foreground)/0.2)")
+            .style("stroke-width", 1.5)
+            .style("stroke-linecap", "round");
 
-        // Create nodes
-        const nodes = g.selectAll(".node")
+        // Create node groups
+        const node = g.selectAll(".node")
             .data(root.descendants())
-            .enter()
-            .append("g")
-            .attr("class", d => {
-                const depth = d.depth;
-                const hasChildren = d.children ? "node--internal" : "node--leaf";
-                return `node node--depth-${depth} ${hasChildren}`;
-            })
-            .attr("transform", d => `translate(${d.x},${d.y})`);
+            .enter().append("g")
+            .attr("class", d => `node node--${d.data.type}`)
+            .attr("transform", d => `translate(${d.y},${d.x})`);
 
-        // Add node backgrounds
-        nodes.append("rect")
-            .attr("class", "node-bg")
-            .attr("x", -120)
-            .attr("y", -25)
-            .attr("width", 240)
-            .attr("height", 50)
-            .attr("rx", 8)
-            .attr("ry", 8);
+        // Add node circles
+        node.append("circle")
+            .attr("r", 6)
+            .attr("fill", d => colorScale(d.data.type))
+            .attr("stroke", "#fff")
+            .attr("stroke-width", 2);
 
         // Add node labels
-        nodes.append("text")
-            .attr("class", "node-label")
-            .attr("dy", "0.32em")
-            .attr("text-anchor", "middle")
+        node.append("text")
+            .attr("x", d => d.children ? -12 : 12)
+            .attr("dy", "0.35em")
+            .attr("text-anchor", d => d.children ? "end" : "start")
             .text(d => {
-                if (d.data.value) {
-                    return `${d.data.name}: ${d.data.value}`;
+                if (d.data.type === 'relationship') {
+                    return `${d.data.name} → ${d.data.target}`;
                 }
                 return d.data.name;
-            });
+            })
+            .style("font-size", "12px")
+            .style("fill", "#333");
 
         // Add descriptions on hover
-        nodes.append("title")
-            .text(d => d.data.description || d.data.value || "");
+        node.append("title")
+            .text(d => d.data.description || "");
 
-        // Enhanced zoom behavior
+        // Zoom and pan behavior
         const zoom = d3.zoom()
-            .scaleExtent([0.2, 2])
+            .scaleExtent([0.1, 4])
             .on("zoom", (event) => {
                 g.attr("transform", event.transform);
             });
 
         svgEl.call(zoom);
 
-        // Initial zoom to fit
-        const bounds = g.node().getBBox();
-        const scale = Math.min(
-            innerWidth / bounds.width,
-            innerHeight / bounds.height,
-            0.4  // Smaller scale to show more of the structure
-        );
-        
-        svgEl.transition().duration(750).call(
-            zoom.transform,
-            d3.zoomIdentity
-                .translate(
-                    (width - bounds.width * scale) / 2 - bounds.x * scale,
-                    margin.top
-                )
+        // Fit the graph to view
+        const bounds = root.descendants().reduce((acc, d) => ({
+            x0: Math.min(acc.x0, d.x),
+            x1: Math.max(acc.x1, d.x),
+            y0: Math.min(acc.y0, d.y),
+            y1: Math.max(acc.y1, d.y)
+        }), { x0: Infinity, x1: -Infinity, y0: Infinity, y1: -Infinity });
+
+        const dx = bounds.x1 - bounds.x0;
+        const dy = bounds.y1 - bounds.y0;
+        const x = (bounds.x0 + bounds.x1) / 2;
+        const y = (bounds.y0 + bounds.y1) / 2;
+        const scale = Math.min(8, 0.9 / Math.max(dx / width, dy / height));
+        const translate = [width / 2 - scale * y, height / 2 - scale * x];
+
+        svgEl.transition()
+            .duration(750)
+            .call(zoom.transform, d3.zoomIdentity
+                .translate(translate[0], translate[1])
                 .scale(scale)
-        );
+            );
     });
 </script>
 
 <svg 
     bind:this={svg} 
-    class="w-full h-full"
-    viewBox="0 0 1200 900"
+    class="w-full h-full bg-white rounded-lg shadow-lg"
+    viewBox="0 0 1200 800"
     preserveAspectRatio="xMidYMid meet"
 >
 </svg>
 
 <style>
-    svg {
-        user-select: none;
-    }
-    :global(.node-label) {
-        font-size: 14px;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-        fill: hsl(var(--background));  /* Light text on dark boxes */
-    }
-    :global(.link) {
+    .link {
         fill: none;
-        stroke: hsl(var(--foreground)/0.5);  /* Darker lines */
-        stroke-width: 3px;
-        stroke-opacity: 0.8;
+        stroke: hsl(var(--foreground)/0.2);
+        stroke-width: 1.5px;
+        stroke-linecap: round;
+        transition: stroke 0.2s ease;
     }
-    :global(.node-bg) {
-        fill: hsl(var(--foreground)/0.9);  /* Dark boxes */
-        stroke: hsl(var(--foreground));     /* Dark borders */
+
+    .link:hover {
+        stroke: hsl(var(--foreground)/0.4);
         stroke-width: 2px;
-        opacity: 0.9;
-        transition: all 0.2s;
     }
-    :global(.node--depth-0 > .node-bg) {
+
+    .node--superclass circle {
+        r: 8;
+        fill: hsl(var(--primary));
+    }
+
+    .node--subclass circle {
+        r: 6;
+        fill: hsl(var(--primary)/0.8);
+    }
+
+    .node--attribute circle {
+        r: 4;
+        fill: hsl(var(--primary)/0.6);
+    }
+
+    .node--relationship circle {
+        r: 4;
+        fill: hsl(var(--primary)/0.4);
+    }
+
+    .node text {
+        font-family: 'Inter', sans-serif;
         fill: hsl(var(--foreground));
-        opacity: 0.95;
+        transition: fill 0.2s ease;
     }
-    :global(.node--depth-1 > .node-bg) {
-        fill: hsl(var(--foreground)/0.85);
+
+    .node--superclass text {
+        font-weight: 600;
     }
-    :global(.node--depth-2 > .node-bg) {
-        fill: hsl(var(--foreground)/0.8);
+
+    .node--relationship text {
+        font-style: italic;
     }
-    :global(.node--depth-3 > .node-bg) {
-        fill: hsl(var(--foreground)/0.75);
-    }
-    :global(.node:hover .node-bg) {
-        opacity: 1;
-        filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.2)) 
-                drop-shadow(0 2px 2px rgb(0 0 0 / 0.15));
-        transform: translateY(-1px);
-    }
-    :global(.node--internal .node-label) {
-        font-weight: bold;
+
+    .node:hover circle {
+        filter: brightness(1.1);
     }
 </style> 
