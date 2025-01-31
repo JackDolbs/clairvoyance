@@ -55,46 +55,59 @@
                 children: [{
                     name: "superclasses",
                     type: 'category',
-                    children: data.ontology.superclasses.map(superclass => ({
-                        ...superclass,
-                        type: 'superclass',
-                        children: [
-                            {
+                    children: data.ontology.superclasses.map(superclass => {
+                        const children = [];
+                        
+                        // Only add attributes category if superclass has attributes
+                        if (superclass.attributes && superclass.attributes.length > 0) {
+                            children.push({
                                 name: "attributes",
                                 type: 'category',
-                                children: superclass.attributes?.map(attr => ({
+                                children: superclass.attributes.map(attr => ({
                                     ...attr,
                                     type: 'attribute'
-                                })) || []
-                            },
-                            {
+                                }))
+                            });
+                        }
+
+                        // Add subclasses category
+                        if (superclass.subclasses && superclass.subclasses.length > 0) {
+                            children.push({
                                 name: "subclasses",
                                 type: 'category',
-                                children: superclass.subclasses?.map(subclass => ({
+                                children: superclass.subclasses.map(subclass => ({
                                     ...subclass,
                                     type: 'subclass',
                                     children: [
-                                        {
+                                        // Only add attributes if subclass has them
+                                        ...(subclass.attributes && subclass.attributes.length > 0 ? [{
                                             name: "attributes",
                                             type: 'category',
-                                            children: subclass.attributes?.map(attr => ({
+                                            children: subclass.attributes.map(attr => ({
                                                 ...attr,
                                                 type: 'attribute'
-                                            })) || []
-                                        },
-                                        {
+                                            }))
+                                        }] : []),
+                                        // Only add relationships if subclass has them
+                                        ...(subclass.relationships && subclass.relationships.length > 0 ? [{
                                             name: "relationships",
                                             type: 'category',
-                                            children: subclass.relationships?.map(rel => ({
+                                            children: subclass.relationships.map(rel => ({
                                                 ...rel,
                                                 type: 'relationship'
-                                            })) || []
-                                        }
+                                            }))
+                                        }] : [])
                                     ]
-                                })) || []
-                            }
-                        ]
-                    }))
+                                }))
+                            });
+                        }
+
+                        return {
+                            ...superclass,
+                            type: 'superclass',
+                            children
+                        };
+                    })
                 }]
             };
         }
@@ -190,7 +203,7 @@
                 const bbox = text.node().getBBox();
 
                 // Add subtle background
-                container.insert("rect", "text")
+                const categoryRect = container.insert("rect", "text")
                     .attr("class", "category-rect")
                     .attr("x", bbox.x - 10)
                     .attr("y", bbox.y - 5)
@@ -198,17 +211,16 @@
                     .attr("height", bbox.height + 10)
                     .attr("rx", 4)
                     .style("fill", "#ffffff")
-                    .style("stroke", "#4a72bf")
+                    .style("stroke", "#666666")
                     .style("stroke-width", 1);
 
-                // Add vertical separator line
-                container.append("line")
-                    .attr("x1", bbox.x + bbox.width + 5)
-                    .attr("y1", bbox.y - 2)
-                    .attr("x2", bbox.x + bbox.width + 5)
-                    .attr("y2", bbox.y + bbox.height + 2)
-                    .style("stroke", "#4a72bf")
-                    .style("stroke-width", 1);
+                // Add hover handlers to the container
+                container.on("mouseenter", function() {
+                    d3.select(this).select(".category-rect").style("stroke", "#4a72bf");
+                })
+                .on("mouseleave", function() {
+                    d3.select(this).select(".category-rect").style("stroke", "#666666");
+                });
 
                 // Add clickable area for the right side
                 const toggleArea = container.append("rect")
@@ -281,75 +293,129 @@
                 .style("font-size", "13px")
                 .style("fill", "#000000");
 
-            // Add name with blue color for property name
-            const nameText = text.append("tspan")
-                .attr("x", -180)
-                .attr("dy", 0);
-            
-            nameText.append("tspan")
-                .style("fill", "#4a72bf") // Blue for property name
-                .text("name: ");
-            
-            nameText.append("tspan")
-                .style("fill", "#000000") // Black for value
-                .text(`"${d.data.name}"`);
+            // Add metadata based on node type
+            if (d.data.type === 'attribute') {
+                // For attributes: name, type, description
+                const nameText = text.append("tspan")
+                    .attr("x", -180)
+                    .attr("dy", 0);
+                nameText.append("tspan")
+                    .style("fill", "#4a72bf")
+                    .text("name: ");
+                nameText.append("tspan")
+                    .style("fill", "#000000")
+                    .text(`"${d.data.name}"`);
 
-            // Add description with blue property name
-            const descText = text.append("tspan")
-                .attr("x", -180)
-                .attr("dy", "2.5em");
-            
-            // Add description label in blue
-            descText.append("tspan")
-                .style("fill", "#4a72bf") // Blue for property name
-                .text("description: ");
+                const typeText = text.append("tspan")
+                    .attr("x", -180)
+                    .attr("dy", "1.4em");
+                typeText.append("tspan")
+                    .style("fill", "#4a72bf")
+                    .text("type: ");
+                typeText.append("tspan")
+                    .style("fill", "#000000")
+                    .text(`"${d.data.type || 'N/A'}"`);
 
-            // Add description value with wrapping, starting on same line
-            const descValue = `"${d.data.description || 'N/A'}"`;
-            const words = descValue.split(/\s+/);
-            let line = [words[0]]; // Start with first word
-            let lineNumber = 1;
-            const maxWidth = 340;
+                addWrappedDescription(text, d.data.description);
+            } else if (d.data.type === 'relationship') {
+                // For relationships: name, target, cardinality
+                const nameText = text.append("tspan")
+                    .attr("x", -180)
+                    .attr("dy", 0);
+                nameText.append("tspan")
+                    .style("fill", "#4a72bf")
+                    .text("name: ");
+                nameText.append("tspan")
+                    .style("fill", "#000000")
+                    .text(`"${d.data.name}"`);
 
-            // Test first line including "description: "
-            const firstLine = descText.append("tspan")
-                .style("fill", "#000000") // Changed from #fff to black
-                .text(line[0]);
+                const targetText = text.append("tspan")
+                    .attr("x", -180)
+                    .attr("dy", "1.4em");
+                targetText.append("tspan")
+                    .style("fill", "#4a72bf")
+                    .text("target: ");
+                targetText.append("tspan")
+                    .style("fill", "#000000")
+                    .text(`"${d.data.target || 'N/A'}"`);
 
-            // Process remaining words
-            for (let i = 1; i < words.length; i++) {
-                line.push(words[i]);
-                const testLine = line.join(" ");
-                const testElem = text.append("tspan").text(testLine);
-                const testWidth = testElem.node().getComputedTextLength();
-                testElem.remove();
+                const cardinalityText = text.append("tspan")
+                    .attr("x", -180)
+                    .attr("dy", "1.4em");
+                cardinalityText.append("tspan")
+                    .style("fill", "#4a72bf")
+                    .text("cardinality: ");
+                cardinalityText.append("tspan")
+                    .style("fill", "#000000")
+                    .text(`"${d.data.cardinality || 'N/A'}"`);
+            } else {
+                // For other nodes: keep existing name and description
+                const nameText = text.append("tspan")
+                    .attr("x", -180)
+                    .attr("dy", 0);
+                nameText.append("tspan")
+                    .style("fill", "#4a72bf")
+                    .text("name: ");
+                nameText.append("tspan")
+                    .style("fill", "#000000")
+                    .text(`"${d.data.name}"`);
 
-                if (testWidth > maxWidth) {
-                    line.pop();
+                addWrappedDescription(text, d.data.description);
+            }
+
+            // Helper function to add wrapped description
+            function addWrappedDescription(text, description) {
+                const descText = text.append("tspan")
+                    .attr("x", -180)
+                    .attr("dy", "1.4em");
+                
+                descText.append("tspan")
+                    .style("fill", "#4a72bf")
+                    .text("description: ");
+
+                const descValue = `"${description || 'N/A'}"`;
+                const words = descValue.split(/\s+/);
+                let line = [words[0]];
+                let lineNumber = 1;
+                const maxWidth = 340;
+
+                const firstLine = descText.append("tspan")
+                    .style("fill", "#000000")
+                    .text(line[0]);
+
+                for (let i = 1; i < words.length; i++) {
+                    line.push(words[i]);
+                    const testLine = line.join(" ");
+                    const testElem = text.append("tspan").text(testLine);
+                    const testWidth = testElem.node().getComputedTextLength();
+                    testElem.remove();
+
+                    if (testWidth > maxWidth) {
+                        line.pop();
+                        if (lineNumber === 1) {
+                            firstLine.text(line.join(" "));
+                        } else {
+                            text.append("tspan")
+                                .attr("x", -180)
+                                .attr("dy", "1.4em")
+                                .style("fill", "#000000")
+                                .text(line.join(" "));
+                        }
+                        line = [words[i]];
+                        lineNumber++;
+                    }
+                }
+
+                if (line.length > 0) {
                     if (lineNumber === 1) {
-                        firstLine.text(line.join(" ")); // Update first line
+                        firstLine.text(line.join(" "));
                     } else {
                         text.append("tspan")
                             .attr("x", -180)
                             .attr("dy", "1.4em")
-                            .style("fill", "#000000") // Changed from #fff to black
+                            .style("fill", "#000000")
                             .text(line.join(" "));
                     }
-                    line = [words[i]];
-                    lineNumber++;
-                }
-            }
-
-            // Add remaining words
-            if (line.length > 0) {
-                if (lineNumber === 1) {
-                    firstLine.text(line.join(" ")); // Update first line
-                } else {
-                    text.append("tspan")
-                        .attr("x", -180)
-                        .attr("dy", "1.4em")
-                        .style("fill", "#000000") // Changed from #fff to black
-                        .text(line.join(" "));
                 }
             }
 
@@ -357,7 +423,7 @@
             const textBox = text.node().getBBox();
             
             // Add rectangle with more width
-            node.insert("rect", "text")
+            const nodeRect = node.insert("rect", "text")
                 .attr("class", "node-rect")
                 .attr("x", textBox.x - 30)
                 .attr("y", textBox.y - 20)
@@ -365,17 +431,16 @@
                 .attr("height", textBox.height + 40)
                 .attr("rx", 4)
                 .style("fill", "#ffffff")
-                .style("stroke", "#4a72bf")
+                .style("stroke", "#666666")
                 .style("stroke-width", 1);
 
-            // Update separator line width
-            node.insert("line", "text")
-                .attr("x1", textBox.x - 30)
-                .attr("y1", -5)
-                .attr("x2", textBox.x + textBox.width + 30)
-                .attr("y2", -5)
-                .attr("stroke", "#4a72bf")
-                .attr("stroke-width", 1);
+            // Add hover handlers to the node group instead
+            node.on("mouseenter", function() {
+                d3.select(this).select(".node-rect").style("stroke", "#4a72bf");
+            })
+            .on("mouseleave", function() {
+                d3.select(this).select(".node-rect").style("stroke", "#666666");
+            });
         });
 
         // Add links after nodes are created
@@ -384,7 +449,7 @@
             .enter().append("path")
             .attr("class", "link")
             .attr("d", customLinkHorizontal)
-            .style("stroke", "#4a72bf")
+            .style("stroke", "#666666")
             .style("stroke-width", 1.5)
             .style("fill", "none");
 
@@ -432,13 +497,13 @@
 <style>
     .link {
         fill: none;
-        stroke: #4a72bf; /* Match box border color */
+        stroke: #666666;
         stroke-width: 1.5;
         transition: all 0.2s ease;
     }
 
     .link:hover {
-        stroke: #6889cf; /* Slightly lighter blue on hover */
+        stroke: #4a72bf;
         stroke-width: 2;
     }
 
@@ -482,6 +547,7 @@
 
     .node-rect {
         filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        transition: stroke 0.2s ease;
     }
 
     .node-text {
@@ -510,6 +576,7 @@
     .category-rect {
         filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
         opacity: 0.8;
+        transition: stroke 0.2s ease;
     }
 
     .flashlight-icon {
