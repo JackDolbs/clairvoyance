@@ -192,38 +192,33 @@
 </script>
 
 <style>
-    /* Custom scrollbar styles */
-    :global(textarea::-webkit-scrollbar) {
+    /* Custom scrollbar for CodeMirror */
+    :global(.cm-editor) {
+        height: 100%;
+        overflow: auto;
+    }
+
+    :global(.cm-editor .cm-scroller) {
+        scrollbar-width: thin;
+        scrollbar-color: hsl(var(--secondary-foreground) / 0.2) transparent;
+        overflow: auto;
+    }
+
+    :global(.cm-editor .cm-scroller::-webkit-scrollbar) {
         width: 8px;
     }
 
-    :global(textarea::-webkit-scrollbar-track) {
+    :global(.cm-editor .cm-scroller::-webkit-scrollbar-track) {
         background: transparent;
     }
 
-    :global(textarea::-webkit-scrollbar-thumb) {
+    :global(.cm-editor .cm-scroller::-webkit-scrollbar-thumb) {
         background-color: hsl(var(--secondary-foreground) / 0.2);
         border-radius: 4px;
     }
 
-    :global(textarea::-webkit-scrollbar-thumb:hover) {
+    :global(.cm-editor .cm-scroller::-webkit-scrollbar-thumb:hover) {
         background-color: hsl(var(--secondary-foreground) / 0.4);
-    }
-
-    /* Firefox */
-    :global(textarea) {
-        scrollbar-width: thin;
-        scrollbar-color: hsl(var(--secondary-foreground) / 0.2) transparent;
-    }
-
-    /* Fullscreen styles */
-    :global([role="dialog"]:fullscreen) {
-        background-color: hsl(var(--background));
-        padding: 1.5rem;
-    }
-
-    :global([role="dialog"]:fullscreen .split-container) {
-        height: calc(100vh - 12rem);
     }
 </style>
 
@@ -468,7 +463,7 @@
                             <CodeMirror 
                                 bind:value={jsonContent}
                                 lang={json()}
-                                class="w-full h-full font-mono text-sm p-4 rounded-md bg-secondary/20 absolute inset-0 overflow-auto"
+                                class="w-full h-full font-mono text-sm p-4 rounded-md bg-secondary/20 absolute inset-0"
                                 style="height: 100%;"
                             />
                         </div>
