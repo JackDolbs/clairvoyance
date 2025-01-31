@@ -20,8 +20,18 @@
 
         // Create a cluster layout with better spacing
         const cluster = d3.cluster()
-            .size([innerHeight, innerWidth - 200]) // More horizontal space
-            .separation((a, b) => a.parent === b.parent ? 1 : 1.5);
+            .size([innerHeight * 4.5, innerWidth - 200]) // Increased vertical space by 4.5x
+            .separation((a: any, b: any) => {
+                // Add extra space for attributes
+                if (a.data.type === 'attribute' || b.data.type === 'attribute') {
+                    return 5;
+                }
+                // Add extra space for subclasses
+                if (a.data.type === 'subclass' || b.data.type === 'subclass') {
+                    return 6;
+                }
+                return a.parent === b.parent ? 4.5 : 6.5;
+            });
 
         // Process data into hierarchical structure
         function processData(data: any) {
@@ -84,26 +94,47 @@
             .attr("class", d => `node node--${d.data.type}`)
             .attr("transform", d => `translate(${d.y},${d.x})`);
 
-        // Add node circles
+        // Add node circles with different sizes
         node.append("circle")
-            .attr("r", 6)
+            .attr("r", (d: any) => {
+                if (d.data.type === 'superclass') return 14; // Larger for superclasses
+                if (d.data.type === 'subclass') return 11; // Larger for subclasses
+                if (d.data.type === 'attribute') return 7;
+                return 6;
+            })
             .attr("fill", d => colorScale(d.data.type))
             .attr("stroke", "#fff")
             .attr("stroke-width", 2);
 
-        // Add node labels
+        // Add node labels with adjusted positioning
         node.append("text")
-            .attr("x", d => d.children ? -12 : 12)
-            .attr("dy", "0.35em")
-            .attr("text-anchor", d => d.children ? "end" : "start")
-            .text(d => {
+            .attr("x", (d: any) => {
+                if (d.data.type === 'attribute') return 35; // More offset for attributes
+                if (d.data.type === 'subclass') return d.children ? -30 : 30; // More offset for subclasses
+                return d.children ? -25 : 25;
+            })
+            .attr("dy", (d: any) => {
+                if (d.data.type === 'attribute') return "0.9em"; // More vertical offset
+                if (d.data.type === 'subclass') return "0.8em"; // More vertical offset for subclasses
+                return "0.7em";
+            })
+            .attr("text-anchor", (d: any) => {
+                if (d.data.type === 'attribute') return "start";
+                return d.children ? "end" : "start";
+            })
+            .text((d: any) => {
                 if (d.data.type === 'relationship') {
                     return `${d.data.name} → ${d.data.target}`;
                 }
                 return d.data.name;
             })
-            .style("font-size", "12px")
-            .style("fill", "#333");
+            .style("font-size", (d: any) => {
+                if (d.data.type === 'attribute') return "13px";
+                if (d.data.type === 'subclass') return "15px"; // Larger font for subclasses
+                return "14px";
+            })
+            .style("fill", "#333")
+            .style("pointer-events", "none");
 
         // Add descriptions on hover
         node.append("title")
