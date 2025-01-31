@@ -20,48 +20,82 @@
 
         // Create a cluster layout with better spacing
         const cluster = d3.cluster()
-            .size([innerHeight * 4.5, innerWidth - 200]) // Increased vertical space by 4.5x
+            .size([innerHeight * 20, innerWidth * 1.5]) // Dramatically increase both dimensions
             .separation((a: any, b: any) => {
+                // Maximum separation between category and non-category nodes
+                if (a.data.type === 'category' && b.data.type !== 'category' ||
+                    a.data.type !== 'category' && b.data.type === 'category') {
+                    return 25; // Much more space between categories and nodes
+                }
+                // Large separation between categories
+                if (a.data.type === 'category' && b.data.type === 'category') {
+                    return 15;
+                }
                 // Add extra space for attributes
                 if (a.data.type === 'attribute' || b.data.type === 'attribute') {
-                    return 5;
+                    return 20;
                 }
                 // Add extra space for subclasses
                 if (a.data.type === 'subclass' || b.data.type === 'subclass') {
-                    return 6;
+                    return 25;
                 }
-                return a.parent === b.parent ? 4.5 : 6.5;
+                // Add extra space for relationships
+                if (a.data.type === 'relationship' || b.data.type === 'relationship') {
+                    return 20;
+                }
+                // Default separation for siblings vs non-siblings
+                return a.parent === b.parent ? 15 : 30;
             });
 
-        // Process data into hierarchical structure
+        // Process data into hierarchical structure with category nodes
         function processData(data: any) {
             return {
                 name: data.ontology.name,
                 description: data.ontology.description,
-                children: data.ontology.superclasses.map(superclass => ({
-                    ...superclass,
-                    type: 'superclass',
-                    children: [
-                        ...(superclass.attributes?.map(attr => ({
-                            ...attr,
-                            type: 'attribute'
-                        })) || []),
-                        ...(superclass.subclasses?.map(subclass => ({
-                            ...subclass,
-                            type: 'subclass',
-                            children: [
-                                ...(subclass.attributes?.map(attr => ({
+                children: [{
+                    name: "superclasses",
+                    type: 'category',
+                    children: data.ontology.superclasses.map(superclass => ({
+                        ...superclass,
+                        type: 'superclass',
+                        children: [
+                            {
+                                name: "attributes",
+                                type: 'category',
+                                children: superclass.attributes?.map(attr => ({
                                     ...attr,
                                     type: 'attribute'
-                                })) || []),
-                                ...(subclass.relationships?.map(rel => ({
-                                    ...rel,
-                                    type: 'relationship'
-                                })) || [])
-                            ]
-                        })) || [])
-                    ]
-                }))
+                                })) || []
+                            },
+                            {
+                                name: "subclasses",
+                                type: 'category',
+                                children: superclass.subclasses?.map(subclass => ({
+                                    ...subclass,
+                                    type: 'subclass',
+                                    children: [
+                                        {
+                                            name: "attributes",
+                                            type: 'category',
+                                            children: subclass.attributes?.map(attr => ({
+                                                ...attr,
+                                                type: 'attribute'
+                                            })) || []
+                                        },
+                                        {
+                                            name: "relationships",
+                                            type: 'category',
+                                            children: subclass.relationships?.map(rel => ({
+                                                ...rel,
+                                                type: 'relationship'
+                                            })) || []
+                                        }
+                                    ]
+                                })) || []
+                            }
+                        ]
+                    }))
+                }]
             };
         }
 
@@ -94,51 +128,144 @@
             .attr("class", d => `node node--${d.data.type}`)
             .attr("transform", d => `translate(${d.y},${d.x})`);
 
-        // Add node circles with different sizes
-        node.append("circle")
-            .attr("r", (d: any) => {
-                if (d.data.type === 'superclass') return 14; // Larger for superclasses
-                if (d.data.type === 'subclass') return 11; // Larger for subclasses
-                if (d.data.type === 'attribute') return 7;
-                return 6;
-            })
-            .attr("fill", d => colorScale(d.data.type))
-            .attr("stroke", "#fff")
-            .attr("stroke-width", 2);
+        // Add special styling for category nodes
+        node.each(function(d) {
+            const node = d3.select(this);
+            
+            if (d.data.type === 'category') {
+                // Add simple category label
+                const text = node.append("text")
+                    .attr("class", "category-text")
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .style("font-family", "monospace")
+                    .style("font-size", "12px")
+                    .style("fill", "#666")
+                    .style("text-anchor", "middle")
+                    .text(d.data.name);
 
-        // Add node labels with adjusted positioning
-        node.append("text")
-            .attr("x", (d: any) => {
-                if (d.data.type === 'attribute') return 35; // More offset for attributes
-                if (d.data.type === 'subclass') return d.children ? -30 : 30; // More offset for subclasses
-                return d.children ? -25 : 25;
-            })
-            .attr("dy", (d: any) => {
-                if (d.data.type === 'attribute') return "0.9em"; // More vertical offset
-                if (d.data.type === 'subclass') return "0.8em"; // More vertical offset for subclasses
-                return "0.7em";
-            })
-            .attr("text-anchor", (d: any) => {
-                if (d.data.type === 'attribute') return "start";
-                return d.children ? "end" : "start";
-            })
-            .text((d: any) => {
-                if (d.data.type === 'relationship') {
-                    return `${d.data.name} → ${d.data.target}`;
+                // Add subtle background
+                const bbox = text.node().getBBox();
+                node.insert("rect", "text")
+                    .attr("class", "category-rect")
+                    .attr("x", bbox.x - 10)
+                    .attr("y", bbox.y - 5)
+                    .attr("width", bbox.width + 20)
+                    .attr("height", bbox.height + 10)
+                    .attr("rx", 4)
+                    .style("fill", "#2a2a2a")
+                    .style("stroke", "#444")
+                    .style("stroke-width", 1);
+
+                return; // Skip the regular node rendering for category nodes
+            }
+
+            // Regular node rendering code for non-category nodes
+            // Add text content first (to measure it)
+            const text = node.append("text")
+                .attr("class", "node-text")
+                .attr("x", -140)
+                .attr("y", -20)
+                .style("font-family", "monospace")
+                .style("font-size", "13px")
+                .style("fill", "#fff");
+
+            // Add name with blue color for property name
+            const nameText = text.append("tspan")
+                .attr("x", -140)
+                .attr("dy", 0);
+            
+            nameText.append("tspan")
+                .style("fill", "#5fb0ff")
+                .text("name: ");
+            
+            nameText.append("tspan")
+                .style("fill", "#fff")
+                .text(`"${d.data.name}"`);
+
+            // Add description with blue property name
+            const descText = text.append("tspan")
+                .attr("x", -140)
+                .attr("dy", "2.5em");
+            
+            // Add description label
+            descText.append("tspan")
+                .style("fill", "#5fb0ff")
+                .text("description: ");
+            
+            // Add description value with wrapping, starting on same line
+            const descValue = `"${d.data.description || 'N/A'}"`;
+            const words = descValue.split(/\s+/);
+            let line = [words[0]]; // Start with first word
+            let lineNumber = 1;
+            const maxWidth = 260;
+
+            // Test first line including "description: "
+            const firstLine = descText.append("tspan")
+                .style("fill", "#fff")
+                .text(line[0]);
+
+            // Process remaining words
+            for (let i = 1; i < words.length; i++) {
+                line.push(words[i]);
+                const testLine = line.join(" ");
+                const testElem = text.append("tspan").text(testLine);
+                const testWidth = testElem.node().getComputedTextLength();
+                testElem.remove();
+
+                if (testWidth > maxWidth) {
+                    line.pop();
+                    if (lineNumber === 1) {
+                        firstLine.text(line.join(" ")); // Update first line
+                    } else {
+                        text.append("tspan")
+                            .attr("x", -140)
+                            .attr("dy", "1.4em")
+                            .style("fill", "#fff")
+                            .text(line.join(" "));
+                    }
+                    line = [words[i]];
+                    lineNumber++;
                 }
-                return d.data.name;
-            })
-            .style("font-size", (d: any) => {
-                if (d.data.type === 'attribute') return "13px";
-                if (d.data.type === 'subclass') return "15px"; // Larger font for subclasses
-                return "14px";
-            })
-            .style("fill", "#333")
-            .style("pointer-events", "none");
+            }
 
-        // Add descriptions on hover
-        node.append("title")
-            .text(d => d.data.description || "");
+            // Add remaining words
+            if (line.length > 0) {
+                if (lineNumber === 1) {
+                    firstLine.text(line.join(" ")); // Update first line
+                } else {
+                    text.append("tspan")
+                        .attr("x", -140)
+                        .attr("dy", "1.4em")
+                        .style("fill", "#fff")
+                        .text(line.join(" "));
+                }
+            }
+
+            // Get the bounding box of all the text
+            const textBox = text.node().getBBox();
+            
+            // Add rectangle sized to fit text with more padding
+            node.insert("rect", "text")
+                .attr("class", "node-rect")
+                .attr("x", textBox.x - 20)
+                .attr("y", textBox.y - 20)
+                .attr("width", textBox.width + 40)
+                .attr("height", textBox.height + 40)
+                .attr("rx", 4)
+                .style("fill", "#1c1c1c")
+                .style("stroke", "#333")
+                .style("stroke-width", 1);
+
+            // Add separator line after measuring text height
+            node.insert("line", "text")
+                .attr("x1", textBox.x - 20)
+                .attr("y1", -5)
+                .attr("x2", textBox.x + textBox.width + 20)
+                .attr("y2", -5)
+                .attr("stroke", "#333")
+                .attr("stroke-width", 1);
+        });
 
         // Zoom and pan behavior
         const zoom = d3.zoom()
@@ -230,5 +357,35 @@
 
     .node:hover circle {
         filter: brightness(1.1);
+    }
+
+    .node-rect {
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    }
+
+    .node-text {
+        pointer-events: none;
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", monospace;
+    }
+
+    .node-text tspan {
+        font-family: monospace; /* For better alignment */
+        font-size: 11px;
+    }
+
+    .node-text tspan:first-child {
+        font-weight: 500;
+    }
+
+    .category-text {
+        pointer-events: none;
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", monospace;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .category-rect {
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+        opacity: 0.8;
     }
 </style> 
