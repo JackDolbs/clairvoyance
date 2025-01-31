@@ -34,6 +34,8 @@
     import ChevronDown from "lucide-svelte/icons/chevron-down";
     import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "$lib/components/ui/accordion";
     import Info from "lucide-svelte/icons/info";
+    import CodeMirror from "svelte-codemirror-editor";
+    import { json } from "@codemirror/lang-json";
 
     // Ensure the state is properly declared
     let csvDialogOpen = $state(false);
@@ -460,14 +462,15 @@
                     >
                         <!-- Left Pane (JSON Editor) -->
                         <div 
-                            class="relative"
+                            class="relative overflow-hidden"
                             style="width: {leftPaneWidth}%"
                         >
-                            <textarea 
-                                class="w-full h-full font-mono text-sm p-4 rounded-md bg-secondary/20 resize-none absolute inset-0"
+                            <CodeMirror 
                                 bind:value={jsonContent}
-                                placeholder="Enter your ontology schema in JSON format..."
-                            ></textarea>
+                                lang={json()}
+                                class="w-full h-full font-mono text-sm p-4 rounded-md bg-secondary/20 absolute inset-0 overflow-auto"
+                                style="height: 100%;"
+                            />
                         </div>
 
                         <!-- Resizer -->
