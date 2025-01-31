@@ -108,19 +108,59 @@
         const g = svgEl.append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        // Add simple relationship lines (without arrows)
-        const link = g.selectAll(".link")
-            .data(root.links())
-            .enter().append("line")
-            .attr("class", "link")
-            .attr("x1", d => d.source.y)
-            .attr("y1", d => d.source.x)
-            .attr("x2", d => d.target.y)
-            .attr("y2", d => d.target.x)
-            .style("stroke", "#4a72bf")
-            .style("stroke-width", 1.5);
+        // Custom link generator function for consistent connection points
+        const customLinkHorizontal = (d) => {
+            const sourceX = d.source.x;
+            const sourceY = d.source.y;
+            const targetX = d.target.x;
+            const targetY = d.target.y;
+            
+            // Get source and target nodes
+            const sourceNode = d3.select(`.node[transform="translate(${d.source.y},${d.source.x})"] rect`);
+            const targetNode = d3.select(`.node[transform="translate(${d.target.y},${d.target.x})"] rect`);
+            
+            let startX, startY, endX, endY;
+            
+            if (d.source.data.type === 'category') {
+                // For category nodes, start from the right edge of the category box
+                const sourceBox = sourceNode.node()?.getBBox() || { x: 0, y: 0, width: 0, height: 0 };
+                startX = sourceY + sourceBox.x + sourceBox.width;
+                startY = sourceX;
+            } else {
+                // For regular nodes, start from the right edge of the rectangle
+                const sourceBox = sourceNode.node();
+                const sourceWidth = sourceBox ? Number(sourceBox.getAttribute('width')) : 0;
+                const sourceBoxX = sourceBox ? Number(sourceBox.getAttribute('x')) : 0;
+                startX = sourceY + sourceBoxX + sourceWidth;
+                startY = sourceX;
+            }
+            
+            if (d.target.data.type === 'category') {
+                // For category nodes, end at the left edge of the category box
+                const targetBox = targetNode.node()?.getBBox() || { x: 0, y: 0, width: 0, height: 0 };
+                endX = targetY + targetBox.x;
+                endY = targetX;
+            } else {
+                // For regular nodes, end at the left edge of the rectangle
+                const targetBox = targetNode.node();
+                const targetBoxX = targetBox ? Number(targetBox.getAttribute('x')) : 0;
+                endX = targetY + targetBoxX;
+                endY = targetX;
+            }
+            
+            // Control points for the curve - placed 1/3 and 2/3 of the way between nodes
+            const dx = endX - startX;
+            const controlPoint1 = [startX + dx / 3, startY];
+            const controlPoint2 = [startX + (dx * 2 / 3), endY];
+            
+            // Create cubic bezier curve
+            return `M ${startX},${startY}
+                    C ${controlPoint1[0]},${controlPoint1[1]}
+                      ${controlPoint2[0]},${controlPoint2[1]}
+                      ${endX},${endY}`;
+        };
 
-        // Create node groups
+        // Create nodes first
         const node = g.selectAll(".node")
             .data(root.descendants())
             .enter().append("g")
@@ -337,6 +377,16 @@
                 .attr("stroke", "#4a72bf")
                 .attr("stroke-width", 1);
         });
+
+        // Add links after nodes are created
+        const link = g.selectAll(".link")
+            .data(root.links())
+            .enter().append("path")
+            .attr("class", "link")
+            .attr("d", customLinkHorizontal)
+            .style("stroke", "#4a72bf")
+            .style("stroke-width", 1.5)
+            .style("fill", "none");
 
         // Zoom and pan behavior
         const zoom = d3.zoom()
