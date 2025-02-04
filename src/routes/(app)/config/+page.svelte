@@ -14,42 +14,31 @@
     import { goto } from "$app/navigation";
     import * as AlertDialog from "$lib/components/ui/alert-dialog";
     import { getPocketBaseStatus, testPocketBaseConnection } from '$lib/services/pocketbase';
-    import { createBackup, listBackups, restoreBackup } from '$lib/services/backup';
     import { onMount } from 'svelte';
     import { toast } from "$lib/components/ui/sonner";
 
     let showPin = $state(false);
     const pin = import.meta.env.VITE_AUTH_PIN || '0000';
-    let currentTab = $state("instance");
 
     let pbStatus = $state({
         isRunning: false,
         version: '',
         collections: [],
-        lastBackup: undefined
     });
-    let backups = $state([]);
-    let isCreatingBackup = $state(false);
-    let isRestoringBackup = $state(false);
 
     function handleTabChange(tab: string) {
-        currentTab = tab;
         const url = new URL($page.url);
         url.searchParams.set('tab', tab);
         goto(url, { replaceState: true });
     }
 
-    const activeTab = $derived(() => {
-        const tab = $page.url.searchParams.get('tab');
-        if (tab && ["instance", "updates", "chat", "auth", "backup"].includes(tab)) {
-            currentTab = tab;
-        }
-        return currentTab;
-    });
+    let tabValue = $state("instance");
 
     onMount(async () => {
         pbStatus = await getPocketBaseStatus();
-        backups = await listBackups();
+        
+        const urlTab = $page.url.searchParams.get('tab');
+        tabValue = urlTab || "instance";
     });
 
     function togglePin() {
@@ -75,8 +64,11 @@
 
     <div class="max-w-3xl">
         <Tabs.Root 
-            value={activeTab} 
-            onValueChange={handleTabChange} 
+            value={tabValue}
+            onValueChange={(value) => {
+                tabValue = value;
+                handleTabChange(value);
+            }}
             class="space-y-6"
         >
             <Tabs.List>
@@ -84,10 +76,48 @@
                 <Tabs.Trigger value="updates">Updates</Tabs.Trigger>
                 <Tabs.Trigger value="chat">Chat</Tabs.Trigger>
                 <Tabs.Trigger value="auth">Authentication</Tabs.Trigger>
-                <Tabs.Trigger value="backup">Backup</Tabs.Trigger>
             </Tabs.List>
 
             <Tabs.Content value="instance" class="space-y-6">
+                <Card.Root>
+                    <Card.Header>
+                        <Card.Title>Database Status</Card.Title>
+                        <Card.Description>
+                            View database connection status and health
+                        </Card.Description>
+                    </Card.Header>
+                    <Card.Content>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-medium">Status</h4>
+                                    <p class="text-sm text-muted-foreground">
+                                        {pbStatus.isRunning ? 'Running' : 'Stopped'}
+                                    </p>
+                                </div>
+                                <Badge variant={pbStatus.isRunning ? "success" : "destructive"}>
+                                    {pbStatus.isRunning ? "Online" : "Offline"}
+                                </Badge>
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <h4 class="font-medium">Version</h4>
+                                <p class="text-sm text-muted-foreground">{pbStatus.version}</p>
+                            </div>
+
+                            <div class="pt-4 border-t">
+                                <Button 
+                                    onclick={testConnection}
+                                    variant="outline"
+                                    class="w-full"
+                                >
+                                    Test Connection
+                                </Button>
+                            </div>
+                        </div>
+                    </Card.Content>
+                </Card.Root>
+
                 <Card.Root>
                     <Card.Header>
                         <Card.Title>Instance Settings</Card.Title>
@@ -556,56 +586,6 @@
                         </div>
                     </Card.Content>
                 </Card.Root>
-            </Tabs.Content>
-
-            <Tabs.Content value="backup" class="space-y-6">
-                <Card.Root>
-                    <Card.Header>
-                        <Card.Title>Database Status</Card.Title>
-                        <Card.Description>
-                            Monitor and manage your PocketBase instance
-                        </Card.Description>
-                    </Card.Header>
-                    <Card.Content>
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h4 class="font-medium">Status</h4>
-                                    <p class="text-sm text-muted-foreground">
-                                        {pbStatus.isRunning ? 'Running' : 'Stopped'}
-                                    </p>
-                                </div>
-                                <Badge variant={pbStatus.isRunning ? "success" : "destructive"}>
-                                    {pbStatus.isRunning ? "Online" : "Offline"}
-                                </Badge>
-                            </div>
-                            
-                            <div class="space-y-2">
-                                <h4 class="font-medium">Version</h4>
-                                <p class="text-sm text-muted-foreground">{pbStatus.version}</p>
-                            </div>
-
-                            <div class="space-y-2">
-                                <h4 class="font-medium">Last Backup</h4>
-                                <p class="text-sm text-muted-foreground">
-                                    {pbStatus.lastBackup ? formatDate(pbStatus.lastBackup) : 'No backups yet'}
-                                </p>
-                            </div>
-
-                            <div class="pt-4 border-t">
-                                <Button 
-                                    onclick={testConnection}
-                                    variant="outline"
-                                    class="w-full"
-                                >
-                                    Test Connection
-                                </Button>
-                            </div>
-                        </div>
-                    </Card.Content>
-                </Card.Root>
-
-                <!-- Add backup management UI -->
             </Tabs.Content>
         </Tabs.Root>
     </div>
