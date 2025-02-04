@@ -1,38 +1,69 @@
-# sv
+# Clairvoyance
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A self-hosted AI chat interface with local database management.
 
-## Creating a project
+## Deployment
 
-If you're seeing this, you've probably already done this step. Congrats!
+### Requirements
+- Linux/macOS system
+- Node.js and npm installed
+- Internet connection for initial setup
 
+### Quick Start
+1. Clone this repository
 ```bash
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
+git clone https://github.com/JackDolbs/clairvoyance.git
+cd clairvoyance
 ```
 
-## Developing
+2. Run the deployment script
+```bash
+./deploy.sh
+```
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+The script will:
+- Download and set up PocketBase database
+- Initialize admin account
+- Start the database service
+- Launch the application
+
+### VPS Deployment
+To deploy on a VPS (DigitalOcean, AWS, etc.):
+
+1. SSH into your VPS
+```bash
+ssh user@your-vps-ip
+```
+
+2. Follow the same Quick Start steps above
+3. Access your instance at `http://your-vps-ip:5173`
+
+### What's Included
+- Local database (PocketBase)
+- Admin interface at `http://127.0.0.1:8090/_/`
+- Configuration UI
+- Automatic database initialization
+
+### Architecture
+- Frontend: SvelteKit application
+- Backend: PocketBase database
+- All components run on the same machine
+- No external services required
+
+## Development
+
+Once deployed, start the development server:
 
 ```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
 npm run dev -- --open
 ```
 
 ## Building
 
-To create a production version of your app:
+To create a production version:
 
 ```bash
 npm run build
 ```
 
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+Preview the production build with `npm run preview`.
