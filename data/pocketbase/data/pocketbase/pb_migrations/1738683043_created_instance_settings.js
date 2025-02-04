@@ -1,15 +1,15 @@
 migrate((db) => {
   const collection = new Collection({
-    "id": "btuetp74y5cuy8c",
-    "created": "2025-02-04 14:55:53.782Z",
-    "updated": "2025-02-04 14:55:53.782Z",
+    "id": "bpnndmuox30mq46",
+    "created": "2025-02-04 15:30:43.031Z",
+    "updated": "2025-02-04 15:30:43.031Z",
     "name": "instance_settings",
     "type": "base",
     "system": false,
     "schema": [
       {
         "system": false,
-        "id": "tayqciyy",
+        "id": "vhnrikll",
         "name": "instance_name",
         "type": "text",
         "required": false,
@@ -22,7 +22,7 @@ migrate((db) => {
       },
       {
         "system": false,
-        "id": "xribwvhp",
+        "id": "jswx3mek",
         "name": "instance_url",
         "type": "text",
         "required": false,
@@ -35,7 +35,7 @@ migrate((db) => {
       },
       {
         "system": false,
-        "id": "wgaukcec",
+        "id": "2khzgauj",
         "name": "theme",
         "type": "json",
         "required": false,
@@ -55,7 +55,7 @@ migrate((db) => {
   return Dao(db).saveCollection(collection);
 }, (db) => {
   const dao = new Dao(db);
-  const collection = dao.findCollectionByNameOrId("btuetp74y5cuy8c");
+  const collection = dao.findCollectionByNameOrId("bpnndmuox30mq46");
 
   return dao.deleteCollection(collection);
 })

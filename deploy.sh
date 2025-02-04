@@ -7,13 +7,23 @@ PB_BINARY="$PB_DIR/pocketbase"
 PB_DATA="$PB_DIR/pb_data"
 BACKUP_DIR="$APP_DIR/backups"
 
-# Kill any existing PocketBase process
+# Add this near the start of the script
 echo "Checking for existing PocketBase process..."
-if lsof -i:8090 > /dev/null; then
-    echo "PocketBase is already running. Stopping it..."
-    pkill -f pocketbase
-    sleep 2
+
+# Try multiple ways to find and stop PocketBase
+pkill -f pocketbase
+pkill pocketbase
+
+# Check if port 8090 is in use
+if lsof -i:8090 > /dev/null 2>&1; then
+    echo "Port 8090 is still in use. Finding process..."
+    lsof -i:8090
+    echo "Please manually kill the process and try again"
+    exit 1
 fi
+
+# Small wait to ensure port is freed
+sleep 2
 
 echo "Starting deployment..."
 echo "Creating directories..."

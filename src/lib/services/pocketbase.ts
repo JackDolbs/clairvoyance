@@ -15,9 +15,17 @@ export async function initializePocketBase() {
         const health = await pb.health.check();
         console.log('PocketBase health check:', health);
 
-        // First authenticate as admin
-        await pb.admins.authWithPassword('admin@clairvoyance.local', 'securepassword123');
+        // Use raw API endpoint for admin auth
+        const authData = await pb.send('/api/admins/auth-with-password', {
+            method: 'POST',
+            body: {
+                identity: 'admin@clairvoyance.local',
+                password: 'securepassword123'
+            }
+        });
         
+        pb.authStore.save(authData.token, authData.admin);
+
         if (!pb.authStore.isValid) {
             throw new Error('Authentication failed');
         }
@@ -53,6 +61,19 @@ export async function initializePocketBase() {
 export async function getPocketBaseStatus(): Promise<PocketBaseStatus> {
     try {
         const health = await pb.health.check();
+        
+        // Use raw API endpoint if needed
+        if (!pb.authStore.isValid) {
+            const authData = await pb.send('/api/admins/auth-with-password', {
+                method: 'POST',
+                body: {
+                    identity: 'admin@clairvoyance.local',
+                    password: 'securepassword123'
+                }
+            });
+            pb.authStore.save(authData.token, authData.admin);
+        }
+        
         const collections = await pb.collections.getFullList();
         
         return {
@@ -61,6 +82,7 @@ export async function getPocketBaseStatus(): Promise<PocketBaseStatus> {
             collections: collections.map(c => c.name),
         };
     } catch (err) {
+        console.error('Failed to get PocketBase status:', err);
         return {
             isRunning: false,
             version: 'unknown',
@@ -72,9 +94,27 @@ export async function getPocketBaseStatus(): Promise<PocketBaseStatus> {
 // Add this function to test connectivity
 export async function testPocketBaseConnection(): Promise<boolean> {
     try {
+        // First check basic health
         const health = await pb.health.check();
         console.log('PocketBase health check:', health);
         
+        // Use raw API endpoint for admin auth
+        const authData = await pb.send('/api/admins/auth-with-password', {
+            method: 'POST',
+            body: {
+                identity: 'admin@clairvoyance.local',
+                password: 'securepassword123'
+            }
+        });
+        
+        pb.authStore.save(authData.token, authData.admin);
+        
+        if (!pb.authStore.isValid) {
+            console.error('Admin authentication failed: Invalid auth state');
+            return false;
+        }
+        
+        // Now try to list collections (requires admin auth)
         const collections = await pb.collections.getFullList();
         console.log('Available collections:', collections.map(c => c.name));
         
