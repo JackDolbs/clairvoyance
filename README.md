@@ -2,6 +2,23 @@
 
 A self-hosted AI chat interface with local database management.
 
+## Quick Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/JackDolbs/clairvoyance/main/install.sh | bash
+```
+
+This will:
+- Install required dependencies
+- Clone the repository
+- Set up the database
+- Start the application
+
+### VPS Deployment
+1. SSH into your VPS
+2. Run the install command above
+3. Access your instance at `http://your-vps-ip:5173`
+
 ## Deployment
 
 ### Requirements
@@ -26,17 +43,6 @@ The script will:
 - Initialize admin account
 - Start the database service
 - Launch the application
-
-### VPS Deployment
-To deploy on a VPS (DigitalOcean, AWS, etc.):
-
-1. SSH into your VPS
-```bash
-ssh user@your-vps-ip
-```
-
-2. Follow the same Quick Start steps above
-3. Access your instance at `http://your-vps-ip:5173`
 
 ### What's Included
 - Local database (PocketBase)
