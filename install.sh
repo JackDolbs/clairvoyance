@@ -47,11 +47,11 @@ case "$OS" in
     *"Ubuntu"*|*"Debian"*)
         echo -e "${YELLOW}Installing dependencies for Debian/Ubuntu...${NC}"
         sudo apt-get update
-        sudo apt-get install -y git nodejs npm curl
+        sudo apt-get install -y git nodejs npm curl unzip
         ;;
     *"Red Hat"*|*"CentOS"*)
         echo -e "${YELLOW}Installing dependencies for RHEL/CentOS...${NC}"
-        sudo yum install -y git nodejs npm curl
+        sudo yum install -y git nodejs npm curl unzip
         ;;
     *"macOS"*)
         echo -e "${YELLOW}Installing dependencies for macOS...${NC}"
@@ -59,7 +59,7 @@ case "$OS" in
             echo -e "${YELLOW}Installing Homebrew...${NC}"
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         fi
-        brew install git node
+        brew install git node unzip
         ;;
     *)
         echo -e "${RED}Unsupported operating system: $OS${NC}"
@@ -69,7 +69,7 @@ esac
 
 # Verify dependencies
 echo -e "${YELLOW}Verifying dependencies...${NC}"
-for cmd in git node npm; do
+for cmd in git node npm unzip; do
     if ! command_exists $cmd; then
         echo -e "${RED}$cmd is not installed${NC}"
         exit 1
