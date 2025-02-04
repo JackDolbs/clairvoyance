@@ -2,9 +2,12 @@
     import * as Dialog from "$lib/components/ui/dialog";
     import { Button } from "$lib/components/ui/button";
     import { Pagination } from "$lib/components/ui/pagination";
+    import Progress from "$lib/components/ui/progress/progress.svelte";
+    import { initializePocketBase } from '$lib/services/pocketbase';
 
     export let open = false;
     let currentStep = 0;
+    let initializationComplete = false;
 
     function handleSkip() {
         open = false;
@@ -15,9 +18,19 @@
 
     function handleRestart() {
         currentStep = 0;
+        initializationComplete = false;
     }
 
-    function handleNext() {
+    async function handleNext() {
+        if (currentStep === 1 && !initializationComplete) {
+            const success = await initializePocketBase();
+            if (success) {
+                initializationComplete = true;
+                currentStep++;
+            }
+            return;
+        }
+
         if (currentStep < 2) {
             currentStep++;
         } else {
@@ -29,6 +42,9 @@
     }
 
     function handlePageChange(page: number) {
+        if (page === 1 && !initializationComplete) {
+            return;
+        }
         currentStep = page;
     }
 </script>
@@ -54,44 +70,37 @@
                     </Button>
                 </div>
             {:else if currentStep === 1}
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 max-w-6xl h-full place-content-center">
-                    <div class="space-y-6 flex flex-col justify-center">
-                        <h2 class="text-2xl font-orbitron tracking-wider">What is Clairvoyance?</h2>
-                        <p class="text-sm">
-                            Clairvoyance is a custom analytics engine for startups developed by Auriel Analytics. It transforms raw data into actionable insights through custom ontologies, semantic knowledge graphs, and tailored dashboards, helping startups make data-driven decisions to boost their metrics.
-                        </p>
-                        <div class="mt-6">
-                            <Button 
-                                onclick={handleNext}
-                                size="lg"
-                                class="px-20 text-sm"
-                            >
-                                Next
-                            </Button>
+                <div class="space-y-6 text-center">
+                    <h2 class="text-2xl font-orbitron tracking-wider">Database Setup</h2>
+                    <p class="text-muted-foreground">Initializing your database...</p>
+                    {#await initializePocketBase()}
+                        <div class="w-[300px] mx-auto">
+                            <Progress value={undefined} />
                         </div>
-                    </div>
-                    <div class="space-y-8 flex flex-col justify-center">
-                        <div class="space-y-6">
-                            <div>
-                                <h4 class="font-medium mb-1">Data Analysis:</h4>
-                                <p class="text-muted-foreground text-sm">
-                                    Advanced analytics and visualization tools to help you make sense of your data.
-                                </p>
+                    {:then success}
+                        {#if success}
+                            <div class="text-green-500 font-medium">
+                                Database initialized successfully!
+                                <Button 
+                                    onclick={handleNext}
+                                    class="ml-4"
+                                >
+                                    Continue
+                                </Button>
                             </div>
-                            <div>
-                                <h4 class="font-medium mb-1">No vendor lock-in:</h4>
-                                <p class="text-muted-foreground text-sm">
-                                    All your data and configurations are stored locally, giving you complete control and ownership.
-                                </p>
+                        {:else}
+                            <div class="text-red-500 font-medium">
+                                Failed to initialize database.
+                                <Button 
+                                    onclick={() => currentStep = 1}
+                                    variant="outline"
+                                    class="ml-4"
+                                >
+                                    Try Again
+                                </Button>
                             </div>
-                            <div>
-                                <h4 class="font-medium mb-1">Monitoring:</h4>
-                                <p class="text-muted-foreground text-sm">
-                                    Get notified about important insights and changes in your data through your preferred channels.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                        {/if}
+                    {/await}
                 </div>
             {:else if currentStep === 2}
                 <div class="space-y-5 w-full">

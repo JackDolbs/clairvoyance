@@ -4,6 +4,7 @@
     import { Input } from "$lib/components/ui/input";
     import { Label } from "$lib/components/ui/label";
     import { Button } from "$lib/components/ui/button";
+    import { Badge } from "$lib/components/ui/badge";
     import { AlertCircle, Eye, EyeOff, Clock } from "lucide-svelte";
     import * as Tooltip from "$lib/components/ui/tooltip";
     import * as Select from "$lib/components/ui/select";
@@ -12,10 +13,24 @@
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
     import * as AlertDialog from "$lib/components/ui/alert-dialog";
+    import { getPocketBaseStatus, testPocketBaseConnection } from '$lib/services/pocketbase';
+    import { createBackup, listBackups, restoreBackup } from '$lib/services/backup';
+    import { onMount } from 'svelte';
+    import { toast } from "$lib/components/ui/sonner";
 
-    let showPin = false;
+    let showPin = $state(false);
     const pin = import.meta.env.VITE_AUTH_PIN || '0000';
-    let currentTab = "instance";
+    let currentTab = $state("instance");
+
+    let pbStatus = $state({
+        isRunning: false,
+        version: '',
+        collections: [],
+        lastBackup: undefined
+    });
+    let backups = $state([]);
+    let isCreatingBackup = $state(false);
+    let isRestoringBackup = $state(false);
 
     function handleTabChange(tab: string) {
         currentTab = tab;
@@ -24,10 +39,29 @@
         goto(url, { replaceState: true });
     }
 
-    $: {
+    const activeTab = $derived(() => {
         const tab = $page.url.searchParams.get('tab');
         if (tab && ["instance", "updates", "chat", "auth", "backup"].includes(tab)) {
             currentTab = tab;
+        }
+        return currentTab;
+    });
+
+    onMount(async () => {
+        pbStatus = await getPocketBaseStatus();
+        backups = await listBackups();
+    });
+
+    function togglePin() {
+        showPin = !showPin;
+    }
+
+    async function testConnection() {
+        const success = await testPocketBaseConnection();
+        if (success) {
+            toast.success("PocketBase connection successful!");
+        } else {
+            toast.error("Failed to connect to PocketBase");
         }
     }
 </script>
@@ -41,7 +75,7 @@
 
     <div class="max-w-3xl">
         <Tabs.Root 
-            value={currentTab} 
+            value={activeTab} 
             onValueChange={handleTabChange} 
             class="space-y-6"
         >
@@ -404,7 +438,7 @@
                                 <button
                                     type="button"
                                     class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                                    on:click={() => showPin = !showPin}
+                                    onclick={togglePin}
                                 >
                                     {#if showPin}
                                         <EyeOff class="h-4 w-4" />
@@ -527,24 +561,51 @@
             <Tabs.Content value="backup" class="space-y-6">
                 <Card.Root>
                     <Card.Header>
-                        <div class="flex items-center gap-2">
-                            <Card.Title>Backup & Restore</Card.Title>
-                            <Tooltip.Root>
-                                <Tooltip.Trigger>
-                                    <AlertCircle class="w-4 h-4 text-amber-500" />
-                                </Tooltip.Trigger>
-                                <Tooltip.Content>
-                                    <p>Instance backup functionality coming soon</p>
-                                </Tooltip.Content>
-                            </Tooltip.Root>
-                        </div>
+                        <Card.Title>Database Status</Card.Title>
                         <Card.Description>
-                            Export and import your instance configuration
+                            Monitor and manage your PocketBase instance
                         </Card.Description>
                     </Card.Header>
                     <Card.Content>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-medium">Status</h4>
+                                    <p class="text-sm text-muted-foreground">
+                                        {pbStatus.isRunning ? 'Running' : 'Stopped'}
+                                    </p>
+                                </div>
+                                <Badge variant={pbStatus.isRunning ? "success" : "destructive"}>
+                                    {pbStatus.isRunning ? "Online" : "Offline"}
+                                </Badge>
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <h4 class="font-medium">Version</h4>
+                                <p class="text-sm text-muted-foreground">{pbStatus.version}</p>
+                            </div>
+
+                            <div class="space-y-2">
+                                <h4 class="font-medium">Last Backup</h4>
+                                <p class="text-sm text-muted-foreground">
+                                    {pbStatus.lastBackup ? formatDate(pbStatus.lastBackup) : 'No backups yet'}
+                                </p>
+                            </div>
+
+                            <div class="pt-4 border-t">
+                                <Button 
+                                    onclick={testConnection}
+                                    variant="outline"
+                                    class="w-full"
+                                >
+                                    Test Connection
+                                </Button>
+                            </div>
+                        </div>
                     </Card.Content>
                 </Card.Root>
+
+                <!-- Add backup management UI -->
             </Tabs.Content>
         </Tabs.Root>
     </div>
