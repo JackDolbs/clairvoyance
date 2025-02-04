@@ -22,77 +22,38 @@ command_exists() {
 
 echo -e "${GREEN}Starting Clairvoyance installation...${NC}"
 
-# Check and install dependencies
-echo -e "${YELLOW}Checking system requirements...${NC}"
-
-# Detect OS
-if [ -f /etc/os-release ]; then
-    . /etc/os-release
-    OS=$NAME
-elif [ -f /etc/debian_version ]; then
-    OS="Debian"
-elif [ -f /etc/redhat-release ]; then
-    OS="Red Hat"
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-    OS="macOS"
-else
-    echo -e "${RED}Unable to detect operating system${NC}"
-    exit 1
+# Install dependencies
+if command -v apt-get &> /dev/null; then
+    sudo apt-get update
+    sudo apt-get install -y git nodejs npm curl unzip ufw
 fi
 
-echo -e "${GREEN}Detected OS: $OS${NC}"
+# Configure firewall
+echo -e "${YELLOW}Configuring firewall...${NC}"
+sudo ufw allow ssh
+sudo ufw allow 5174
+sudo ufw allow 8090
+sudo ufw --force enable
 
-# Install dependencies based on OS
-case "$OS" in
-    *"Ubuntu"*|*"Debian"*)
-        echo -e "${YELLOW}Installing dependencies for Debian/Ubuntu...${NC}"
-        sudo apt-get update
-        sudo apt-get install -y git nodejs npm curl unzip
-        ;;
-    *"Red Hat"*|*"CentOS"*)
-        echo -e "${YELLOW}Installing dependencies for RHEL/CentOS...${NC}"
-        sudo yum install -y git nodejs npm curl unzip
-        ;;
-    *"macOS"*)
-        echo -e "${YELLOW}Installing dependencies for macOS...${NC}"
-        if ! command_exists brew; then
-            echo -e "${YELLOW}Installing Homebrew...${NC}"
-            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        fi
-        brew install git node unzip
-        ;;
-    *)
-        echo -e "${RED}Unsupported operating system: $OS${NC}"
-        exit 1
-        ;;
-esac
-
-# Verify dependencies
-echo -e "${YELLOW}Verifying dependencies...${NC}"
-for cmd in git node npm unzip; do
-    if ! command_exists $cmd; then
-        echo -e "${RED}$cmd is not installed${NC}"
-        exit 1
-    fi
-done
-
-# Clone repository
-echo -e "${YELLOW}Cloning Clairvoyance repository...${NC}"
-if [ -d "clairvoyance" ]; then
-    echo -e "${YELLOW}Existing installation found. Removing...${NC}"
-    rm -rf clairvoyance
-fi
-
+# Clone and setup
 git clone https://github.com/JackDolbs/clairvoyance.git
 cd clairvoyance
 
-# Make deploy script executable
-chmod +x deploy.sh
+# Install project dependencies
+npm install
 
-# Run deployment script
-echo -e "${YELLOW}Running deployment script...${NC}"
-./deploy.sh
+# Start PocketBase in background
+./deploy.sh &
 
+# Start the development server in background
+# Use PM2 for process management
+sudo npm install -g pm2
+pm2 start "npm run dev -- --host 0.0.0.0" --name "clairvoyance"
+
+# Show access information
 echo -e "${GREEN}Installation complete!${NC}"
-echo -e "${GREEN}Access your instance at http://localhost:5173${NC}"
-echo -e "${GREEN}Admin interface available at http://127.0.0.1:8090/_/${NC}" 
+echo -e "${GREEN}Access your instance at http://$(curl -s ifconfig.me):5174${NC}"
+echo -e "${GREEN}Admin interface at http://$(curl -s ifconfig.me):8090/_/${NC}"
+echo -e "${YELLOW}Admin credentials:${NC}"
+echo -e "Email: admin@clairvoyance.local"
+echo -e "Password: securepassword123" 
