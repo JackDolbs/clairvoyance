@@ -53,12 +53,13 @@ npm install
 # Start the development server in background
 # Use PM2 for process management
 sudo npm install -g pm2
-pm2 start "npm run dev -- --host" --name "clairvoyance"
+pm2 start "npm run dev -- --host 0.0.0.0 --port 5174" --name "clairvoyance"
 
 # Show access information
 echo -e "${GREEN}Installation complete!${NC}"
-echo -e "${GREEN}Access your instance at http://$(curl -s ifconfig.me):5174${NC}"
-echo -e "${GREEN}Admin interface at http://$(curl -s ifconfig.me):8090/_/${NC}"
+IP=$(curl -s -4 ifconfig.me)
+echo -e "${GREEN}Access your instance at http://$IP:5174${NC}"
+echo -e "${GREEN}Admin interface at http://$IP:8090/_/${NC}"
 echo -e "${YELLOW}Admin credentials:${NC}"
 echo -e "Email: admin@clairvoyance.local"
 echo -e "Password: securepassword123" 
