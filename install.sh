@@ -25,7 +25,18 @@ echo -e "${GREEN}Starting Clairvoyance installation...${NC}"
 # Install dependencies
 if command -v apt-get &> /dev/null; then
     sudo apt-get update
-    sudo apt-get install -y git docker.io docker-compose curl
+    # Install Docker's prerequisites
+    sudo apt-get install -y git curl apt-transport-https ca-certificates software-properties-common
+    
+    # Add Docker's official GPG key
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+    
+    # Add Docker repository
+    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    
+    # Install Docker
+    sudo apt-get update
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 fi
 
 # Clone and setup
