@@ -50,10 +50,12 @@ npm install
 # Start PocketBase in background
 ./deploy.sh &
 
+# Wait for PocketBase to be ready
+sleep 10
+
 # Start the development server in background
-# Use PM2 for process management
 sudo npm install -g pm2
-pm2 start "npm run dev -- --host 0.0.0.0 --port 5174" --name "clairvoyance"
+pm2 start "npm run dev -- --host 0.0.0.0 --port 5174" --name "clairvoyance" --no-daemon
 
 # Show access information
 echo -e "${GREEN}Installation complete!${NC}"
