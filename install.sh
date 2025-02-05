@@ -31,9 +31,14 @@ fi
 # Configure firewall
 echo -e "${YELLOW}Configuring firewall...${NC}"
 sudo ufw allow ssh
+sudo ufw allow 22
 sudo ufw allow 5174
 sudo ufw allow 8090
-sudo ufw --force enable
+if sudo ufw status | grep -q "22/tcp.*ALLOW"; then
+    sudo ufw --force enable
+else
+    echo -e "${RED}Warning: SSH port not properly configured in firewall. Skipping firewall enable.${NC}"
+fi
 
 # Clone and setup
 git clone https://github.com/JackDolbs/clairvoyance.git
