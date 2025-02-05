@@ -31,9 +31,13 @@ fi
 # Configure firewall
 echo -e "${YELLOW}Configuring firewall...${NC}"
 sudo ufw allow ssh
-sudo ufw allow 22
-sudo ufw allow 5174
-sudo ufw allow 8090
+# Only add if rule doesn't exist
+if ! sudo ufw status | grep -q "5174/tcp.*ALLOW"; then
+    sudo ufw allow 5174/tcp
+fi
+if ! sudo ufw status | grep -q "8090/tcp.*ALLOW"; then
+    sudo ufw allow 8090/tcp
+fi
 if sudo ufw status | grep -q "22/tcp.*ALLOW"; then
     sudo ufw --force enable
 else
@@ -55,7 +59,7 @@ sleep 10
 
 # Start the development server in background
 sudo npm install -g pm2
-pm2 start "npm run dev -- --host 0.0.0.0 --port 5174" --name "clairvoyance" --no-daemon
+pm2 start "cd /root/clairvoyance && npm run dev -- --host 0.0.0.0 --port 5174" --name "clairvoyance" --no-daemon
 
 # Show access information
 echo -e "${GREEN}Installation complete!${NC}"
