@@ -59,7 +59,10 @@ sleep 10
 
 # Start the development server in background
 sudo npm install -g pm2
-pm2 start "cd /root/clairvoyance && npm run dev -- --host 0.0.0.0 --port 5174" --name "clairvoyance" --no-daemon
+pm2 start "cd /root/clairvoyance && npm run dev -- --host 0.0.0.0 --port 5174" --name "clairvoyance"
+
+# Wait for Vite to be ready
+sleep 15
 
 # Show access information
 echo -e "${GREEN}Installation complete!${NC}"

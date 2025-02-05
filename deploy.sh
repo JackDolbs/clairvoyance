@@ -98,7 +98,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "Starting PocketBase..."
-./pocketbase serve --http="[::]:8090" --dir="$PB_DATA" &
+./pocketbase serve --http="0.0.0.0:8090" --dir="$PB_DATA" &
 PB_PID=$!
 
 # Wait for PocketBase to start
