@@ -1,9 +1,0 @@
-version: '3.8'
-services:
-  clairvoyance:
-    build: .
-    ports:
-      - "5174:5174"
-      - "8090:8090"
-    volumes:
-      - ./data:/app/data 

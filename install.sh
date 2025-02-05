@@ -22,29 +22,18 @@ command_exists() {
 
 echo -e "${GREEN}Starting Clairvoyance installation...${NC}"
 
-# Install dependencies
-if command -v apt-get &> /dev/null; then
-    sudo apt-get update
-    # Install Docker's prerequisites
-    sudo apt-get install -y git curl apt-transport-https ca-certificates software-properties-common
-    
-    # Add Docker's official GPG key
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-    
-    # Add Docker repository
-    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-    
-    # Install Docker
-    sudo apt-get update
-    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+# Install Docker if not present
+if ! command -v docker &> /dev/null; then
+    curl -fsSL https://get.docker.com | sh
 fi
 
-# Clone and setup
-git clone https://github.com/JackDolbs/clairvoyance.git
-cd clairvoyance
-
-# Start with Docker
-docker-compose up -d
+# Run the container
+docker run -d \
+  --name clairvoyance \
+  -p 5174:5174 \
+  -p 8090:8090 \
+  -v clairvoyance_data:/app/data \
+  jackdolbs/clairvoyance:latest
 
 # Show access information
 echo -e "${GREEN}Installation complete!${NC}"
