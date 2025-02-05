@@ -53,7 +53,7 @@ npm install
 # Start the development server in background
 # Use PM2 for process management
 sudo npm install -g pm2
-pm2 start "npm run dev -- --host 0.0.0.0" --name "clairvoyance"
+pm2 start "npm run dev -- --host" --name "clairvoyance"
 
 # Show access information
 echo -e "${GREEN}Installation complete!${NC}"
