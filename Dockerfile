@@ -11,6 +11,12 @@ FROM node:18-slim
 WORKDIR /app
 COPY --from=build /app .
 
+# Install required tools
+RUN apt-get update && apt-get install -y \
+    curl \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
 # Download and setup PocketBase
 RUN mkdir -p data/pocketbase && \
     cd data/pocketbase && \
