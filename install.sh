@@ -25,44 +25,15 @@ echo -e "${GREEN}Starting Clairvoyance installation...${NC}"
 # Install dependencies
 if command -v apt-get &> /dev/null; then
     sudo apt-get update
-    sudo apt-get install -y git nodejs npm curl unzip ufw
-fi
-
-# Configure firewall
-echo -e "${YELLOW}Configuring firewall...${NC}"
-sudo ufw allow ssh
-# Only add if rule doesn't exist
-if ! sudo ufw status | grep -q "5174/tcp.*ALLOW"; then
-    sudo ufw allow 5174/tcp
-fi
-if ! sudo ufw status | grep -q "8090/tcp.*ALLOW"; then
-    sudo ufw allow 8090/tcp
-fi
-if sudo ufw status | grep -q "22/tcp.*ALLOW"; then
-    sudo ufw --force enable
-else
-    echo -e "${RED}Warning: SSH port not properly configured in firewall. Skipping firewall enable.${NC}"
+    sudo apt-get install -y git docker.io docker-compose curl
 fi
 
 # Clone and setup
 git clone https://github.com/JackDolbs/clairvoyance.git
 cd clairvoyance
 
-# Install project dependencies
-npm install
-
-# Start PocketBase in background
-./deploy.sh &
-
-# Wait for PocketBase to be ready
-sleep 10
-
-# Start the development server in background
-sudo npm install -g pm2
-pm2 start "cd /root/clairvoyance && npm run dev -- --host 0.0.0.0 --port 5174" --name "clairvoyance"
-
-# Wait for Vite to be ready
-sleep 15
+# Start with Docker
+docker-compose up -d
 
 # Show access information
 echo -e "${GREEN}Installation complete!${NC}"
