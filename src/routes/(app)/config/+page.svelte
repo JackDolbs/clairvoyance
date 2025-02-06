@@ -138,11 +138,6 @@
                                     {$pbStatus.isRunning ? "Online" : "Offline"}
                                 </Badge>
                             </div>
-                            
-                            <div class="space-y-2">
-                                <h4 class="font-medium">Version</h4>
-                                <p class="text-sm text-muted-foreground">{pbStatus.version}</p>
-                            </div>
 
                             <div class="pt-4 border-t">
                                 <Button 
