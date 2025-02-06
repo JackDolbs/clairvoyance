@@ -22,24 +22,23 @@ command_exists() {
 
 echo -e "${GREEN}Starting Clairvoyance installation...${NC}"
 
-# Install Docker if not present
+# Install Docker if needed
 if ! command -v docker &> /dev/null; then
     curl -fsSL https://get.docker.com | sh
 fi
 
-# Run the container
+# Run container
 docker run -d \
   --name clairvoyance \
   -p 5174:5174 \
   -p 8090:8090 \
-  -v clairvoyance_data:/app/data \
+  -v clairvoyance_data:/app/pb_data \
   jackdolbs/clairvoyance:latest
 
 # Show access information
 echo -e "${GREEN}Installation complete!${NC}"
-IP=$(curl -s -4 ifconfig.me)
-echo -e "${GREEN}Access your instance at http://$IP:5174${NC}"
-echo -e "${GREEN}Admin interface at http://$IP:8090/_/${NC}"
+echo -e "${GREEN}Access your instance at http://localhost:5174${NC}"
+echo -e "${GREEN}Admin interface at http://localhost:8090/_/${NC}"
 echo -e "${YELLOW}Admin credentials:${NC}"
 echo -e "Email: admin@clairvoyance.local"
 echo -e "Password: securepassword123" 

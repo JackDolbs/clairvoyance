@@ -13,18 +13,17 @@
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
     import * as AlertDialog from "$lib/components/ui/alert-dialog";
-    import { getPocketBaseStatus, testPocketBaseConnection } from '$lib/services/pocketbase';
+    import { pb, testPocketBaseConnection, getPocketBaseVersion } from "$lib/services/pocketbase";
     import { onMount } from 'svelte';
     import { toast } from "$lib/components/ui/sonner";
 
     let showPin = $state(false);
     const pin = import.meta.env.VITE_AUTH_PIN || '0000';
 
-    let pbStatus = $state({
+    let pbStatus = {
         isRunning: false,
-        version: '',
-        collections: [],
-    });
+        version: "Unknown",
+    };
 
     function handleTabChange(tab: string) {
         const url = new URL($page.url);
@@ -34,22 +33,54 @@
 
     let tabValue = $state("instance");
 
-    onMount(async () => {
-        pbStatus = await getPocketBaseStatus();
-        
-        const urlTab = $page.url.searchParams.get('tab');
-        tabValue = urlTab || "instance";
+    async function updatePbStatus() {
+        try {
+            const health = await pb.health.check();
+            console.log("Full health response:", JSON.stringify(health, null, 2));
+            
+            if (health && health.code === 200) {
+                pbStatus = {
+                    isRunning: true,
+                    version: getPocketBaseVersion()
+                };
+                console.log("Updated PB status:", JSON.stringify(pbStatus, null, 2));
+            } else {
+                pbStatus = {
+                    isRunning: false,
+                    version: "Unknown"
+                };
+            }
+        } catch (err) {
+            console.error("Failed to check PocketBase status:", err);
+            pbStatus = {
+                isRunning: false,
+                version: "Unknown"
+            };
+        }
+    }
+
+    // Update status on mount and every 30 seconds
+    onMount(() => {
+        updatePbStatus();
+        const interval = setInterval(updatePbStatus, 30000);
+        return () => clearInterval(interval);
     });
 
     function togglePin() {
         showPin = !showPin;
     }
 
-    async function testConnection() {
-        const success = await testPocketBaseConnection();
-        if (success) {
-            toast.success("PocketBase connection successful!");
-        } else {
+    async function handleTestConnection() {
+        try {
+            const isConnected = await testPocketBaseConnection();
+            if (isConnected) {
+                toast.success("PocketBase connection successful!");
+                await updatePbStatus(); // Update status after successful test
+            } else {
+                toast.error("Failed to connect to PocketBase");
+            }
+        } catch (err) {
+            console.error("Test connection error:", err);
             toast.error("Failed to connect to PocketBase");
         }
     }
@@ -107,7 +138,7 @@
 
                             <div class="pt-4 border-t">
                                 <Button 
-                                    onclick={testConnection}
+                                    onclick={handleTestConnection}
                                     variant="outline"
                                     class="w-full"
                                 >
