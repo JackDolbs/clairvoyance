@@ -11,9 +11,9 @@ until curl -s http://localhost:8090/api/health > /dev/null; do
 done
 echo "PocketBase is ready"
 
-# Start frontend
+# Start frontend with explicit network binding
 echo "Starting frontend..."
-NODE_ENV=production npm run preview -- --host 0.0.0.0 --port 5174 --strictPort
+exec npm run preview -- --port 5174 --host --strictPort
 
 # If Vite exits, kill PocketBase
 kill $PB_PID 
