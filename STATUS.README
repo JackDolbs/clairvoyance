@@ -1,0 +1,51 @@
+# Clairvoyance Deployment Status Report
+February 6, 2025
+
+## What We've Accomplished
+1. Created multi-platform Docker image
+   - Successfully builds for both ARM64 (Mac) and AMD64 (VPS)
+   - Image pushed to Docker Hub: `jackdolbs/clairvoyance:latest`
+   - Container runs locally without issues
+
+2. Simplified application
+   - Removed version display from config page
+   - Streamlined PocketBase status monitoring
+
+## Current Issues
+1. 502 Bad Gateway on VPS Deployment
+   - Frontend (Vite) not accessible through Traefik
+   - Container starts but service unreachable
+   - Occurs despite correct port bindings (5174)
+
+2. Deployment Environment
+   - Running through Coolify infrastructure
+   - Using Traefik for reverse proxy
+   - Container labels configured for routing
+
+## Attempted Solutions
+1. Port Configuration
+   - Tried different port mappings
+   - Verified services running inside container
+   - Confirmed Vite binding to 0.0.0.0:5174
+
+2. Container Configuration
+   - Updated start.sh for better network binding
+   - Verified process management
+   - Tested different Traefik routing rules
+
+## Next Steps to Investigate
+1. Verify Vite production build settings
+2. Check Traefik logs for routing issues
+3. Consider alternative port configurations
+4. Review Vite's compatibility with reverse proxies
+
+## Working Components
+- Docker image builds successfully
+- Container runs locally
+- PocketBase initializes correctly
+- Multi-platform support works
+
+## Non-Working Components
+- VPS deployment through Coolify
+- Frontend access through Traefik
+- Production environment routing 
