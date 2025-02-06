@@ -16,14 +16,16 @@
     import { pb, testPocketBaseConnection, getPocketBaseVersion } from "$lib/services/pocketbase";
     import { onMount } from 'svelte';
     import { toast } from "$lib/components/ui/sonner";
+    import { writable } from 'svelte/store';
 
     let showPin = $state(false);
     const pin = import.meta.env.VITE_AUTH_PIN || '0000';
 
-    let pbStatus = {
+    // Create a reactive store for PB status
+    const pbStatus = writable({
         isRunning: false,
-        version: "Unknown",
-    };
+        version: "Unknown"
+    });
 
     function handleTabChange(tab: string) {
         const url = new URL($page.url);
@@ -39,23 +41,23 @@
             console.log("Full health response:", JSON.stringify(health, null, 2));
             
             if (health && health.code === 200) {
-                pbStatus = {
+                pbStatus.set({
                     isRunning: true,
                     version: getPocketBaseVersion()
-                };
-                console.log("Updated PB status:", JSON.stringify(pbStatus, null, 2));
+                });
+                console.log("Updated PB status:", JSON.stringify($pbStatus, null, 2));
             } else {
-                pbStatus = {
+                pbStatus.set({
                     isRunning: false,
                     version: "Unknown"
-                };
+                });
             }
         } catch (err) {
             console.error("Failed to check PocketBase status:", err);
-            pbStatus = {
+            pbStatus.set({
                 isRunning: false,
                 version: "Unknown"
-            };
+            });
         }
     }
 
@@ -83,6 +85,12 @@
             console.error("Test connection error:", err);
             toast.error("Failed to connect to PocketBase");
         }
+    }
+
+    // Just show connection status
+    async function isConnected() {
+        const health = await pb.health.check();
+        return health?.code === 200;
     }
 </script>
 
@@ -123,11 +131,11 @@
                                 <div>
                                     <h4 class="font-medium">Status</h4>
                                     <p class="text-sm text-muted-foreground">
-                                        {pbStatus.isRunning ? 'Running' : 'Stopped'}
+                                        {$pbStatus.isRunning ? 'Running' : 'Stopped'}
                                     </p>
                                 </div>
-                                <Badge variant={pbStatus.isRunning ? "success" : "destructive"}>
-                                    {pbStatus.isRunning ? "Online" : "Offline"}
+                                <Badge variant={$pbStatus.isRunning ? "success" : "destructive"}>
+                                    {$pbStatus.isRunning ? "Online" : "Offline"}
                                 </Badge>
                             </div>
                             
