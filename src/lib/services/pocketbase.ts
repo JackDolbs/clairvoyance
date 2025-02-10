@@ -3,10 +3,14 @@ import PocketBase from 'pocketbase';
 // Use environment-aware URL
 const getPocketBaseUrl = () => {
     if (process.env.NODE_ENV === 'production') {
-        // Use relative URL in production
-        return window?.location?.origin || 'http://localhost:8090';
+        // Check if we're in the browser
+        if (typeof window !== 'undefined') {
+            return window.location.origin;
+        }
+        // Server-side
+        return 'http://localhost:8090';
     }
-    // In development
+    // Development
     return 'http://localhost:8090';
 }
 
