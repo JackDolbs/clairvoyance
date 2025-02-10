@@ -52,8 +52,8 @@ export async function initializePocketBase() {
 
         // Try to create first admin
         try {
-            console.log('Attempting to create first admin...');
-            await fetch(getPocketBaseUrl() + '/api/admins', {
+            console.log('Creating admin with URL:', getPocketBaseUrl() + '/api/admins');
+            const response = await fetch(getPocketBaseUrl() + '/api/admins', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -64,7 +64,15 @@ export async function initializePocketBase() {
                     passwordConfirm: 'securepassword123'
                 })
             });
-            console.log('Admin created successfully');
+            
+            console.log('Admin creation response:', {
+                status: response.status,
+                statusText: response.statusText,
+                headers: Object.fromEntries(response.headers)
+            });
+            
+            const responseText = await response.text();
+            console.log('Response body:', responseText);
             
             // Add delay before authentication
             await new Promise(resolve => setTimeout(resolve, 1000));
