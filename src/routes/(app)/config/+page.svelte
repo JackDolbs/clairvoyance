@@ -13,7 +13,7 @@
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
     import * as AlertDialog from "$lib/components/ui/alert-dialog";
-    import { pb, testPocketBaseConnection } from "$lib/services/pocketbase";
+    import pb, { testPocketBaseConnection } from "$lib/services/pocketbase";
     import { onMount } from 'svelte';
     import { toast } from "$lib/components/ui/sonner";
     import { writable } from 'svelte/store';

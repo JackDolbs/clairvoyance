@@ -8,7 +8,9 @@ const pb = new PocketBase(
         : process.env.POCKETBASE_URL || 'http://127.0.0.1:8090' // Direct in SSR
 );
 
+// Export both as default and named export
 export default pb;
+export { pb };
 
 // Use environment-aware URL for internal server calls
 const getInternalPocketBaseUrl = () => {
