@@ -4,52 +4,46 @@ import type { RequestHandler } from './$types';
 async function handleRequest(event: any) {
     const { params, request, url } = event;
     try {
+        // Forward request to PocketBase
         const pbUrl = `http://localhost:8090/${params.path}${url.search}`;
+        
+        // Create new headers without host
+        const headers = new Headers(request.headers);
+        headers.delete('host');
+        headers.set('Content-Type', 'application/json');
+
+        // Get request body if it exists
+        let body = null;
+        if (request.method !== 'GET') {
+            body = await request.text();
+        }
+
         console.log('Proxy Request:', {
             url: pbUrl,
             method: request.method,
-            headers: Object.fromEntries(request.headers),
-            hasBody: request.body ? 'yes' : 'no'
+            body
         });
-
-        const headers = new Headers(request.headers);
-        headers.delete('host');
-
-        let body;
-        if (request.method !== 'GET' && request.body) {
-            body = await request.text(); // Get body as text for logging
-            console.log('Request Body:', body);
-        }
 
         const response = await fetch(pbUrl, {
             method: request.method,
-            headers: headers,
-            body: body
+            headers,
+            body
         });
-
-        console.log('Proxy Response:', {
-            status: response.status,
-            statusText: response.statusText,
-            headers: Object.fromEntries(response.headers)
-        });
-
-        const newHeaders = new Headers(response.headers);
-        newHeaders.set('Access-Control-Allow-Origin', '*');
-        newHeaders.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        newHeaders.set('Access-Control-Allow-Headers', '*');
 
         return new Response(response.body, {
             status: response.status,
-            headers: newHeaders
+            headers: response.headers
         });
     } catch (e) {
-        console.error('Detailed Proxy Error:', e);
+        console.error('PocketBase proxy error:', e);
         throw error(502, 'PocketBase unavailable');
     }
 }
 
+// Handle all methods
 export const GET = handleRequest;
 export const POST = handleRequest;
 export const PUT = handleRequest;
+export const PATCH = handleRequest;
 export const DELETE = handleRequest;
 export const OPTIONS = handleRequest; 
