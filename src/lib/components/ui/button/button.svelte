@@ -75,7 +75,7 @@
 		bind:this={ref}
 		class={cn(buttonVariants({ variant, size }), className)}
 		{type}
-		on:click={() => dispatch('click')}
+		onclick={() => dispatch('click')}
 		{...restProps}
 	>
 		{#if isLoading}

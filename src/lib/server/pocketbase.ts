@@ -4,6 +4,11 @@ import path from 'path';
 let pocketbaseProcess: any = null;
 
 export function startPocketBase() {
+    // Add debug logging
+    console.log('Starting PocketBase process...');
+    console.log('Current directory:', process.cwd());
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+
     // Don't start if we're building
     if (process.env.NODE_ENV === 'production' && process.argv.includes('build')) {
         console.log('Skipping PocketBase start during build');
@@ -12,15 +17,17 @@ export function startPocketBase() {
 
     // Kill existing instance if running
     if (pocketbaseProcess) {
+        console.log('Killing existing PocketBase process');
         pocketbaseProcess.kill();
         pocketbaseProcess = null;
     }
 
     const pbPath = path.resolve(process.cwd(), 'src/lib/pocketbase/pocketbase');
+    console.log('PocketBase path:', pbPath);
     
     pocketbaseProcess = spawn(pbPath, [
         'serve',
-        '--http=localhost:8090',
+        '--http=0.0.0.0:8090',  // Listen on all interfaces
         '--dir=./pb_data'
     ]);
 

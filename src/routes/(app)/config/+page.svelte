@@ -13,7 +13,7 @@
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
     import * as AlertDialog from "$lib/components/ui/alert-dialog";
-    import { pb, testPocketBaseConnection, getPocketBaseVersion } from "$lib/services/pocketbase";
+    import { pb, testPocketBaseConnection } from "$lib/services/pocketbase";
     import { onMount } from 'svelte';
     import { toast } from "$lib/components/ui/sonner";
     import { writable } from 'svelte/store';
@@ -38,25 +38,17 @@
     async function updatePbStatus() {
         try {
             const health = await pb.health.check();
-            console.log("Full health response:", JSON.stringify(health, null, 2));
+            console.log("Health check response:", JSON.stringify(health, null, 2));
             
-            if (health && health.code === 200) {
-                pbStatus.set({
-                    isRunning: true,
-                    version: getPocketBaseVersion()
-                });
-                console.log("Updated PB status:", JSON.stringify($pbStatus, null, 2));
-            } else {
-                pbStatus.set({
-                    isRunning: false,
-                    version: "Unknown"
-                });
-            }
+            pbStatus.set({
+                isRunning: health?.code === 200,
+                version: health?.code === 200 ? "Running" : "Stopped"
+            });
         } catch (err) {
-            console.error("Failed to check PocketBase status:", err);
+            console.error("Health check failed:", err);
             pbStatus.set({
                 isRunning: false,
-                version: "Unknown"
+                version: "Stopped"
             });
         }
     }

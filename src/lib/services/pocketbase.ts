@@ -12,9 +12,6 @@ const getPocketBaseUrl = () => {
 
 const pb = new PocketBase(getPocketBaseUrl());
 
-// Add this variable to store version
-let pbVersion = "Unknown";
-
 // Helper function to wait for PocketBase
 async function waitForPocketBase(maxAttempts = 5) {
     for (let i = 0; i < maxAttempts; i++) {
@@ -30,6 +27,39 @@ async function waitForPocketBase(maxAttempts = 5) {
     return false;
 }
 
+// Add retry logic for admin creation
+async function tryAdminCreation(attempts = 3) {
+    for (let i = 0; i < attempts; i++) {
+        try {
+            const response = await fetch(getPocketBaseUrl() + '/api/admins', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: 'admin@clairvoyance.local',
+                    password: 'securepassword123',
+                    passwordConfirm: 'securepassword123'
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.status === 401) {
+                return { success: true, exists: true };
+            } else if (response.ok) {
+                return { success: true, exists: false };
+            }
+
+            // If failed, wait before retry
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (err) {
+            console.error(`Attempt ${i + 1} failed:`, err);
+            if (i === attempts - 1) throw err;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
+    throw new Error('All admin creation attempts failed');
+}
+
 // Initialize database with configuration collections
 export async function initializePocketBase() {
     try {
@@ -40,75 +70,65 @@ export async function initializePocketBase() {
             throw new Error('PocketBase not available after maximum attempts');
         }
 
-        // Get PocketBase version
-        try {
-            pbVersion = await fetch(getPocketBaseUrl() + '/api/_').then(r => r.text());
-            console.log('PocketBase version:', pbVersion);
-        } catch (err) {
-            console.log('Failed to get PocketBase version:', err);
-        }
-
-        console.log('PocketBase is ready, attempting admin setup...');
-
         // Try to create first admin
         try {
-            console.log('Creating admin with URL:', getPocketBaseUrl() + '/api/admins');
             const response = await fetch(getPocketBaseUrl() + '/api/admins', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     email: 'admin@clairvoyance.local',
                     password: 'securepassword123',
                     passwordConfirm: 'securepassword123'
                 })
             });
-            
-            console.log('Admin creation response:', {
-                status: response.status,
-                statusText: response.statusText,
-                headers: Object.fromEntries(response.headers)
-            });
-            
-            const responseText = await response.text();
-            console.log('Response body:', responseText);
-            
-            // Add delay before authentication
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
+
+            const data = await response.json();
+
+            if (response.status === 401) {
+                // Expected when admin exists
+                console.log('Admin exists, proceeding with authentication...');
+            } else if (response.status === 400) {
+                // Log the actual error
+                console.log('Admin creation response:', data);
+            } else if (!response.ok) {
+                throw new Error(`Admin creation failed: ${data.message}`);
+            } else {
+                console.log('Admin created successfully');
+            }
+
         } catch (err) {
-            // Ignore error if admin already exists
-            console.log('Admin creation failed (might already exist):', err);
+            if (err.message?.includes('401')) {
+                console.log('Admin exists (expected)');
+            } else {
+                console.error('Admin creation error:', err);
+            }
         }
 
-        // Now try to authenticate using admin API
+        // Try authentication
         try {
-            console.log('Attempting admin authentication...');
             const authResponse = await fetch(getPocketBaseUrl() + '/api/admins/auth-with-password', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     identity: 'admin@clairvoyance.local',
                     password: 'securepassword123'
                 })
             });
 
+            const authData = await authResponse.json();
+
             if (!authResponse.ok) {
-                throw new Error(`Auth failed with status ${authResponse.status}`);
+                throw new Error(`Auth failed: ${authData.message}`);
             }
 
-            const authData = await authResponse.json();
-            console.log('Admin authentication successful:', authData);
+            console.log('Admin authentication successful');
             return true;
         } catch (err) {
-            console.error('Admin authentication failed:', err);
+            console.error('Auth error:', err);
             return false;
         }
     } catch (err) {
-        console.error('Detailed initialization error:', err);
+        console.error('Initialization error:', err);
         return false;
     }
 }
@@ -133,11 +153,6 @@ export async function testPocketBaseConnection() {
         console.error('Connection test failed:', err);
         return false;
     }
-}
-
-// Add getter for version
-export function getPocketBaseVersion() {
-    return pbVersion;
 }
 
 export { pb }; 
