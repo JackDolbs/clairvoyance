@@ -2,9 +2,10 @@ import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ params, locals, request }) => {
+    console.log('=== PocketBase Proxy Request ===');
     try {
         // Log full request details
-        console.log('PocketBase Proxy Request:', {
+        console.log('Request details:', {
             url: request.url,
             method: request.method,
             path: params.path,
@@ -12,18 +13,20 @@ export const GET: RequestHandler = async ({ params, locals, request }) => {
         });
 
         // Log PocketBase instance details
-        console.log('PocketBase Instance:', {
+        console.log('PocketBase instance:', {
             url: locals.pb.baseUrl,
-            authStore: locals.pb.authStore.isValid
+            authStore: locals.pb.authStore.isValid,
+            token: locals.pb.authStore.token?.substring(0, 20) + '...' // Log partial token for debugging
         });
 
+        console.log('Sending request to PocketBase');
         const response = await locals.pb.send(request.url, {
             method: request.method,
             headers: request.headers,
             body: request.body
         });
 
-        console.log('PocketBase Response:', {
+        console.log('PocketBase response:', {
             status: response.status,
             statusText: response.statusText,
             headers: Object.fromEntries(response.headers.entries())
@@ -34,13 +37,13 @@ export const GET: RequestHandler = async ({ params, locals, request }) => {
             headers: response.headers
         });
     } catch (err) {
-        // Enhanced error logging
         console.error('PocketBase Proxy Error:', {
             error: err instanceof Error ? err.message : String(err),
             stack: err instanceof Error ? err.stack : undefined,
             url: request.url,
             method: request.method,
-            path: params.path
+            path: params.path,
+            pbUrl: locals.pb?.baseUrl
         });
 
         throw error(500, {
