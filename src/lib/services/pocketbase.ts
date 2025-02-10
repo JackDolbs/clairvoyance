@@ -12,28 +12,21 @@ const pb = new PocketBase(
 export default pb;
 export { pb };
 
-// Use environment-aware URL for internal server calls
-const getInternalPocketBaseUrl = () => {
-    // Always use direct localhost for server-side calls
-    return 'http://localhost:8090';
-}
-
-// Use environment-aware URL for client calls
-const getPocketBaseUrl = () => {
-    if (process.env.NODE_ENV === 'production') {
-        // Use proxy route in production
-        return '/pb';
+// Use environment-aware URL for all calls
+function getPocketBaseUrl() {
+    if (browser) {
+        // In browser, always use the proxy
+        return window.location.origin + '/pb';
     }
-    // Development: direct connection
-    return 'http://localhost:8090';
+    // Server-side: use direct connection
+    return process.env.POCKETBASE_URL || 'http://127.0.0.1:8090';
 }
 
 // Helper function to wait for PocketBase with exponential backoff
 async function waitForPocketBase(maxAttempts = 10) {
     for (let i = 0; i < maxAttempts; i++) {
         try {
-            // Use internal URL for server-side health checks
-            const response = await fetch(getInternalPocketBaseUrl() + '/api/health');
+            const response = await fetch(getPocketBaseUrl() + '/api/health');
             const health = await response.json();
             
             if (health.code === 200) {
@@ -53,7 +46,7 @@ async function waitForPocketBase(maxAttempts = 10) {
 async function tryAdminCreation(attempts = 3) {
     for (let i = 0; i < attempts; i++) {
         try {
-            const response = await fetch(getInternalPocketBaseUrl() + '/api/admins', {
+            const response = await fetch(getPocketBaseUrl() + '/api/admins', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -98,7 +91,7 @@ export async function initializePocketBase(isBuild = false) {
 
         // Try to create first admin
         try {
-            const response = await fetch(getInternalPocketBaseUrl() + '/api/admins', {
+            const response = await fetch(getPocketBaseUrl() + '/api/admins', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -132,7 +125,7 @@ export async function initializePocketBase(isBuild = false) {
 
         // Try authentication
         try {
-            const authResponse = await fetch(getInternalPocketBaseUrl() + '/api/admins/auth-with-password', {
+            const authResponse = await fetch(getPocketBaseUrl() + '/api/admins/auth-with-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -171,7 +164,7 @@ export async function getPocketBaseStatus() {
     }
 }
 
-// Update this function to be more thorough
+// Update this function to use the environment-aware URL
 export async function testPocketBaseConnection() {
     try {
         const response = await fetch(getPocketBaseUrl() + '/api/health');
