@@ -8,11 +8,11 @@
         <div
             class="h-full w-full flex-1 bg-primary transition-all duration-500"
             style:transform="translateX(-{100 - ((value / max) * 100)}%)"
-        />
+        ></div>
     {:else}
         <div
             class="animate-indeterminate h-full w-[50%] bg-primary"
-        />
+        ></div>
     {/if}
 </div>
 

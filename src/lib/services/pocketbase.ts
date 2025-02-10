@@ -1,7 +1,16 @@
 import PocketBase from 'pocketbase';
 
-// Single PocketBase instance
-const pb = new PocketBase('http://localhost:8090');
+// Use environment-aware URL
+const getPocketBaseUrl = () => {
+    if (process.env.NODE_ENV === 'production') {
+        // In production, PocketBase runs on port 8090
+        return 'http://localhost:8090';
+    }
+    // In development
+    return 'http://localhost:8090';
+}
+
+const pb = new PocketBase(getPocketBaseUrl());
 
 // Add this variable to store version
 let pbVersion = "Unknown";
@@ -33,7 +42,7 @@ export async function initializePocketBase() {
 
         // Get PocketBase version
         try {
-            pbVersion = await fetch('http://localhost:8090/api/_').then(r => r.text());
+            pbVersion = await fetch(getPocketBaseUrl() + '/api/_').then(r => r.text());
             console.log('PocketBase version:', pbVersion);
         } catch (err) {
             console.log('Failed to get PocketBase version:', err);
@@ -44,7 +53,7 @@ export async function initializePocketBase() {
         // Try to create first admin
         try {
             console.log('Attempting to create first admin...');
-            await fetch('http://localhost:8090/api/admins', {
+            await fetch(getPocketBaseUrl() + '/api/admins', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -56,6 +65,10 @@ export async function initializePocketBase() {
                 })
             });
             console.log('Admin created successfully');
+            
+            // Add delay before authentication
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
         } catch (err) {
             // Ignore error if admin already exists
             console.log('Admin creation failed (might already exist):', err);
@@ -64,7 +77,7 @@ export async function initializePocketBase() {
         // Now try to authenticate using admin API
         try {
             console.log('Attempting admin authentication...');
-            const authResponse = await fetch('http://localhost:8090/api/admins/auth-with-password', {
+            const authResponse = await fetch(getPocketBaseUrl() + '/api/admins/auth-with-password', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

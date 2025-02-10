@@ -1,13 +1,20 @@
 # Clairvoyance
 
-A self-hosted AI chat interface with local database management, built with SvelteKit and PocketBase.
+A self-contained, self-hosted AI chat interface built with SvelteKit and PocketBase.
 
 ## Features
 - Custom analytics dashboards
 - AI-powered chat insights
 - Knowledge graph visualization
-- Local database management
+- Self-contained database
 - PIN-based authentication
+
+## How It Works
+Each Clairvoyance deployment is completely self-contained:
+- Your own PocketBase instance
+- Private data storage
+- Dedicated admin interface
+- Automatic initialization
 
 ## Development
 
@@ -24,14 +31,11 @@ npm run dev
 ```
 
 ## Deployment
-We support multiple deployment platforms. Choose the one that works best for you:
 
-### Quick Deploy
-[![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyourusername%2Fclairvoyance)
-[![Deploy to Coolify](https://coolify.io/button)](https://coolify.io/docs/deploy)
-
-### Manual Deploy
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed platform-specific guides.
+> ⚠️ **Note**: Currently only supports deployment via Coolify
+> 
+> Each deployment creates an isolated instance with its own database and storage.
+> See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed setup instructions.
 
 ## Environment Variables
 ```env

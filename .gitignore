@@ -31,3 +31,12 @@ vite.config.ts.timestamp-*
 *.db-wal
 logs.db
 data.db
+
+# PocketBase
+pb_data/
+pb_data/**/*
+*.db
+*.db-shm
+*.db-wal
+logs.db
+data.db 
