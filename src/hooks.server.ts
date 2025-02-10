@@ -5,24 +5,26 @@ import { building } from '$app/environment';
 // Initialize on server start
 export async function handle({ event, resolve }) {
     try {
+        // Skip everything during build
+        if (building) {
+            return await resolve(event);
+        }
+
         // Start PocketBase if not running
         if (!global.__pocketbaseStarted) {
-            if (!building) {
-                console.log('Starting PocketBase from hooks...');
-                startPocketBase();
-                // Add delay to ensure server is ready
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            }
+            console.log('Starting PocketBase from hooks...');
+            startPocketBase();
+            // Initial delay for process to start
+            await new Promise(resolve => setTimeout(resolve, 2000));
             global.__pocketbaseStarted = true;
         }
 
         // Initialize database if needed
         if (!global.__pocketbaseInitialized) {
             const success = await initializePocketBase();
-            if (!success) {
-                console.error('PocketBase initialization failed');
+            if (success) {
+                global.__pocketbaseInitialized = true;
             }
-            global.__pocketbaseInitialized = true;
         }
     } catch (err) {
         console.error('Hook error:', err);

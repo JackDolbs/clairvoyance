@@ -1,9 +1,15 @@
 import PocketBase from 'pocketbase';
 
-// Use environment-aware URL
+// Use environment-aware URL for internal server calls
+const getInternalPocketBaseUrl = () => {
+    // Always use direct localhost for server-side calls
+    return 'http://localhost:8090';
+}
+
+// Use environment-aware URL for client calls
 const getPocketBaseUrl = () => {
     if (process.env.NODE_ENV === 'production') {
-        // Always use the proxy route in production
+        // Use proxy route in production
         return '/pb';
     }
     // Development: direct connection
@@ -12,16 +18,22 @@ const getPocketBaseUrl = () => {
 
 const pb = new PocketBase(getPocketBaseUrl());
 
-// Helper function to wait for PocketBase
-async function waitForPocketBase(maxAttempts = 5) {
+// Helper function to wait for PocketBase with exponential backoff
+async function waitForPocketBase(maxAttempts = 10) {
     for (let i = 0; i < maxAttempts; i++) {
         try {
-            const health = await pb.health.check();
-            console.log('PocketBase health check:', health);
-            return true;
+            // Use internal URL for server-side health checks
+            const response = await fetch(getInternalPocketBaseUrl() + '/api/health');
+            const health = await response.json();
+            
+            if (health.code === 200) {
+                console.log('PocketBase health check:', health);
+                return true;
+            }
+            throw new Error('Health check failed');
         } catch (err) {
             console.log(`Attempt ${i + 1}: PocketBase not ready, waiting...`);
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, Math.min(1000 * Math.pow(2, i), 10000)));
         }
     }
     return false;
@@ -31,7 +43,7 @@ async function waitForPocketBase(maxAttempts = 5) {
 async function tryAdminCreation(attempts = 3) {
     for (let i = 0; i < attempts; i++) {
         try {
-            const response = await fetch(getPocketBaseUrl() + '/api/admins', {
+            const response = await fetch(getInternalPocketBaseUrl() + '/api/admins', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -61,8 +73,12 @@ async function tryAdminCreation(attempts = 3) {
 }
 
 // Initialize database with configuration collections
-export async function initializePocketBase() {
+export async function initializePocketBase(isBuild = false) {
     try {
+        if (isBuild) {
+            console.log('Skipping PocketBase initialization during build');
+            return true;
+        }
         console.log('Starting PocketBase initialization...');
         
         // Wait for PocketBase to be ready
@@ -72,7 +88,7 @@ export async function initializePocketBase() {
 
         // Try to create first admin
         try {
-            const response = await fetch(getPocketBaseUrl() + '/api/admins', {
+            const response = await fetch(getInternalPocketBaseUrl() + '/api/admins', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -106,7 +122,7 @@ export async function initializePocketBase() {
 
         // Try authentication
         try {
-            const authResponse = await fetch(getPocketBaseUrl() + '/api/admins/auth-with-password', {
+            const authResponse = await fetch(getInternalPocketBaseUrl() + '/api/admins/auth-with-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -136,8 +152,10 @@ export async function initializePocketBase() {
 // Simple status check
 export async function getPocketBaseStatus() {
     try {
-        await pb.health.check();
-        return true;
+        // Use fetch instead of SDK
+        const response = await fetch(getPocketBaseUrl() + '/api/health');
+        const health = await response.json();
+        return health?.code === 200;
     } catch {
         return false;
     }
@@ -146,9 +164,10 @@ export async function getPocketBaseStatus() {
 // Update this function to be more thorough
 export async function testPocketBaseConnection() {
     try {
-        const health = await pb.health.check();
+        const response = await fetch(getPocketBaseUrl() + '/api/health');
+        const health = await response.json();
         console.log("PocketBase health check response:", JSON.stringify(health, null, 2));
-        return health && health.code === 200;
+        return health?.code === 200;
     } catch (err) {
         console.error('Connection test failed:', err);
         return false;
