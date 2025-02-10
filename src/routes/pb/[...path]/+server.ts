@@ -1,49 +1,43 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-async function handleRequest(event: any) {
-    const { params, request, url } = event;
+export const GET: RequestHandler = async ({ params, locals, request }) => {
     try {
-        // Forward request to PocketBase
-        const pbUrl = `http://localhost:8090/${params.path}${url.search}`;
-        
-        // Create new headers without host
-        const headers = new Headers(request.headers);
-        headers.delete('host');
-        headers.set('Content-Type', 'application/json');
-
-        // Get request body if it exists
-        let body = null;
-        if (request.method !== 'GET') {
-            body = await request.text();
-        }
-
-        console.log('Proxy Request:', {
-            url: pbUrl,
+        const response = await locals.pb.send(request.url, {
             method: request.method,
-            body
-        });
-
-        const response = await fetch(pbUrl, {
-            method: request.method,
-            headers,
-            body
+            headers: request.headers,
+            body: request.body
         });
 
         return new Response(response.body, {
             status: response.status,
             headers: response.headers
         });
-    } catch (e) {
-        console.error('PocketBase proxy error:', e);
-        throw error(502, 'PocketBase unavailable');
+    } catch (err) {
+        console.error('PocketBase proxy error:', err);
+        throw error(500, 'PocketBase request failed');
     }
-}
+};
 
-// Handle all methods
-export const GET = handleRequest;
-export const POST = handleRequest;
-export const PUT = handleRequest;
-export const PATCH = handleRequest;
-export const DELETE = handleRequest;
-export const OPTIONS = handleRequest; 
+export const POST: RequestHandler = GET;
+export const PATCH: RequestHandler = GET;
+export const PUT: RequestHandler = GET;
+export const DELETE: RequestHandler = GET;
+
+export const OPTIONS: RequestHandler = async ({ params, locals, request }) => {
+    try {
+        const response = await locals.pb.send(request.url, {
+            method: request.method,
+            headers: request.headers,
+            body: request.body
+        });
+
+        return new Response(response.body, {
+            status: response.status,
+            headers: response.headers
+        });
+    } catch (err) {
+        console.error('PocketBase proxy error:', err);
+        throw error(500, 'PocketBase request failed');
+    }
+}; 

@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import path from 'path';
+import PocketBase from 'pocketbase';
 
 let pocketbaseProcess: any = null;
 
@@ -47,4 +48,11 @@ process.on('exit', () => {
     if (pocketbaseProcess) {
         pocketbaseProcess.kill();
     }
-}); 
+});
+
+export function createPocketBaseServer() {
+    // Use environment variables or fallback to default
+    const pbUrl = process.env.POCKETBASE_URL || 'http://127.0.0.1:8090';
+    
+    return new PocketBase(pbUrl);
+} 

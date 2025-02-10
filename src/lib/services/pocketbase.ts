@@ -1,4 +1,14 @@
 import PocketBase from 'pocketbase';
+import { browser } from '$app/environment';
+
+// Create PocketBase instance based on environment
+const pb = new PocketBase(
+    browser 
+        ? window.location.origin + '/pb'  // Use proxy in browser
+        : process.env.POCKETBASE_URL || 'http://127.0.0.1:8090' // Direct in SSR
+);
+
+export default pb;
 
 // Use environment-aware URL for internal server calls
 const getInternalPocketBaseUrl = () => {
@@ -15,8 +25,6 @@ const getPocketBaseUrl = () => {
     // Development: direct connection
     return 'http://localhost:8090';
 }
-
-const pb = new PocketBase(getPocketBaseUrl());
 
 // Helper function to wait for PocketBase with exponential backoff
 async function waitForPocketBase(maxAttempts = 10) {
@@ -172,6 +180,4 @@ export async function testPocketBaseConnection() {
         console.error('Connection test failed:', err);
         return false;
     }
-}
-
-export { pb }; 
+} 

@@ -1,34 +1,27 @@
-import { startPocketBase } from '$lib/server/pocketbase';
-import { initializePocketBase } from '$lib/services/pocketbase';
-import { building } from '$app/environment';
+import { createPocketBaseServer } from '$lib/server/pocketbase';
+import type { Handle } from '@sveltejs/kit';
 
-// Initialize on server start
-export async function handle({ event, resolve }) {
+export const handle: Handle = async ({ event, resolve }) => {
+    // Create a new PocketBase instance for each request
+    event.locals.pb = createPocketBaseServer();
+
+    // Load auth data from cookies if available
+    event.locals.pb.authStore.loadFromCookie(event.request.headers.get('cookie') || '');
+
     try {
-        // Skip everything during build
-        if (building) {
-            return await resolve(event);
+        // Refresh auth if needed
+        if (event.locals.pb.authStore.isValid) {
+            await event.locals.pb.collection('users').authRefresh();
         }
-
-        // Start PocketBase if not running
-        if (!global.__pocketbaseStarted) {
-            console.log('Starting PocketBase from hooks...');
-            startPocketBase();
-            // Initial delay for process to start
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            global.__pocketbaseStarted = true;
-        }
-
-        // Initialize database if needed
-        if (!global.__pocketbaseInitialized) {
-            const success = await initializePocketBase();
-            if (success) {
-                global.__pocketbaseInitialized = true;
-            }
-        }
-    } catch (err) {
-        console.error('Hook error:', err);
+    } catch (_) {
+        // Clear auth data on failed refresh
+        event.locals.pb.authStore.clear();
     }
 
-    return await resolve(event);
-} 
+    const response = await resolve(event);
+
+    // Set auth cookie in response
+    response.headers.set('set-cookie', event.locals.pb.authStore.exportToCookie());
+
+    return response;
+}; 
