@@ -6,7 +6,8 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"start": "node build"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.3",
@@ -15,6 +16,7 @@
 		"@sveltejs/adapter-static": "^3.0.0",
 		"@sveltejs/kit": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",
+		"@sveltejs/adapter-node": "^2.0.0",
 		"autoprefixer": "^10.4.20",
 		"bits-ui": "^1.0.0-next.79",
 		"clsx": "^2.1.1",
