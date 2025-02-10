@@ -3,14 +3,10 @@ import PocketBase from 'pocketbase';
 // Use environment-aware URL
 const getPocketBaseUrl = () => {
     if (process.env.NODE_ENV === 'production') {
-        // Check if we're in the browser
-        if (typeof window !== 'undefined') {
-            return window.location.origin;
-        }
-        // Server-side
-        return 'http://localhost:8090';
+        // Always use the proxy route in production
+        return '/pb';
     }
-    // Development
+    // Development: direct connection
     return 'http://localhost:8090';
 }
 
