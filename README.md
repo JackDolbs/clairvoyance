@@ -1,37 +1,46 @@
 # Clairvoyance
 
-A self-hosted AI chat interface with local database management.
+A self-hosted AI chat interface with local database management, built with SvelteKit and PocketBase.
 
-## Quick Install
+## Features
+- Custom analytics dashboards
+- AI-powered chat insights
+- Knowledge graph visualization
+- Local database management
+- PIN-based authentication
+
+## Development
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/JackDolbs/clairvoyance/main/install.sh | bash
+# Clone the repository
+git clone https://github.com/yourusername/clairvoyance.git
+cd clairvoyance
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
 ```
 
-This will:
-- Install required dependencies
-- Pull Docker image
-- Start containerized application
-- Set up persistent storage
-
-### VPS Deployment
-1. SSH into your VPS
-2. Run the install command above
-3. Access your instance at `http://your-vps-ip:5174`
-
 ## Deployment
+We support multiple deployment platforms. Choose the one that works best for you:
 
-### Requirements
-- Docker installed
+### Quick Deploy
+[![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyourusername%2Fclairvoyance)
+[![Deploy to Coolify](https://coolify.io/button)](https://coolify.io/docs/deploy)
 
-### What's Included
-- Local database (PocketBase)
-- Admin interface at `http://your-ip:8090/_/`
-- Configuration UI
-- Automatic database initialization
+### Manual Deploy
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed platform-specific guides.
 
-### Architecture
-- Frontend: SvelteKit application
-- Backend: PocketBase database
-- Containerized deployment
-- Docker-based installation
+## Environment Variables
+```env
+# Required
+VITE_AUTH_PIN=1234    # Your chosen 4-digit PIN for authentication
+
+# Optional
+NODE_ENV=production   # Set by deployment platform
+```
+
+## Status
+This project is in pre-alpha. Expect frequent changes and updates.
