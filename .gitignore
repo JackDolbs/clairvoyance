@@ -39,4 +39,7 @@ pb_data/**/*
 *.db-shm
 *.db-wal
 logs.db
-data.db 
+data.db
+
+# Add this to ensure PocketBase executable is included
+!src/lib/pocketbase/pocketbase 

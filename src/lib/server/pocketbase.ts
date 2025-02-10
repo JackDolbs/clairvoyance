@@ -23,12 +23,16 @@ export function startPocketBase() {
         pocketbaseProcess = null;
     }
 
-    const pbPath = path.resolve(process.cwd(), 'src/lib/pocketbase/pocketbase');
+    // In production, use the embedded PocketBase executable
+    const pbPath = process.env.NODE_ENV === 'production' 
+        ? path.resolve(process.cwd(), 'pocketbase/pocketbase')
+        : path.resolve(process.cwd(), 'src/lib/pocketbase/pocketbase');
+    
     console.log('PocketBase path:', pbPath);
     
     pocketbaseProcess = spawn(pbPath, [
         'serve',
-        '--http=0.0.0.0:8090',  // Listen on all interfaces
+        '--http=127.0.0.1:8090',  // Listen only on localhost in production
         '--dir=./pb_data'
     ]);
 
@@ -51,8 +55,7 @@ process.on('exit', () => {
 });
 
 export function createPocketBaseServer() {
-    // Use environment variables or fallback to default
-    const pbUrl = process.env.POCKETBASE_URL || 'http://127.0.0.1:8090';
-    
-    return new PocketBase(pbUrl);
+    // Always connect to local instance
+    const pb = new PocketBase('http://127.0.0.1:8090');
+    return pb;
 } 
