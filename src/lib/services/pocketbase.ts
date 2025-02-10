@@ -3,8 +3,8 @@ import PocketBase from 'pocketbase';
 // Use environment-aware URL
 const getPocketBaseUrl = () => {
     if (process.env.NODE_ENV === 'production') {
-        // In production, PocketBase runs on port 8090
-        return 'http://localhost:8090';
+        // Use relative URL in production
+        return window?.location?.origin || 'http://localhost:8090';
     }
     // In development
     return 'http://localhost:8090';
