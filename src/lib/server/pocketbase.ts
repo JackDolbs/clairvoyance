@@ -31,16 +31,11 @@ export async function startPocketBase() {
                 throw new Error(`PocketBase executable not found at ${pbPath}`);
             }
 
-            // Verify binary and set permissions
-            const fd = fs.openSync(pbPath, 'r');
-            const buffer = Buffer.alloc(4);
-            fs.readSync(fd, buffer, 0, 4, 0);
-            fs.closeSync(fd);
+            // Just check if we can execute it
+            fs.accessSync(pbPath, fs.constants.X_OK);
+            console.log('Executable permissions verified');
 
-            if (buffer[0] !== 0x7f || buffer[1] !== 0x45 || buffer[2] !== 0x4c || buffer[3] !== 0x46) {
-                throw new Error('PocketBase executable appears to be corrupted');
-            }
-
+            // Set permissions just to be sure
             fs.chmodSync(pbPath, 0o755);
             
             // Ensure pb_data directory exists
