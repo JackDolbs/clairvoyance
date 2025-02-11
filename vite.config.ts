@@ -12,6 +12,20 @@ const getGitHash = () => {
 
 export default defineConfig({
 	plugins: [sveltekit()],
+	server: {
+		fs: {
+			// Allow serving files from one level up from the package root
+			allow: ['..']
+		}
+	},
+	optimizeDeps: {
+		exclude: ['pocketbase']
+	},
+	build: {
+		commonjsOptions: {
+			include: [/node_modules/]
+		}
+	},
 	define: {
 		__COMMIT_HASH__: JSON.stringify(getGitHash()),
 		__APP_VERSION__: JSON.stringify(process.env.npm_package_version),
