@@ -1,58 +1,51 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = async ({ params, locals, request }) => {
-    console.log('=== PocketBase Proxy Request ===');
+export const GET: RequestHandler = async ({ url, params, request }) => {
     try {
-        // Log full request details
-        console.log('Request details:', {
-            url: request.url,
+        const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
+        const path = params.path || '';
+        console.log('Proxying request to:', `${pbUrl}/${path}`);
+        
+        // Forward the original request headers
+        const headers = new Headers(request.headers);
+        headers.set('Content-Type', 'application/json');
+        headers.set('Accept', 'application/json');
+
+        const response = await fetch(`${pbUrl}/${path}`, {
             method: request.method,
-            path: params.path,
-            headers: Object.fromEntries(request.headers.entries())
+            headers,
+            body: request.method !== 'GET' ? await request.text() : undefined
         });
 
-        // Log PocketBase instance details
-        console.log('PocketBase instance:', {
-            url: locals.pb.baseUrl,
-            authStore: locals.pb.authStore.isValid,
-            token: locals.pb.authStore.token?.substring(0, 20) + '...' // Log partial token for debugging
-        });
+        if (!response.ok) {
+            // Forward the error response from PocketBase
+            const errorData = await response.text();
+            console.error('PocketBase error response:', errorData);
+            return new Response(errorData, {
+                status: response.status,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+        }
 
-        console.log('Sending request to PocketBase');
-        const response = await locals.pb.send(request.url, {
-            method: request.method,
-            headers: request.headers,
-            body: request.body
-        });
+        const data = await response.text();
+        console.log('PocketBase response:', data.substring(0, 100));
 
-        console.log('PocketBase response:', {
+        return new Response(data, {
             status: response.status,
-            statusText: response.statusText,
-            headers: Object.fromEntries(response.headers.entries())
-        });
-
-        return new Response(response.body, {
-            status: response.status,
-            headers: response.headers
+            headers: {
+                'Content-Type': 'application/json'
+            }
         });
     } catch (err) {
-        console.error('PocketBase Proxy Error:', {
-            error: err instanceof Error ? err.message : String(err),
-            stack: err instanceof Error ? err.stack : undefined,
-            url: request.url,
-            method: request.method,
-            path: params.path,
-            pbUrl: locals.pb?.baseUrl
-        });
-
-        throw error(500, {
-            message: 'PocketBase request failed',
-            error: err instanceof Error ? err.message : String(err)
-        });
+        console.error('PocketBase proxy error:', err);
+        throw error(500, 'Failed to proxy request to PocketBase');
     }
 };
 
+// Create handlers for other methods that properly handle the request body
 export const POST: RequestHandler = GET;
 export const PATCH: RequestHandler = GET;
 export const PUT: RequestHandler = GET;

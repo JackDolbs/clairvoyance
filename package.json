@@ -5,11 +5,10 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build && chmod +x build/pocketbase/pocketbase",
+		"prebuild": "node scripts/download-pocketbase.js",
+		"build": "vite build",
 		"preview": "vite preview",
-		"start": "node build",
-		"prebuild": "mkdir -p build/pocketbase && cp -f src/lib/pocketbase/pocketbase build/pocketbase/pocketbase",
-		"postbuild": "ls -l build/pocketbase/pocketbase || echo 'PocketBase executable not found'"
+		"start": "node build"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.3",

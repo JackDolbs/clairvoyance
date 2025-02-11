@@ -36,4 +36,8 @@ pb_data/**/*
 *.db-shm
 *.db-wal
 logs.db
-data.db 
+data.db
+
+# PocketBase
+pocketbase
+pb.zip 

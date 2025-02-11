@@ -8,29 +8,11 @@ let isStarting = false;
 let startPromise: Promise<any> | null = null;
 
 export async function startPocketBase() {
-    const isProduction = process.env.NODE_ENV === 'production';
-    const cwd = process.cwd();
-    console.log('Current directory:', cwd);
-    console.log('NODE_ENV:', process.env.NODE_ENV);
-
-    const pbPath = isProduction 
-        ? path.join(process.cwd(), 'build', 'pocketbase', 'pocketbase')
-        : path.join(process.cwd(), 'src', 'lib', 'pocketbase', 'pocketbase');
-
-    console.log('PocketBase executable path:', pbPath);
-
+    const pbPath = path.join(process.cwd(), 'pocketbase');
+    
     try {
-        // Check if file exists
-        const stats = fs.statSync(pbPath);
-        if (!stats.isFile()) {
-            throw new Error('PocketBase executable not found');
-        }
-
-        // Make executable
-        fs.chmodSync(pbPath, '755');
-
-        // Start process
-        const pb = spawn(pbPath, ['serve', '--http=0.0.0.0:8090'], {
+        // Start PocketBase process
+        const pb = spawn(pbPath, ['serve', '--http=127.0.0.1:8090'], {
             stdio: 'pipe'
         });
 
@@ -113,24 +95,24 @@ export async function startPocketBase() {
 
     } catch (error) {
         console.error('Failed to start PocketBase:', error);
-        if (isProduction) {
-            // In production, continue without PocketBase
-            console.log('Continuing without PocketBase in production');
-            return;
-        } else {
-            // In development, throw the error
-            throw error;
-        }
+        throw error;
     }
 }
 
 export function createPocketBaseServer() {
-    if (!pocketbaseProcess) {
-        console.warn('PocketBase server not started, creating client with remote URL');
-        return new PocketBase('http://127.0.0.1:8090');
+    // In production, connect to external PocketBase instance
+    if (process.env.NODE_ENV === 'production') {
+        const pbUrl = process.env.POCKETBASE_URL || 'http://localhost:8090';
+        console.log(`Connecting to PocketBase at ${pbUrl}`);
+        return new PocketBase(pbUrl);
     }
-    console.log('Creating new PocketBase instance');
-    return new PocketBase('http://127.0.0.1:8090');
+
+    // Development code
+    if (!pocketbaseProcess) {
+        console.warn('PocketBase server not started, creating client with default URL');
+        return new PocketBase('http://localhost:8090');
+    }
+    return new PocketBase('http://localhost:8090');
 }
 
 // Cleanup handlers
