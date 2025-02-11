@@ -20,6 +20,14 @@ if (os === 'darwin') {
 
 const downloadUrl = `${BASE_URL}/${VERSION}/pocketbase_${VERSION.substring(1)}_${binaryName}.zip`;
 
+// Install unzip if not present
+try {
+  execSync('which unzip');
+} catch (error) {
+  console.log('Installing unzip...');
+  execSync('apt-get update && apt-get install -y unzip');
+}
+
 try {
     // Download and extract PocketBase
     console.log(`Downloading PocketBase for ${binaryName}...`);
