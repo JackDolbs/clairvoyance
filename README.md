@@ -1,6 +1,6 @@
 # Clairvoyance
 
-A self-contained, self-hosted AI chat interface built with SvelteKit and PocketBase.
+A SvelteKit application with integrated PocketBase backend.
 
 ## Features
 - Custom analytics dashboards
@@ -18,24 +18,37 @@ Each Clairvoyance deployment is completely self-contained:
 
 ## Development
 
+1. Clone the repository:
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/clairvoyance.git
+git clone https://github.com/JackDolbs/clairvoyance.git
 cd clairvoyance
+```
 
-# Install dependencies
+2. Install dependencies:
+```bash
 npm install
+```
 
-# Start development server
+3. Create a `.env` file:
+```env
+POCKETBASE_URL=http://localhost:8090
+VITE_AUTH_PIN=your_chosen_pin
+```
+
+4. Start the development server:
+```bash
 npm run dev
 ```
 
+This will:
+- Download PocketBase automatically
+- Start PocketBase on port 8090
+- Start SvelteKit development server
+- Open http://localhost:5173 in your browser
+
 ## Deployment
 
-> ⚠️ **Note**: Currently only supports deployment via Coolify
-> 
-> Each deployment creates an isolated instance with its own database and storage.
-> See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed setup instructions.
+See [DEPLOYMENT.md](DEPLOYMENT.md) for deployment instructions.
 
 ## Environment Variables
 ```env
