@@ -1,3 +1,7 @@
+# Make sure this is at the top to track the executable
+!src/lib/pocketbase/pocketbase
+
+# Node
 node_modules
 
 # Output
@@ -22,24 +26,14 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# PocketBase
+# PocketBase data and logs
 /data/
 /data/pocketbase/
 /data/pocketbase/pb_data/
-*.db
-*.db-shm
-*.db-wal
-logs.db
-data.db
-
-# PocketBase
 pb_data/
 pb_data/**/*
 *.db
 *.db-shm
 *.db-wal
 logs.db
-data.db
-
-# Add this to ensure PocketBase executable is included
-!src/lib/pocketbase/pocketbase 
+data.db 
