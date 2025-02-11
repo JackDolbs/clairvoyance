@@ -26,16 +26,23 @@ export async function startPocketBase() {
             
             console.log('PocketBase executable path:', pbPath);
             
-            // Check if file exists and is executable
-            if (!fs.existsSync(pbPath)) {
-                throw new Error(`PocketBase executable not found at ${pbPath}`);
-            }
+            // Add detailed file checks
+            const stats = fs.statSync(pbPath);
+            console.log('File stats:', {
+                size: stats.size,
+                mode: stats.mode.toString(8),
+                uid: stats.uid,
+                gid: stats.gid
+            });
 
-            // Just check if we can execute it
-            fs.accessSync(pbPath, fs.constants.X_OK);
-            console.log('Executable permissions verified');
+            // Try to read first few bytes
+            const fd = fs.openSync(pbPath, 'r');
+            const buffer = Buffer.alloc(16);
+            fs.readSync(fd, buffer, 0, 16, 0);
+            fs.closeSync(fd);
+            console.log('First 16 bytes:', buffer.toString('hex'));
 
-            // Set permissions just to be sure
+            // Ensure executable permissions
             fs.chmodSync(pbPath, 0o755);
             
             // Ensure pb_data directory exists
@@ -102,7 +109,10 @@ export async function startPocketBase() {
 
         } catch (err) {
             console.error('Failed to start PocketBase:', err);
-            reject(err);
+            if (err instanceof Error) {
+                console.error('Stack trace:', err.stack);
+            }
+            throw err;
         } finally {
             isStarting = false;
         }
