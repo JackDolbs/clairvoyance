@@ -4,147 +4,138 @@ import PocketBase from 'pocketbase';
 import fs from 'fs';
 
 let pocketbaseProcess: any = null;
+let isStarting = false;
+let startPromise: Promise<any> | null = null;
 
-export function startPocketBase() {
+export async function startPocketBase() {
+    // If already starting, return existing promise
+    if (isStarting && startPromise) {
+        return startPromise;
+    }
+
+    isStarting = true;
     console.log('=== Starting PocketBase Process ===');
     console.log('Current directory:', process.cwd());
     console.log('NODE_ENV:', process.env.NODE_ENV);
-    console.log('Process arguments:', process.argv);
-    console.log('Directory contents:', fs.readdirSync(process.cwd()));
-
-    // Don't start if we're building
-    if (process.env.NODE_ENV === 'production' && process.argv.includes('build')) {
-        console.log('Skipping PocketBase start during build');
-        return;
-    }
-
-    const pbPath = process.env.NODE_ENV === 'production' 
-        ? path.resolve(process.cwd(), 'build/pocketbase/pocketbase')
-        : path.resolve(process.cwd(), 'src/lib/pocketbase/pocketbase');
     
-    console.log('PocketBase executable path:', pbPath);
-    
-    try {
-        // Check if file exists and is executable
-        if (!fs.existsSync(pbPath)) {
-            throw new Error(`PocketBase executable not found at ${pbPath}`);
-        }
-
-        // Read first few bytes to verify it's a binary
-        const fd = fs.openSync(pbPath, 'r');
-        const buffer = Buffer.alloc(4);
-        fs.readSync(fd, buffer, 0, 4, 0);
-        fs.closeSync(fd);
-
-        // Check ELF magic number for Linux binary
-        if (buffer[0] !== 0x7f || buffer[1] !== 0x45 || buffer[2] !== 0x4c || buffer[3] !== 0x46) {
-            throw new Error('PocketBase executable appears to be corrupted');
-        }
-
-        console.log('Executable verification passed');
-        
-        // Ensure executable permissions
-        fs.chmodSync(pbPath, 0o755);
-        
-        // Kill existing instance if running
-        if (pocketbaseProcess) {
-            console.log('Killing existing PocketBase process');
-            pocketbaseProcess.kill();
-            pocketbaseProcess = null;
-        }
-
-        // Ensure pb_data directory exists
-        const dataDir = path.join(process.cwd(), 'pb_data');
-        if (!fs.existsSync(dataDir)) {
-            console.log('Creating pb_data directory');
-            fs.mkdirSync(dataDir, { recursive: true });
-        }
-
-        console.log('Starting PocketBase process...');
-        pocketbaseProcess = spawn(pbPath, [
-            'serve',
-            '--http=127.0.0.1:8090',
-            '--dir=./pb_data'
-        ], { 
-            stdio: 'pipe',
-            env: {
-                ...process.env,
-                NODE_ENV: process.env.NODE_ENV || 'production'
+    startPromise = new Promise(async (resolve, reject) => {
+        try {
+            const pbPath = process.env.NODE_ENV === 'production' 
+                ? path.resolve(process.cwd(), 'build/pocketbase/pocketbase')
+                : path.resolve(process.cwd(), 'src/lib/pocketbase/pocketbase');
+            
+            console.log('PocketBase executable path:', pbPath);
+            
+            // Check if file exists and is executable
+            if (!fs.existsSync(pbPath)) {
+                throw new Error(`PocketBase executable not found at ${pbPath}`);
             }
-        });
 
-        console.log('PocketBase process spawned with PID:', pocketbaseProcess.pid);
+            // Verify binary and set permissions
+            const fd = fs.openSync(pbPath, 'r');
+            const buffer = Buffer.alloc(4);
+            fs.readSync(fd, buffer, 0, 4, 0);
+            fs.closeSync(fd);
 
-        pocketbaseProcess.stdout.on('data', (data: Buffer) => {
-            console.log(`PocketBase stdout: ${data.toString()}`);
-        });
-
-        pocketbaseProcess.stderr.on('data', (data: Buffer) => {
-            console.error(`PocketBase stderr: ${data.toString()}`);
-        });
-
-        pocketbaseProcess.on('error', (err: Error) => {
-            console.error('Failed to start PocketBase process:', err);
-            console.error('Error details:', {
-                name: err.name,
-                message: err.message,
-                stack: err.stack
-            });
-        });
-
-        pocketbaseProcess.on('exit', (code: number, signal: string) => {
-            console.log('PocketBase process exited with code:', code, 'signal:', signal);
-            // Attempt to restart if crashed
-            if (code !== 0 && !signal) {
-                console.log('PocketBase crashed, attempting restart...');
-                setTimeout(startPocketBase, 1000);
+            if (buffer[0] !== 0x7f || buffer[1] !== 0x45 || buffer[2] !== 0x4c || buffer[3] !== 0x46) {
+                throw new Error('PocketBase executable appears to be corrupted');
             }
-        });
 
-        // Wait for process to be ready
-        return new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => {
-                reject(new Error('PocketBase start timeout'));
-            }, 10000);
+            fs.chmodSync(pbPath, 0o755);
+            
+            // Ensure pb_data directory exists
+            const dataDir = path.join(process.cwd(), 'pb_data');
+            if (!fs.existsSync(dataDir)) {
+                fs.mkdirSync(dataDir, { recursive: true });
+            }
 
-            pocketbaseProcess.stdout.on('data', (data: Buffer) => {
-                if (data.toString().includes('Server started')) {
-                    clearTimeout(timeout);
-                    resolve(pocketbaseProcess);
+            // Kill existing instance if running
+            if (pocketbaseProcess) {
+                pocketbaseProcess.kill();
+                pocketbaseProcess = null;
+            }
+
+            console.log('Starting PocketBase process...');
+            pocketbaseProcess = spawn(pbPath, [
+                'serve',
+                '--http=127.0.0.1:8090',
+                '--dir=./pb_data'
+            ], { 
+                stdio: 'pipe',
+                env: {
+                    ...process.env,
+                    NODE_ENV: process.env.NODE_ENV || 'production'
                 }
             });
-        });
 
-    } catch (err) {
-        console.error('Error starting PocketBase:', err);
-        if (err instanceof Error) {
-            console.error('Stack trace:', err.stack);
+            // Wait for server to be ready
+            const serverReady = new Promise((resolveServer, rejectServer) => {
+                const timeout = setTimeout(() => {
+                    rejectServer(new Error('PocketBase start timeout'));
+                }, 10000);
+
+                pocketbaseProcess.stdout.on('data', (data: Buffer) => {
+                    const output = data.toString();
+                    console.log(`PocketBase stdout: ${output}`);
+                    if (output.includes('Server started')) {
+                        clearTimeout(timeout);
+                        resolveServer(true);
+                    }
+                });
+
+                pocketbaseProcess.stderr.on('data', (data: Buffer) => {
+                    console.error(`PocketBase stderr: ${data.toString()}`);
+                });
+
+                pocketbaseProcess.on('error', (err: Error) => {
+                    console.error('PocketBase process error:', err);
+                    clearTimeout(timeout);
+                    rejectServer(err);
+                });
+
+                pocketbaseProcess.on('exit', (code: number, signal: string) => {
+                    console.log(`PocketBase exited with code ${code} and signal ${signal}`);
+                    if (code !== 0) {
+                        rejectServer(new Error(`PocketBase exited with code ${code}`));
+                    }
+                });
+            });
+
+            await serverReady;
+            console.log('PocketBase server is ready');
+            resolve(true);
+
+        } catch (err) {
+            console.error('Failed to start PocketBase:', err);
+            reject(err);
+        } finally {
+            isStarting = false;
         }
-        throw err;
-    }
+    });
+
+    return startPromise;
 }
 
-// Add shutdown handler
+export function createPocketBaseServer() {
+    if (!pocketbaseProcess) {
+        throw new Error('PocketBase server not started');
+    }
+    console.log('Creating new PocketBase instance');
+    return new PocketBase('http://127.0.0.1:8090');
+}
+
+// Cleanup handlers
 process.on('exit', () => {
     if (pocketbaseProcess) {
-        console.log('Shutting down PocketBase process');
         pocketbaseProcess.kill();
     }
 });
 
-// Handle other termination signals
 ['SIGINT', 'SIGTERM', 'SIGQUIT'].forEach(signal => {
     process.on(signal, () => {
-        console.log(`Received ${signal}, shutting down...`);
         if (pocketbaseProcess) {
             pocketbaseProcess.kill();
         }
         process.exit(0);
     });
-});
-
-export function createPocketBaseServer() {
-    console.log('Creating new PocketBase server instance');
-    const pb = new PocketBase('http://127.0.0.1:8090');
-    return pb;
-} 
+}); 
