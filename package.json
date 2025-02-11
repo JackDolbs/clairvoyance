@@ -8,8 +8,8 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"start": "node build",
-		"prebuild": "mkdir -p build/pocketbase && cp src/lib/pocketbase/pocketbase build/pocketbase/",
-		"postbuild": "chmod +x build/pocketbase/pocketbase"
+		"prebuild": "mkdir -p build/pocketbase && cp -a src/lib/pocketbase/pocketbase build/pocketbase/ && chmod +x build/pocketbase/pocketbase",
+		"postbuild": "test -f build/pocketbase/pocketbase && chmod +x build/pocketbase/pocketbase || echo 'PocketBase executable not found'"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.3",
