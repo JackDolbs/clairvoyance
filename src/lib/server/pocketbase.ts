@@ -18,32 +18,48 @@ export function startPocketBase() {
         return;
     }
 
-    // Kill existing instance if running
-    if (pocketbaseProcess) {
-        console.log('Killing existing PocketBase process');
-        pocketbaseProcess.kill();
-        pocketbaseProcess = null;
-    }
-
-    // Ensure pb_data directory exists
-    const dataDir = path.join(process.cwd(), 'pb_data');
-    if (!fs.existsSync(dataDir)) {
-        console.log('Creating pb_data directory');
-        fs.mkdirSync(dataDir, { recursive: true });
-    }
-
     const pbPath = process.env.NODE_ENV === 'production' 
-        ? path.resolve(process.cwd(), 'pocketbase/pocketbase')
+        ? path.resolve(process.cwd(), 'build/pocketbase/pocketbase')
         : path.resolve(process.cwd(), 'src/lib/pocketbase/pocketbase');
     
     console.log('PocketBase executable path:', pbPath);
-    console.log('Checking if file exists:', fs.existsSync(pbPath));
-    console.log('File permissions:', fs.statSync(pbPath).mode.toString(8));
     
     try {
-        // Ensure executable permissions
-        fs.chmodSync(pbPath, '755');
+        // Check if file exists and is executable
+        if (!fs.existsSync(pbPath)) {
+            throw new Error(`PocketBase executable not found at ${pbPath}`);
+        }
+
+        // Read first few bytes to verify it's a binary
+        const fd = fs.openSync(pbPath, 'r');
+        const buffer = Buffer.alloc(4);
+        fs.readSync(fd, buffer, 0, 4, 0);
+        fs.closeSync(fd);
+
+        // Check ELF magic number for Linux binary
+        if (buffer[0] !== 0x7f || buffer[1] !== 0x45 || buffer[2] !== 0x4c || buffer[3] !== 0x46) {
+            throw new Error('PocketBase executable appears to be corrupted');
+        }
+
+        console.log('Executable verification passed');
         
+        // Ensure executable permissions
+        fs.chmodSync(pbPath, 0o755);
+        
+        // Kill existing instance if running
+        if (pocketbaseProcess) {
+            console.log('Killing existing PocketBase process');
+            pocketbaseProcess.kill();
+            pocketbaseProcess = null;
+        }
+
+        // Ensure pb_data directory exists
+        const dataDir = path.join(process.cwd(), 'pb_data');
+        if (!fs.existsSync(dataDir)) {
+            console.log('Creating pb_data directory');
+            fs.mkdirSync(dataDir, { recursive: true });
+        }
+
         console.log('Starting PocketBase process...');
         pocketbaseProcess = spawn(pbPath, [
             'serve',
@@ -100,7 +116,7 @@ export function startPocketBase() {
         });
 
     } catch (err) {
-        console.error('Error spawning PocketBase process:', err);
+        console.error('Error starting PocketBase:', err);
         if (err instanceof Error) {
             console.error('Stack trace:', err.stack);
         }

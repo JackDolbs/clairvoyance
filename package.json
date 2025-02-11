@@ -8,8 +8,8 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"start": "node build",
-		"prebuild": "mkdir -p pocketbase && cp src/lib/pocketbase/pocketbase pocketbase/",
-		"postbuild": "cp -r pocketbase build/"
+		"prebuild": "mkdir -p build/pocketbase && cp -p src/lib/pocketbase/pocketbase build/pocketbase/",
+		"postbuild": "chmod +x build/pocketbase/pocketbase"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.3",
