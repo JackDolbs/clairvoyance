@@ -126,7 +126,8 @@ export async function startPocketBase() {
 
 export function createPocketBaseServer() {
     if (!pocketbaseProcess) {
-        throw new Error('PocketBase server not started');
+        console.warn('PocketBase server not started, creating client with remote URL');
+        return new PocketBase('http://127.0.0.1:8090');
     }
     console.log('Creating new PocketBase instance');
     return new PocketBase('http://127.0.0.1:8090');
