@@ -63,11 +63,52 @@ If you encounter issues:
 
 ### Data Persistence
 
-PocketBase data is stored in the `pb_data` directory. To persist data between deployments:
+#### Why This Matters
+Your application stores data in two critical locations:
+1. `pb_data/` - PocketBase's database and files
+2. `data/ontology.db` - DuckDB ontology database
 
-1. Add a volume in Coolify for `/app/pb_data`
-2. Configure backup strategy for the volume
-3. Ensure `pb_data` is in your `.gitignore`
+**Without proper configuration, these will be deleted every time you:**
+- Redeploy the app
+- Restart the container
+- Update dependencies
+
+#### Step-by-Step Configuration
+1. **In Coolify's Dashboard:**
+   - Go to your application's settings
+   - Find "Volumes" or "Persistent Storage"
+   - Add these two entries:
+   
+     | Container Path      | Host Path              |
+     |---------------------|------------------------|
+     | `/app/pb_data`     | `/pb_data`             |
+     | `/app/data`         | `/ontology_data`       |
+
+2. **In Your Local `.gitignore**:
+   ```gitignore
+   # Database files
+   /pb_data/
+   /data/
+   ```
+
+#### Verification After Deployment
+1. **Check Volume Mounts:**
+   ```bash
+   # Get container ID
+   docker ps
+
+   # Inspect mounts
+   docker inspect <container-id> | grep Mounts
+   ```
+
+2. **Verify Database Files Exist:**
+   ```bash
+   docker exec -it <container-id> ls /app/data
+   # Should show: ontology.db
+
+   docker exec -it <container-id> ls /app/pb_data
+   # Should show: data.db, backups, etc.
+   ```
 
 ### Security Notes
 
@@ -75,33 +116,3 @@ PocketBase data is stored in the `pb_data` directory. To persist data between de
 2. Keep your `VITE_AUTH_PIN` secure
 3. Consider setting up SSL/TLS through Coolify
 4. Regularly update dependencies with `npm audit fix`
-
-## Vercel Deployment
-
-### Prerequisites
-- Vercel account
-- Git repository access
-
-### Steps
-1. Fork this repository
-2. Import to Vercel:
-   - Connect your GitHub account
-   - Select the repository
-   - Configure build settings:
-     ```
-     Framework Preset: SvelteKit
-     Build Command: npm run build
-     Output Directory: build
-     ```
-   - Add environment variables
-   - Deploy
-
-### Notes
-- PocketBase requires serverless adaptation (coming soon)
-- Use Vercel's edge functions for optimal performance
-
-### PocketBase Data
-The `pb_data` directory will be created in:
-- Development: Project root
-- Coolify: Container volume
-- Vercel: Ephemeral storage (needs adaptation) 
