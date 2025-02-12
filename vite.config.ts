@@ -24,6 +24,12 @@ export default defineConfig({
 	build: {
 		commonjsOptions: {
 			include: [/node_modules/]
+		},
+		rollupOptions: {
+			external: [
+				'@duckdb/node-api',
+				'@duckdb/node-bindings-darwin-arm64'
+			]
 		}
 	},
 	define: {

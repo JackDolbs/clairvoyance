@@ -5,8 +5,8 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"predev": "node scripts/download-pocketbase.js",
-		"prebuild": "node scripts/download-pocketbase.js",
+		"predev": "node scripts/download-pocketbase.js && node scripts/init.cjs",
+		"prebuild": "node scripts/download-pocketbase.js && node scripts/init.cjs",
 		"build": "vite build",
 		"preview": "vite preview",
 		"start": "node build"

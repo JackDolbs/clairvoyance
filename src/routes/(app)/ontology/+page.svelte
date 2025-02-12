@@ -39,10 +39,10 @@
 
     // Ensure the state is properly declared
     let csvDialogOpen = $state(false);
-    let jsonContent = JSON.stringify(ontologySchema, null, 2);
+    let jsonContent = $state(JSON.stringify(ontologySchema, null, 2));
 
     // Add state for table features
-    let searchQuery = '';
+    let searchQuery = $state('');
     let selectedClasses = ontologySchema.ontology.superclasses.flatMap(s => 
         [s, ...(s.subclasses || [])
     ]).map(c => ({ ...c, selected: true }));
@@ -68,7 +68,7 @@
 
     // Add these variables for the resizer
     let isResizing = false;
-    let leftPaneWidth = 30; // Initial width in percentage
+    let leftPaneWidth = $state(30); // Initial width in percentage
 
     function startResizing(event: MouseEvent) {
         isResizing = true;
@@ -113,13 +113,24 @@
         }
     }
 
-    function saveSchema() {
+    async function saveSchema() {
         try {
             const parsed = JSON.parse(jsonContent);
-            // Add save logic here
+            const response = await fetch('/api/ontology', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: 'test',
+                    name: parsed.ontology.name,
+                    description: parsed.ontology.description
+                })
+            });
+            
+            if (!response.ok) throw new Error('Save failed');
+            ontologySchema.ontology = parsed.ontology;
             csvDialogOpen = false;
-        } catch (e) {
-            console.error('Invalid JSON format');
+        } catch (error) {
+            console.error('Save error:', error);
         }
     }
 
@@ -470,11 +481,10 @@
 
                         <!-- Resizer -->
                         <div
-                            class="w-1 hover:w-2 bg-border hover:bg-primary transition-all cursor-col-resize flex-shrink-0 relative"
-                            onmousedown={startResizing}
                             role="separator"
-                            aria-orientation="vertical"
-                            aria-valuenow={leftPaneWidth}
+                            aria-label="Pane resizer"
+                            class="w-1 hover:w-2 bg-border hover:bg-primary transition-all cursor-col-resize flex-shrink-0 relative"
+                            on:mousedown={startResizing}
                         >
                             <div class="absolute inset-y-0 -left-2 right-0"></div>
                         </div>

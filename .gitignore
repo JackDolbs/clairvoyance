@@ -36,6 +36,8 @@ pb.zip
 *.db
 *.db-shm
 *.db-wal
+.tables
+data/ontology.db
 
 # DuckDB
 db/
