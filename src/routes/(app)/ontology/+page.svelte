@@ -19,7 +19,6 @@
     import Filter from "lucide-svelte/icons/filter";
     import ArrowRight from "lucide-svelte/icons/arrow-right";
     import Check from "lucide-svelte/icons/check";
-    import ontologySchema from './ontology.json';
     import * as Menubar from "$lib/components/ui/menubar/index.js";
     import ZoomIn from "lucide-svelte/icons/zoom-in";
     import ZoomOut from "lucide-svelte/icons/zoom-out";
@@ -39,13 +38,22 @@
 
     // Ensure the state is properly declared
     let csvDialogOpen = $state(false);
-    let jsonContent = $state(JSON.stringify(ontologySchema, null, 2));
+    let jsonContent = $state(JSON.stringify({ ontology: { superclasses: [], rules: [] } }, null, 2));
 
     // Add state for table features
     let searchQuery = $state('');
-    let selectedClasses = ontologySchema.ontology.superclasses.flatMap(s => 
-        [s, ...(s.subclasses || [])
-    ]).map(c => ({ ...c, selected: true }));
+    let ontologyState = $state({
+        ontology: {
+            superclasses: [],
+            rules: []
+        }
+    });
+
+    let selectedClasses = $derived(
+        ontologyState.ontology.superclasses.flatMap(s => 
+            [s, ...(s.subclasses || [])]
+        ).map(c => ({ ...c, selected: true }))
+    );
 
     // Replace the reactive statement with $derived
     const filteredClasses = $derived(
@@ -119,15 +127,16 @@
             const response = await fetch('/api/ontology', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id: 'test',
-                    name: parsed.ontology.name,
-                    description: parsed.ontology.description
-                })
+                body: JSON.stringify(parsed)
             });
             
             if (!response.ok) throw new Error('Save failed');
-            ontologySchema.ontology = parsed.ontology;
+            jsonContent = JSON.stringify(parsed, null, 2);
+            
+            // Refresh data after save
+            const refreshResponse = await fetch('/api/ontology');
+            ontologyState = await refreshResponse.json();
+            
             csvDialogOpen = false;
         } catch (error) {
             console.error('Save error:', error);
@@ -200,6 +209,13 @@
     let enableTrackpadGestures = true;
     let showJsonEditor = true;
     let enableAutoSave = false;
+
+    let ontologySchema = $state({ ontology: { superclasses: [], rules: [] } });
+
+    onMount(async () => {
+        const response = await fetch('/api/ontology');
+        ontologySchema = await response.json();
+    });
 </script>
 
 <style>

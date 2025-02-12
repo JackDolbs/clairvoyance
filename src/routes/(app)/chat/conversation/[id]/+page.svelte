@@ -26,9 +26,9 @@
     const props = $props<{ data: { conversation: ChatConversation } }>();
     let conversation = $state(props.data.conversation);
     
-    let messages = $state(conversation.messages);
+    let messages = $state([]);
     let inputMessage = $state('');
-    let selectedContexts = $state(conversation.contexts);
+    let selectedContexts = $state([]);
     let chatContainer: HTMLDivElement;
     let textareaElement: HTMLTextAreaElement;
     let showHistory = $state(false);
@@ -110,6 +110,8 @@
     }
 
     onMount(() => {
+        messages = conversation.messages;
+        selectedContexts = conversation.contexts;
         if (textareaElement) {
             handleInput();
         }
